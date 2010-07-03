@@ -1,0 +1,7 @@
+"UnlitGeneric"
+{
+	"$basetexture" "vgui\maps\menu_thumb_tf2ware_test24"
+	"$translucent" 1
+	"$ignorez" 1
+	"$vertexcolor" 1
+}
