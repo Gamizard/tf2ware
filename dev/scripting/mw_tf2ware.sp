@@ -223,7 +223,6 @@ public OnMapStart() {
         g_enabled = false;
     }
 
-
     precacheSound(WW_START);
     precacheSound(WW_WIN);
     precacheSound(WW_FAIL);
@@ -324,6 +323,10 @@ public Action:OnGetGameDescription(String:gameDesc[64]) {
     if (g_enabled) {
         Format(gameDesc, sizeof(gameDesc), "TF2Ware %s", PLUGIN_VERSION);
     }
+	else
+	{
+		Format(gameDesc, sizeof(gameDesc), "Team Fortress 2");
+	}
     return Plugin_Changed;
 }
 
