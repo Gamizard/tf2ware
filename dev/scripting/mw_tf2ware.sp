@@ -212,9 +212,9 @@ public OnPluginStart() {
 }
 
 public OnMapStart() {
-	// Check if the map has tf2ware at the beginning, otherwise tf2ware should be disabled
-	// (A bit hacky I suppose)
-	decl String:map[128];
+    // Check if the map has tf2ware at the beginning, otherwise tf2ware should be disabled
+    // (A bit hacky I suppose)
+    decl String:map[128];
     GetCurrentMap(map, 8);
     if(StrEqual(map, "tf2ware")) {
         g_enabled = true;
@@ -898,9 +898,9 @@ RemoveClientWeapons(i) {
 public Action:RemoveClientWeapons_timer(Handle:hTimer, any:i) {
     if (IsValidClient(i) && (IsPlayerAlive(i)) && (g_Winner[i] == 0)) {
         SetClientSlot(i, 0);
-		for (new j=1; j<=5; j++) {
-			TF2_RemoveWeaponSlot(i, j);
-		}
+        for (new j=1; j<=5; j++) {
+            TF2_RemoveWeaponSlot(i, j);
+        }
         
         new ActiveWeapon = GetEntDataEnt2(i,FindSendPropOffs("CTFPlayer", "m_hActiveWeapon"));
         if(IsValidEntity(ActiveWeapon)) {
