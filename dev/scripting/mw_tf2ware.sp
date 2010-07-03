@@ -325,7 +325,7 @@ public Action:OnGetGameDescription(String:gameDesc[64]) {
     }
 	else
 	{
-		Format(gameDesc, sizeof(gameDesc), "Team Fortress 2");
+		Format(gameDesc, sizeof(gameDesc), "Team Fortress");
 	}
     return Plugin_Changed;
 }
