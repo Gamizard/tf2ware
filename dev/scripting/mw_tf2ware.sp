@@ -904,10 +904,6 @@ public Action:RemoveClientWeapons_timer(Handle:hTimer, any:i) {
 		for (new j=1; j<=5; j++) {
 			TF2_RemoveWeaponSlot(i, j);
 		}
-        // TF2_RemoveWeaponSlot(i, 2);
-        // TF2_RemoveWeaponSlot(i, 3);
-        // TF2_RemoveWeaponSlot(i, 4);
-        // TF2_RemoveWeaponSlot(i, 5);
         
         new ActiveWeapon = GetEntDataEnt2(i,FindSendPropOffs("CTFPlayer", "m_hActiveWeapon"));
         if(IsValidEntity(ActiveWeapon)) {
