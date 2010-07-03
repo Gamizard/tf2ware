@@ -120,8 +120,6 @@ public Plugin:myinfo = {
 };
 
 public OnPluginStart() {
-    //LoadTranslations("tf2ware.phrases");
-
     // G A M E  C H E C K //
     decl String:game[32];
     GetGameFolderName(game, sizeof(game));
@@ -214,16 +212,6 @@ public OnPluginStart() {
 }
 
 public OnMapStart() {
-    decl String:map[128];
-    GetCurrentMap(map, sizeof(map));
-    //PrintToChatAll(map);
-    if(StrContains(map, "tf2ware")) {
-        g_enabled = true;
-    }
-    else {
-        g_enabled = true;
-    }
-
     precacheSound(WW_START);
     precacheSound(WW_WIN);
     precacheSound(WW_FAIL);
@@ -793,9 +781,6 @@ public Action:Victory_timer(Handle:hTimer) {
                 }
                 if (g_Achievements) mw_AchievementEvent("tf2ware_playround", i, 0, 0, 1);
             }
-            else {
-                //TF2_StunPlayer(i, GetSpeedMultiplier(8.17), _, 96, 0);
-            }
         }
         for (new i = 0; i < GetArraySize(ArrayWinners); i++) {
             new client = GetArrayCell(ArrayWinners, i);
@@ -1037,8 +1022,6 @@ SetOverlay(i, String:overlay[512]) {
         if (!(StrEqual(overlay, ""))) {
             Format(input, sizeof(input), "r_screenoverlay \"%s%s%s\"", materialpath,language,overlay);
         }
-        
-        //PrintToChatAll("Country string (%N): %s (%d) on server (%d with total %d)",i, language, GetClientLanguage(i), GetServerLanguage(), GetLanguageCount());
 
         ClientCommand(i,input);
     }
