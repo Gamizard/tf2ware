@@ -224,6 +224,16 @@ OnMinigame(id) {
     
     if (id == 11) {
         SetStateAll(true);
+		
+        for (new i = 1; i <= MaxClients; i++) {
+            if (IsValidClient(i)) {
+			    new TFClassType:class = TF2_GetPlayerClass(i);
+				if(class == TFClass_Scout)
+				{
+                    SetAllClass("demoman");
+				}
+            }
+        }
     
         decl Float:pos[3];
         new prop = CreateEntityByName("prop_physics");
