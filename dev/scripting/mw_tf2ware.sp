@@ -212,6 +212,18 @@ public OnPluginStart() {
 }
 
 public OnMapStart() {
+	// Check if the map has tf2ware at the beginning, otherwise tf2ware should be disabled
+	// (A bit hacky I suppose)
+	decl String:map[128];
+    GetCurrentMap(map, 8);
+    if(StrEqual(map, "tf2ware")) {
+        g_enabled = true;
+    }
+    else {
+        g_enabled = false;
+    }
+
+
     precacheSound(WW_START);
     precacheSound(WW_WIN);
     precacheSound(WW_FAIL);
