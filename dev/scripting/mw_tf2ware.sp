@@ -15,7 +15,7 @@
 #include <mw_achievements_natives>
 #define REQUIRE_PLUGIN
 
-#define PLUGIN_VERSION "0.7-14"
+#define PLUGIN_VERSION "0.7.1-14"
 #define WW_START "imgay/tf2ware/warioman_intro.mp3"
 #define WW_WIN "imgay/tf2ware/warioman_win.mp3"
 #define WW_FAIL "imgay/tf2ware/warioman_fail.mp3"
@@ -458,6 +458,8 @@ public EventInventoryApplication(Handle:event, const String:name[], bool:dontBro
     }
     g_Spawned[client] = true;
     if (GetConVarBool(ww_enable) && g_enabled) {
+        // Replace huntsman with sniper rifle to avoid taunt killers
+        ReplaceClientWeapon(client, 56, "tf_weapon_sniperrifle");
         if ((status != 2) && (g_Winner[client] == 0)) {
             RemoveClientWeapons(client);
             if (status != 5) CreateSprite(client);
