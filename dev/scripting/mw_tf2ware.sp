@@ -901,11 +901,13 @@ RemoveClientWeapons(i) {
 public Action:RemoveClientWeapons_timer(Handle:hTimer, any:i) {
     if (IsValidClient(i) && (IsPlayerAlive(i)) && (g_Winner[i] == 0)) {
         SetClientSlot(i, 0);
-        TF2_RemoveWeaponSlot(i, 1);
-        TF2_RemoveWeaponSlot(i, 2);
-        TF2_RemoveWeaponSlot(i, 3);
-        TF2_RemoveWeaponSlot(i, 4);
-        TF2_RemoveWeaponSlot(i, 5);
+		for (new j=1; j<=5; j++) {
+			TF2_RemoveWeaponSlot(i, j);
+		}
+        // TF2_RemoveWeaponSlot(i, 2);
+        // TF2_RemoveWeaponSlot(i, 3);
+        // TF2_RemoveWeaponSlot(i, 4);
+        // TF2_RemoveWeaponSlot(i, 5);
         
         new ActiveWeapon = GetEntDataEnt2(i,FindSendPropOffs("CTFPlayer", "m_hActiveWeapon"));
         if(IsValidEntity(ActiveWeapon)) {
@@ -920,48 +922,7 @@ public Action:RemoveClientWeapons_timer(Handle:hTimer, any:i) {
 
 RemoveClientSlot(i, slot) {
     if (IsValidClient(i) && (IsPlayerAlive(i))) {
-        if (slot == 0) CreateTimer(0.0, RemoveClientWeapons0_timer, i, TIMER_FLAG_NO_MAPCHANGE);
-        if (slot == 1) CreateTimer(0.0, RemoveClientWeapons1_timer, i, TIMER_FLAG_NO_MAPCHANGE);
-        if (slot == 2) CreateTimer(0.0, RemoveClientWeapons2_timer, i, TIMER_FLAG_NO_MAPCHANGE);
-        if (slot == 3) CreateTimer(0.0, RemoveClientWeapons3_timer, i, TIMER_FLAG_NO_MAPCHANGE);
-        if (slot == 4) CreateTimer(0.0, RemoveClientWeapons4_timer, i, TIMER_FLAG_NO_MAPCHANGE);
-        if (slot == 5) CreateTimer(0.0, RemoveClientWeapons5_timer, i, TIMER_FLAG_NO_MAPCHANGE);
-    }
-}
-
-public Action:RemoveClientWeapons0_timer(Handle:hTimer, any:i) {
-    if (IsValidClient(i) && (IsPlayerAlive(i))) {
-        TF2_RemoveWeaponSlot(i, 0);
-    }
-}
-
-public Action:RemoveClientWeapons1_timer(Handle:hTimer, any:i) {
-    if (IsValidClient(i) && (IsPlayerAlive(i))) {
-        TF2_RemoveWeaponSlot(i, 1);
-    }
-}
-
-public Action:RemoveClientWeapons2_timer(Handle:hTimer, any:i) {
-    if (IsValidClient(i) && (IsPlayerAlive(i))) {
-        TF2_RemoveWeaponSlot(i, 2);
-    }
-}
-
-public Action:RemoveClientWeapons3_timer(Handle:hTimer, any:i) {
-    if (IsValidClient(i) && (IsPlayerAlive(i))) {
-        TF2_RemoveWeaponSlot(i, 3);
-    }
-}
-
-public Action:RemoveClientWeapons4_timer(Handle:hTimer, any:i) {
-    if (IsValidClient(i) && (IsPlayerAlive(i))) {
-        TF2_RemoveWeaponSlot(i, 4);
-    }
-}
-
-public Action:RemoveClientWeapons5_timer(Handle:hTimer, any:i) {
-    if (IsValidClient(i) && (IsPlayerAlive(i))) {
-        TF2_RemoveWeaponSlot(i, 5);
+		TF2_RemoveWeaponSlot(i, slot);
     }
 }
 
