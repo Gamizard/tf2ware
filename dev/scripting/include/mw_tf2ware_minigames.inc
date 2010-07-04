@@ -15,18 +15,37 @@
 // 15: Simon Says
 // 16: Least Wins (Boss)
 
+// Added these for code clarity
+
+#define GAME_HIT_ENEMY 1
+#define GAME_KAMIKAZE 2
+#define GAME_BARREL_BREAK 3
+#define GAME_SAW_RUN 4
+#define GAME_NEEDLEJUMP 5
+#define GAME_HOPSCOTCH 6
+#define GAME_AIRBLAST 8
+#define GAME_MATHS 9
+#define GAME_MOVEMENT 10
+#define GAME_FLOOD 11
+#define GAME_DEMO_DODGEBALL 12
+#define GAME_DEMO_BBALL 13
+#define GAME_HUGGING_HEAVY 14
+#define GAME_SIMON_SAYS 15
+#define GAME_LEAST_WINS 16
+
+
 OnMinigame(id) {
     new bool:g_respawn = false;
 
     GiveId();
 
-    if ((id == 4)) {
+    if ((id == GAME_SAW_RUN)) {
         SetAllClass("scout");
         g_respawn = true;
         RespawnAll(true, false);
     }
 
-    if ((id == 8)) {
+    if ((id == GAME_AIRBLAST)) {
         SetAllClass("pyro");
         SetStateAll(true);
         g_respawn = true;
@@ -34,14 +53,14 @@ OnMinigame(id) {
         RespawnAll(true, false);
     }
     
-    if ((id == 6)) {
+    if ((id == GAME_HOPSCOTCH)) {
         SetAllClass("heavy");
         g_respawn = true;
         SetStateAll(true);
         RespawnAll(true, false);
     }
     
-    if ((id == 16)) {
+    if ((id == GAME_LEAST_WINS)) {
         SetAllClass("spy");
         g_respawn = true;
         SetStateAll(true);
@@ -58,7 +77,7 @@ OnMinigame(id) {
         g_respawn = true;
         RespawnAll(true, false);
     }
-    if ((id == 12)) {
+    if ((id == GAME_DEMO_DODGEBALL)) {
         SetAllClass("demoman");
         SetStateAll(true);
         g_attack = true;
@@ -66,14 +85,14 @@ OnMinigame(id) {
         RespawnAll(true, false);
     }
     
-    if ((id == 13)) {
+    if ((id == GAME_DEMO_BBALL)) {
         SetAllClass("demoman");
         g_attack = true;
         g_respawn = true;
         RespawnAll(true, false);
     }
     
-    if ((id == 9)) {
+    if ((id == GAME_MATHS)) {
         new random1 = GetRandomInt(3, 15);
         new random2 = GetRandomInt(3, 15);
         new form = GetRandomInt(1,3);
@@ -97,7 +116,7 @@ OnMinigame(id) {
         // Save the question string so we can replace it in when the player answers
         Format(g_mathquestion, sizeof(g_mathquestion), "%d %s %d", random1, formString, random2);
         for (new i = 1; i<= MaxClients; i++) {
-            if (IsClientInGame(i)) {
+            if (IsValidClient(i)) {
                 SetHudTextParams(-1.0, 0.4, 3.0, 255,255,255, 255, 0, 6.0, 0.2, 0.5);
                 ShowHudText(i, 5, "%s = ?", g_mathquestion);
             }
@@ -105,7 +124,7 @@ OnMinigame(id) {
        // PrintCenterTextAll("%d %s %d", random1, formString, random2);
     }
     
-    if ((id == 10) || (id == 15)) {
+    if ((id == GAME_MOVEMENT) || (id == GAME_SIMON_SAYS)) {
         SetStateAll(true);
         new mission = GetRandomInt(0,1);
         for (new i = 1; i <= MaxClients; i++) {
@@ -115,13 +134,13 @@ OnMinigame(id) {
         }
     }
     
-    if (id == 15) {
+    if (id == GAME_SIMON_SAYS) {
         SetStateAll(false);
         g_respawn = true;
         RespawnAll(true, true);
     }
 
-    if (id == 2) {
+    if (id == GAME_KAMIKAZE) {
         new AllPlayers = GetClientCount(true);
         new target = GetRandomInt(1, AllPlayers);
         while ((!IsValidClient(target)) || GetClientTeam(target) < 2 || g_Spawned[target] == false || !IsPlayerAlive(target)) {
@@ -144,7 +163,7 @@ OnMinigame(id) {
         SetStateClient(target, false);
     }
     
-    if (id == 14) {
+    if (id == GAME_HUGGING_HEAVY) {
         new AllPlayers = GetClientCount(true);
         new target = 0;
         new attempts = 0;
@@ -178,7 +197,7 @@ OnMinigame(id) {
         RespawnAll(true, false);
     }
     
-    if (id == 1) {
+    if (id == GAME_HIT_ENEMY) {
         randommini = GetRandomInt(0, 2);
         if (randommini <= 0) {
             SetAllClass("spy");
@@ -192,13 +211,13 @@ OnMinigame(id) {
         g_attack = true;
     }
     
-    if (id == 5) {
+    if (id == GAME_NEEDLEJUMP) {
         SetAllClass("medic");
         SetStateAll(true);
         g_attack = true;
     }
     
-    if (id == 3) {
+    if (id == GAME_BARREL_BREAK) {
         SetAllClass("scout");
         g_attack = true;
         
@@ -230,7 +249,7 @@ OnMinigame(id) {
         }
     }
     
-    if (id == 11) {
+    if (id == GAME_FLOOD) {
         SetStateAll(true);
 		
         for (new i = 1; i <= MaxClients; i++) {
@@ -256,7 +275,7 @@ OnMinigame(id) {
         }    
     }
     
-    if ((id == 1) || (id == 3) || (id == 5) || (id == 2)) {
+    if ((id == GAME_HIT_ENEMY) || (id == GAME_BARREL_BREAK) || (id == GAME_NEEDLEJUMP) || (id == GAME_KAMIKAZE)) {
         g_respawn = true;
         RespawnAll(true);
     }
@@ -269,7 +288,7 @@ OnMinigame(id) {
 }
 
 OnAlmostEndMinigame() {
-    if (minigame == 6) {
+    if (minigame == GAME_HOPSCOTCH) {
         for (new i = 1; i <= MaxClients; i++) {
             if (IsValidClient(i) && (!(IsPlayerAlive(i)))) SetStateClient(i, false);
         }
@@ -279,23 +298,26 @@ OnAlmostEndMinigame() {
             if (IsValidClient(i) && (!(IsPlayerAlive(i)))) SetStateClient(i, false);
         }
     }
-    if (minigame == 8) {
+    if (minigame == GAME_AIRBLAST) {
         for (new i = 1; i <= MaxClients; i++) {
             if (IsValidClient(i) && (!(IsPlayerAlive(i)))) SetStateClient(i, false);
         }
     }
-    if (minigame == 2) {
+    if (minigame == GAME_KAMIKAZE) {
         for (new i = 1; i <= MaxClients; i++) {
             if (IsValidClient(i) && (g_Mission[i] == 1) && (g_result >= 2)) SetStateClient(i, true);
         }
     }
-    if (minigame == 9) {
-        PrintCenterTextAll("");
+    if (minigame == GAME_MATHS) {
+        for (new i = 1; i <= MaxClients; i++) {
+            if (IsValidClient(i)) {
+                ShowHudText(i, 5, "");
+            }
     }
 }
 
 OnTimerMinigame(timer) {
-    if ((minigame == 5) && timer == 3) {
+    if ((minigame == GAME_NEEDLEJUMP) && timer == 3) {
         for (new i = 1; i <= MaxClients; i++) {
             if (IsValidClient(i) && IsPlayerAlive(i)) {
                 decl Float:pos[3];
@@ -315,7 +337,7 @@ OnTimerMinigame(timer) {
         }
     }
     
-    if ((minigame == 2)) {
+    if ((minigame == GAME_KAMIKAZE)) {
         for (new i = 1; i <= MaxClients; i++) {
             if (IsValidClient(i) && IsPlayerAlive(i) && (g_Mission[i] == 1)) {
                 if (timer > 2) {
@@ -341,29 +363,29 @@ OnTimerMinigame(timer) {
 
 
 OnEndMinigame() {
-    if (minigame == 3) {
+    if (minigame == GAME_BARREL_BREAK) {
         DestroyAllBarrels();
     }
-    if (minigame == 4) {
+    if (minigame == GAME_SAW_RUN) {
         RespawnAll(true, false);
     }
-    if (minigame == 6) {
+    if (minigame == GAME_HOPSCOTCH) {
         RespawnAll(true, false);
     }
     if (minigame == 7) {
         RespawnAll(true, false);
     }
-    if (minigame == 8) {
+    if (minigame == GAME_AIRBLAST) {
         RespawnAll(true, false);
     }
-    if (minigame == 2) {
+    if (minigame == GAME_KAMIKAZE) {
         if ((g_bomb > 0) && IsValidEntity(g_bomb)) {
             CDetach(g_bomb);
             AcceptEntityInput(g_bomb, "Kill" );
             g_bomb = 0;
         }
     }
-    if (minigame == 12) {
+    if (minigame == GAME_DEMO_DODGEBALL) {
         RespawnAll(true, false);
         
         decl Float:pos[3];
@@ -379,20 +401,20 @@ OnEndMinigame() {
             CreateTimer(0.1, killprop_timer, prop);
         }
     }
-    if (minigame == 13) {
+    if (minigame == GAME_DEMO_BBALL) {
         RespawnAll(true, false);
     }
-    if (minigame == 14) {
+    if (minigame == GAME_HUGGING_HEAVY) {
         RespawnAll(true, false);
     }
-    if (minigame == 16) {
+    if (minigame == GAME_LEAST_WINS) {
         RespawnAll(true, false);
     }
 }
 
 justEnteredMinigame(client) {
     if (IsValidClient(client)) {
-        if (minigame == 1) {
+        if (minigame == GAME_HIT_ENEMY) {
             if (randommini <= 0) {
                 SetClientClass(client, "spy");
                 RemoveClientSlot(client,1);
@@ -420,7 +442,7 @@ justEnteredMinigame(client) {
                 RemoveClientSlot(client,5);
             }
         }
-        if (minigame == 2) {
+        if (minigame == GAME_KAMIKAZE) {
             if (g_Mission[client] == 0) {
                 SetClientClass(client, "heavy");
                 RemoveClientWeapons(client);
@@ -445,7 +467,7 @@ justEnteredMinigame(client) {
                 }    
             }
         }
-        if (minigame == 14) {
+        if (minigame == GAME_HUGGING_HEAVY) {
             decl Float:pos[3];
             decl Float:ang[3];
             decl Float:vel[3];
@@ -493,14 +515,14 @@ justEnteredMinigame(client) {
             if (heavy_love[client] == INVALID_HANDLE) heavy_love[client] = CreateTimer(5.0, HeavyLoveTaunt, client);
         }
         
-        if (minigame == 3) {
+        if (minigame == GAME_BARREL_BREAK) {
             SetClientClass(client, "scout");
             RemoveClientSlot(client,0);
             RemoveClientSlot(client,1);
             SetClientSlot(client, 2);
         }
         
-        if (minigame == 4) {
+        if (minigame == GAME_SAW_RUN) {
             SetClientClass(client, "scout");
             RemoveClientWeapons(client);
             
@@ -529,7 +551,7 @@ justEnteredMinigame(client) {
             TeleportEntity(client, pos, ang, vel);
             NoCollision(true);
         }
-        if (minigame == 5) {
+        if (minigame == GAME_NEEDLEJUMP) {
             SetClientClass(client, "medic");
             RemoveClientSlot(client,1);
             RemoveClientSlot(client,2);
@@ -539,7 +561,7 @@ justEnteredMinigame(client) {
             g_NeedleDelay[client] = 50;
         }
         
-        if (minigame == 6) {
+        if (minigame == GAME_HOPSKOTCH) {
             SetClientClass(client, "heavy");
             RemoveClientWeapons(client);
             
@@ -597,7 +619,7 @@ justEnteredMinigame(client) {
             ang[2] = 0.0;
             TeleportEntity(client, pos, ang, vel);
         }
-        if (minigame == 8) {
+        if (minigame == GAME_AIRBLAST) {
             SetClientClass(client, "pyro");
             ReplaceClientWeapon(client, 40, "tf_weapon_flamethrower");
             RemoveClientSlot(client,1);
@@ -625,7 +647,7 @@ justEnteredMinigame(client) {
             ang[2] = 0.0;
             TeleportEntity(client, pos, ang, vel);
         }
-        if (minigame == 12) {
+        if (minigame == GAME_DEMO_DODGEBALL) {
             SetClientClass(client, "demoman");
             SetClientSlot(client, 2);
             RemoveClientSlot(client,0);
@@ -660,7 +682,7 @@ justEnteredMinigame(client) {
             NoCollision(true);
         }
         
-        if (minigame == 13) {
+        if (minigame == GAME_DEMO_BBALL) {
             SetClientClass(client, "demoman");
             RemoveClientSlot(client,1);
             RemoveClientSlot(client,2);
@@ -693,12 +715,12 @@ justEnteredMinigame(client) {
             TeleportEntity(client, pos, ang, vel);
         }
         
-        if (minigame == 15) {
+        if (minigame == GAME_SIMON_SAYS) {
             SetClientSlot(client, 0);
             RemoveClientWeapons(client);
         }
         
-        if (minigame == 16) {
+        if (minigame == GAME_LEAST_WINS) {
             SetClientClass(client, "spy");
             RemoveClientWeapons(client);
             PosPlayer_Minigame16(client);
@@ -707,7 +729,7 @@ justEnteredMinigame(client) {
 }
 
 public Action:PosPlayer_Minigame16_Timer(Handle:hTimer) {
-    if (status == 2 && minigame == 16) {
+    if (status == 2 && minigame == GAME_LEAST_WINS) {
         new activeplayers = 0;
         for (new i = 1; i <= MaxClients; i++) {
             if (IsValidClient(i) && g_Complete[i] && IsPlayerAlive(i) && g_Spawned[i] && GetClientTeam(i) >= 2) {
@@ -791,29 +813,29 @@ public Player_Death(Handle:event, const String:name[], bool:dontBroadcast) {
     DestroySprite(client);
     
     if (GetConVarBool(ww_enable) && (status == 2)) {
-        if ((minigame == 2) && IsValidClient(client) && (g_Mission[client] == 0)) {
+        if ((minigame == GAME_KAMIKAZE) && IsValidClient(client) && (g_Mission[client] == 0)) {
             SetStateClient(client, false);
             g_result += 1;
         }
         
-        if ((minigame == 11) && IsValidClient(client)) {
+        if ((minigame == GAME_FLOOD) && IsValidClient(client)) {
             SetStateClient(client, false);
         }
         
-        if ((minigame == 12) && IsValidClient(client)) {
+        if ((minigame == GAME_DEMO_DODGEBALL) && IsValidClient(client)) {
             SetStateClient(client, false);
         }
-        if ((minigame == 16) && IsValidClient(client)) {
+        if ((minigame == GAME_LEAST_WINS) && IsValidClient(client)) {
             SetStateClient(client, false);
         }
     }
 }
 
 OnGameFrame_Minigames() {
-    if (minigame == 4) {
+    if (minigame == GAME_SAW_RUN) {
         for (new i = 1; i <= MaxClients; i++) {
             if (IsValidClient(i) && IsPlayerAlive(i)) {
-                if (minigame == 4) {
+                if (minigame == GAME_SAW_RUN) {
                     decl Float:pos[3];
                     GetClientAbsOrigin(i, pos);
                     if (pos[1] > 1000.0) SetStateClient(i, true, true);
@@ -822,7 +844,7 @@ OnGameFrame_Minigames() {
         }
     }
     
-    if (minigame == 5) {
+    if (minigame == GAME_NEEDLEJUMP) {
         for (new i = 1; i <= MaxClients; i++) {
             if((IsValidClient(i) && IsPlayerAlive(i))) {
                 PerformNeedleJump(i);
@@ -830,7 +852,7 @@ OnGameFrame_Minigames() {
         }
     }
     
-    if ((minigame == 10) && (timeleft <= 5)) {
+    if ((minigame == GAME_MOVEMENT) && (timeleft <= 5)) {
         decl Float:fVelocity[3];
         decl Float:speed;
         decl Float:limit;
@@ -853,7 +875,7 @@ OnGameFrame_Minigames() {
         }
     }
     
-    if (minigame == 15) {
+    if (minigame == GAME_SIMON_SAYS) {
         new failed = 0;
         for (new i = 1; i <= MaxClients; i++) {
             if((IsValidClient(i) && IsPlayerAlive(i))) {
@@ -941,7 +963,7 @@ public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:ang
 }
 
 public OnEntityCreated(entity, const String:classname[]) {
-    if ((minigame == 13) && (status == 2) && (StrEqual(classname, "tf_projectile_pipe"))) {
+    if ((minigame == GAME_DEMO_BBALL) && (status == 2) && (StrEqual(classname, "tf_projectile_pipe"))) {
         SDKHook(entity, SDKHook_StartTouch, Hook_StartTouch_Pipe);
     }
 }
