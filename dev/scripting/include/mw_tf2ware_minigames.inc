@@ -446,6 +446,7 @@ OnEndMinigame() {
 justEnteredMinigame(client) {
     if (IsValidClient(client)) {
         if (minigame == GAME_SPYCRAB) {
+            SetClientClass(client, "spy");
             RemoveClientSlot(client,0);
             RemoveClientSlot(client,1);
             RemoveClientSlot(client,2);
