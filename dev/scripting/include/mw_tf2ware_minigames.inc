@@ -122,13 +122,6 @@ OnMinigame(id) {
         
         // Save the question string so we can replace it in when the player answers
         Format(g_mathquestion, sizeof(g_mathquestion), "%d %s %d", random1, formString, random2);
-        for (new i = 1; i<= MaxClients; i++) {
-            if (IsValidClient(i)) {
-                SetHudTextParams(-1.0, 0.4, 4.0, 255,255,255, 255, 0, 6.0, 0.2, 0.5);
-                ShowHudText(i, 5, "%s = ?", g_mathquestion);
-            }
-        }
-       // PrintCenterTextAll("%d %s %d", random1, formString, random2);
     }
     
     if ((id == GAME_MOVEMENT) || (id == GAME_SIMON_SAYS)) {
@@ -523,6 +516,13 @@ justEnteredMinigame(client) {
                 }    
             }
         }
+        
+        if (minigame == GAME_MATHS) {
+            SetHudTextParams(-1.0, 0.4, 4.0, 255,255,255, 255, 0, 6.0, 0.2, 0.5);
+            ShowHudText(client, 5, "%s = ?", g_mathquestion);
+        }
+        
+        
         if (minigame == GAME_BOSS_HUGGING_HEAVY) {
             decl Float:pos[3];
             decl Float:ang[3];

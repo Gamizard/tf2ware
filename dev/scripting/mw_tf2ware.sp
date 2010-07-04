@@ -15,7 +15,7 @@
 #include <mw_achievements_natives>
 #define REQUIRE_PLUGIN
 
-#define PLUGIN_VERSION "0.7.3-15"
+#define PLUGIN_VERSION "0.7.4-15"
 #define WW_START "imgay/tf2ware/warioman_intro.mp3"
 #define WW_WIN "imgay/tf2ware/warioman_win.mp3"
 #define WW_FAIL "imgay/tf2ware/warioman_fail.mp3"
