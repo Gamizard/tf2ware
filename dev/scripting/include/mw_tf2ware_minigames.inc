@@ -94,7 +94,15 @@ OnMinigame(id) {
             g_result = random1 * random2;
         }
         
-        PrintCenterTextAll("%d %s %d", random1, formString, random2);
+        // Save the question string so we can replace it in when the player answers
+        Format(g_mathquestion, sizeof(g_mathquestion), "%d %s %d", random1, formString, random2);
+        for (new i = 1; i<= MaxClients; i++) {
+            if (IsClientInGame(i)) {
+                SetHudTextParams(-1.0, 0.4, 3.0, 255,255,255, 255, 0, 6.0, 0.2, 0.5);
+                ShowHudText(i, 5, "%s = ?", g_mathquestion);
+            }
+        }
+       // PrintCenterTextAll("%d %s %d", random1, formString, random2);
     }
     
     if ((id == 10) || (id == 15)) {
@@ -227,11 +235,10 @@ OnMinigame(id) {
 		
         for (new i = 1; i <= MaxClients; i++) {
             if (IsValidClient(i)) {
-			    new TFClassType:class = TF2_GetPlayerClass(i);
-				if(class == TFClass_Scout)
-				{
+                new TFClassType:class = TF2_GetPlayerClass(i);
+                if (class == TFClass_Scout) {
                     SetAllClass("demoman");
-				}
+                }
             }
         }
     

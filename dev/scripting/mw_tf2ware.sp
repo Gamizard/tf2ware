@@ -102,6 +102,7 @@ new white;
 new g_HaloSprite;
 new g_ExplosionSprite;
 new g_result = 0;
+new String:g_mathquestion[24];
 new g_bomb = 0;
 new Roundstarts = 0;
 
@@ -1111,7 +1112,10 @@ public Action:Player_Say(iClient, iArgs)
         // Retrieve the first argument and check it's a valid trigger
         decl String:strArgument[64]; GetCmdArg(1, strArgument, sizeof(strArgument));
         new guess = StringToInt(strArgument);
+        
         if (guess == g_result) {
+            SetHudTextParams(-1.0, 0.4, 3.0, 0,255,0, 255, 0, 6.0, 0.2, 0.5);
+            ShowHudText(iClient, 5, "%s = %d", g_mathquestion, guess);            
             SetStateClient(iClient, true, true);
             if (!(g_first)) {
                 CPrintToChatAllEx(iClient, "{teamcolor}%N{green} guessed the answer first!", iClient);
@@ -1119,8 +1123,13 @@ public Action:Player_Say(iClient, iArgs)
             }
         }
         if (guess != g_result) {
+            SetHudTextParams(-1.0, 0.4, 3.0, 255,0,0, 255, 0, 6.0, 0.2, 0.5);
+            ShowHudText(iClient, 5, "%s ≠ %d", g_mathquestion, guess);
             ForcePlayerSuicide(iClient);
         }
+        
+        // Replace the current display to include the guess instead of a question mark
+
         
         return Plugin_Handled;
     }
