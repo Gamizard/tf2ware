@@ -103,8 +103,8 @@ OnMinigame(id) {
         if (form == 1) {
             // A guy one day kept saying 9001 to the math problems and was sad that it never was it. Take this as a 1/50 chance joke :P
             if (GetRandomInt(1, 50) == 1) {
-                random1 = 9000;
-                random2 = 1;
+                random1 = GetRandomInt(8000,9000);
+                random2 = 9001 - random1;
             }
             g_result = random1 + random2;
             Format(formString, sizeof(formString), "+");
