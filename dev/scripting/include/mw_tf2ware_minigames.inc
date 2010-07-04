@@ -35,10 +35,6 @@
 #define GAME_BOSS_LEAST_WINS 16
 #define GAME_SPYCRAB 17
 
-//spycrab variables
-new player_crabduck[MAXPLAYERS+1];
-new player_crablook[MAXPLAYERS+1];
-
 OnMinigame(id) {
     new bool:g_respawn = false;
 
@@ -48,7 +44,7 @@ OnMinigame(id) {
         SetStateAll(true);
         SetAllClass("spy");
         g_respawn = true;
-        RespawnAll(true, false);
+        RespawnAll(true, true);
     }
 
     if (id == GAME_SAW_RUN) {
@@ -371,6 +367,33 @@ OnTimerMinigame(timer) {
                 }
             }
         }
+    }
+    
+    if (minigame == GAME_SPYCRAB && (timer == 3)) {
+        new Float:min;
+        new Float:ang[3];
+        new duck;
+        
+        for (new i = 1; i <= MaxClients; i++) {
+            min = -35.0;
+            if (IsValidClient(i) && IsPlayerAlive(i)) {
+                if (GetEntProp(i, Prop_Send, "m_nPlayerCond") & 16) SetEntProp(i, Prop_Send, "m_nPlayerCond", 0);
+                SetEntPropFloat(i, Prop_Send, "m_flCloakMeter", 0.0);
+                TF2_RemovePlayerDisguise(i);
+                
+                duck = (GetEntData(i, FindSendPropOffs("CTFPlayer", "m_fFlags")) & 2);
+              
+                GetClientEyeAngles(i, ang);
+                if (ang[0] > min || duck == 0) {
+                    ForcePlayerSuicide(i);
+                    SetStateClient(i, false);
+                    // Explain to the client what he should've done so he isn't left clueless.
+                    if (ang[0] > min && duck == 0) CPrintToChat(i, "{default}Spycrabs {red}crouch {default}and {red}look up{default}! %d", duck);
+                    else if (ang[0] > min) CPrintToChat(i, "{default}Spycrabs {default}crouch and {red}look up{default}! %d", duck);
+                    else CPrintToChat(i, "{default}Spycrabs {red}crouch{default} and look up! %d", duck);
+                }
+            }
+        }                
     }
 }
 
@@ -864,41 +887,6 @@ OnGameFrame_Minigames() {
                 }
             }
         }
-    }
-    if (minigame == GAME_SPYCRAB && (timeleft <= 5)) {
-        new Float:min;
-        new Float:ang[3];
-        new duck, look;
-        
-        for (new i = 1; i <= MaxClients; i++) {
-            min = -35.0;
-            if (IsValidClient(i) && IsPlayerAlive(i)) {
-                if (GetEntProp(i, Prop_Send, "m_nPlayerCond") & 16) SetEntProp(i, Prop_Send, "m_nPlayerCond", 0);
-                SetEntPropFloat(i, Prop_Send, "m_flCloakMeter", 0.0);
-                TF2_RemovePlayerDisguise(i);
-                
-                duck = (GetEntData(i, FindSendPropOffs("CTFPlayer", "m_fFlags")) & 2);
-              
-                GetClientEyeAngles(i, ang);
-                if (ang[0] > min) {
-                    ForcePlayerSuicide(i);
-                    SetStateClient(i, false);
-                   // ang[0] = min - 5.0;
-                    //TeleportEntity(i, NULL_VECTOR, ang, NULL_VECTOR);
-                }
-                
-                if (duck != player_crabduck[i] || look != player_crablook[i]) {
-                    if (GetEntityMoveType(i) == MOVETYPE_WALK) {
-                        ForcePlayerSuicide(i);
-                        SetStateClient(i, false);
-                    }
-                    SetEntityMoveType(i, (duck && look) ? MOVETYPE_WALK : MOVETYPE_NONE);
-                    player_crabduck[i] = duck;
-                    player_crablook[i] = look;
-                }
-                
-            }
-        }                
     }
     
     if (minigame == GAME_NEEDLEJUMP) {
