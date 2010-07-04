@@ -125,7 +125,7 @@ OnMinigame(id) {
         Format(g_mathquestion, sizeof(g_mathquestion), "%d %s %d", random1, formString, random2);
         for (new i = 1; i<= MaxClients; i++) {
             if (IsValidClient(i)) {
-                SetHudTextParams(-1.0, 0.4, 3.0, 255,255,255, 255, 0, 6.0, 0.2, 0.5);
+                SetHudTextParams(-1.0, 0.4, 4.0, 255,255,255, 255, 0, 6.0, 0.2, 0.5);
                 ShowHudText(i, 5, "%s = ?", g_mathquestion);
             }
         }
@@ -388,9 +388,17 @@ OnTimerMinigame(timer) {
                     ForcePlayerSuicide(i);
                     SetStateClient(i, false);
                     // Explain to the client what he should've done so he isn't left clueless.
-                    if (ang[0] > min && duck == 0) CPrintToChat(i, "{default}Spycrabs {red}crouch {default}and {red}look up{default}! %d", duck);
-                    else if (ang[0] > min) CPrintToChat(i, "{default}Spycrabs {default}crouch and {red}look up{default}! %d", duck);
-                    else CPrintToChat(i, "{default}Spycrabs {red}crouch{default} and look up! %d", duck);
+                    // We should probably add a translation file but I have no clue how those work D:
+                    if (g_Country[i] == 1) {
+                    if (ang[0] > min && duck == 0) CPrintToChat(i, "{default}Le spycrab {red}si abbassano {default}e {red}guardano su{default}!");
+                    else if (ang[0] > min) CPrintToChat(i, "{default}Le spycrab {default}si abbassano e {red}guardano su{default}!");
+                    else CPrintToChat(i, "{default}Le spycrab {red}si abbassano{default} e guardano su!");
+                    }
+                    else {
+                        if (ang[0] > min && duck == 0) CPrintToChat(i, "{default}Spycrabs {red}crouch {default}and {red}look up{default}!");
+                        else if (ang[0] > min) CPrintToChat(i, "{default}Spycrabs {default}crouch and {red}look up{default}!");
+                        else CPrintToChat(i, "{default}Spycrabs {red}crouch{default} and look up!");
+                    }
                 }
             }
         }                

@@ -15,7 +15,7 @@
 #include <mw_achievements_natives>
 #define REQUIRE_PLUGIN
 
-#define PLUGIN_VERSION "0.7.2-14"
+#define PLUGIN_VERSION "0.7.3-15"
 #define WW_START "imgay/tf2ware/warioman_intro.mp3"
 #define WW_WIN "imgay/tf2ware/warioman_win.mp3"
 #define WW_FAIL "imgay/tf2ware/warioman_fail.mp3"
@@ -563,7 +563,6 @@ RollMinigame() {
         if ((i == 2) && ((GetActivePlayers(2) <= 1) || (GetActivePlayers(3) <= 1))) accept = false;
         if ((bossBattle) && (var_boss[i-1] == false)) accept = false;
         if ((bossBattle == false) && (var_boss[i-1])) accept = false;
-        if ((i == 12) && (GetActivePlayers() < 4)) accept = false;
         if ((i == 14) && (GetActivePlayers() < 6)) accept = false;
         if ((i == 16) && (GetActivePlayers() < 6)) accept = false;
         if (StrEqual(var_intro1[i-1], "")) accept = false;
@@ -1162,7 +1161,12 @@ public Action:Player_Say(iClient, iArgs)
             ShowHudText(iClient, 5, "%s = %d", g_mathquestion, guess);            
             SetStateClient(iClient, true, true);
             if (!(g_first)) {
-                CPrintToChatAllEx(iClient, "{teamcolor}%N{green} guessed the answer first!", iClient);
+                for (new i = 1; i <= MaxClients; i++) {
+                    if (IsValidClient(i)) {
+                        if (g_Country[i] == 1) CPrintToChatEx(i, iClient, "{teamcolor}%N{green} ha indovinato la risposta per primo!", iClient);
+                        else CPrintToChatEx(i, iClient, "{teamcolor}%N{green} guessed the answer first!", iClient);
+                    }
+                }
                 g_first = true;
             }
         }
