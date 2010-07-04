@@ -106,6 +106,8 @@ new String:g_mathquestion[24];
 new g_bomb = 0;
 new Roundstarts = 0;
 
+new g_welcomedisplayed[MAXPLAYERS+1];
+
 // Strings
 new String:materialpath[512] = "imgay/";
 
@@ -165,6 +167,9 @@ public OnPluginStart() {
     HookEvent("teamplay_game_over", Event_Roundend, EventHookMode_PostNoCopy);
     HookEvent("teamplay_round_stalemate", Event_Roundend, EventHookMode_PostNoCopy);
     HookEvent("teamplay_round_win", Event_Roundend, EventHookMode_PostNoCopy);
+    
+    HookEvent("player_changeclass",Event_ChangeClass);
+    
     RegConsoleCmd("say", Player_Say);
     RegConsoleCmd("say_team", Player_Say);
     RegAdminCmd("ww_give", Command_points, ADMFLAG_GENERIC, "Gives you 20 points - You're a winner! (testing feature)");
@@ -324,11 +329,40 @@ public Action:OnGetGameDescription(String:gameDesc[64]) {
     if (g_enabled) {
         Format(gameDesc, sizeof(gameDesc), "TF2Ware %s", PLUGIN_VERSION);
     }
-	else
-	{
-		Format(gameDesc, sizeof(gameDesc), "Team Fortress");
-	}
+    else
+    {
+        Format(gameDesc, sizeof(gameDesc), "Team Fortress");
+    }
     return Plugin_Changed;
+}
+
+public OnClientConnected(client)
+{
+    g_welcomedisplayed[client] = false;
+}
+
+public Action:Event_ChangeClass(Handle:event, const String:name[], bool:dontBroadcast)
+{
+// We want the player to see the message as soon as he sees the hud (when he chooses classes for the first time).
+    new client = GetClientOfUserId(GetEventInt(event, "userid"));
+    if (!g_welcomedisplayed[client])
+    {
+        CreateTimer(2.0, Timer_DisplayWelcome, client);
+        g_welcomedisplayed[client] = true;
+    }
+    return Plugin_Continue;
+}
+
+public Action:Timer_DisplayWelcome(Handle:timer, any:client)
+{
+    if (IsValidClient(client))
+    {
+        SetHudTextParams(-1.0,0.30,5.0,0,255,0,255,1,3.0,1.0,3.0);
+        ShowHudText(client,1,"Welcome to TF2Ware %s!", PLUGIN_VERSION);
+        SetHudTextParams(-1.0,0.35,5.5,255,255,0,255,1,3.0,1.5,3.0);
+        ShowHudText(client, 2, "Have fun!");
+    }
+    return Plugin_Handled;
 }
 
 public Action:Event_Roundstart(Handle:event,const String:name[],bool:dontBroadcast) {
