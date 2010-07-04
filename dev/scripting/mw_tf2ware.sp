@@ -1082,7 +1082,7 @@ UpdateHud(Float:time) {
     decl String:output[512];
     decl String:add[5];
     for(new i = 1; i <= MaxClients; i++) {
-        if (IsValidClient(i)) {
+        if (IsValidClient(i) && GetClientTeam(i) >= 2 && g_Spawned[i]) {
             Format(add, sizeof(add), "");
             if (g_Complete[i] && bossBattle) Format(add, sizeof(add), "+5");
             if (g_Complete[i] && !bossBattle) Format(add, sizeof(add), "+1");
