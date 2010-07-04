@@ -473,7 +473,10 @@ justEnteredMinigame(client) {
             }
             if (randommini == 1) {
                 SetClientClass(client, "demoman");
+                // Blocks anything but bottle to avoid giving certain players an advantage
                 ReplaceClientWeapon(client, 132, "tf_weapon_bottle");
+                ReplaceClientWeapon(client, 172, "tf_weapon_bottle");
+                ReplaceClientWeapon(client, 154, "tf_weapon_bottle");
                 RemoveClientSlot(client,0);
                 RemoveClientSlot(client,1);
                 RemoveClientSlot(client,3);
