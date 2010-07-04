@@ -44,18 +44,18 @@ new String:var_heavy_love[][] = {"imgay/tf2ware/heavy_ilu.wav", "vo/heavy_specia
 
 
 // Main intro texts
-new String:var_intro1[][] = {"Hit an enemy", "Avoid the kamikaze", "Break a barrel", "Get to the end", "Needlejump", "Reach the end", "", "Airblast", "Type answer in chat", "Don't stop moving", "Get on a platform", "", "Score 7 goals", "Avoid the Cuddly Heavy", "Simon says: Taunt", "Stand on the Green"};
+new String:var_intro1[][] = {"Hit an enemy", "Avoid the kamikaze", "Break a barrel", "Get to the end", "Needlejump", "Reach the end", "", "Airblast", "Type answer in chat", "Don't stop moving", "Get on a platform", "", "Score 7 goals", "Avoid the Cuddly Heavy", "Simon says: Taunt", "Stand on the Green", "Do the Spycrab"};
 
 // Alternative intro texts
-new String:var_intro2[][] = {"", "Explode 2 players", "", "", "", "", "", "", "", "Don't move", "", "", "", "", "Hug all Scouts", "Someone says: Taunt", "Avoid the Red Floor"};
+new String:var_intro2[][] = {"", "Explode 2 players", "", "", "", "", "", "", "", "Don't move", "", "", "", "Hug all Scouts", "Someone says: Taunt", "Avoid the Red Floor", ""};
 
 // Language strings
 new String:var_lang[][] = {"", "it/"};
 
 // Time each microgame lasts
-new Float:var_time[sizeof(var_intro1)] = {4.0, 4.0, 4.0, 4.0, 4.0, 52.5, 32.3, 4.0, 4.0, 4.0, 4.0, 32.0, 31.4, 64.8, 4.0, 99.0};
-new bool:var_boss[sizeof(var_intro1)] = {false, false, false, false, false, true, false, false, false, false, false, true, true, true, false, true};
-new bool:var_dynamic[sizeof(var_intro1)] = {false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true};
+new Float:var_time[sizeof(var_intro1)] = {4.0, 4.0, 4.0, 4.0, 4.0, 52.5, 32.3, 4.0, 4.0, 4.0, 4.0, 32.0, 31.4, 64.8, 4.0, 99.0, 4.0};
+new bool:var_boss[sizeof(var_intro1)] = {false, false, false, false, false, true, false, false, false, false, false, true, true, true, false, true, false};
+new bool:var_dynamic[sizeof(var_intro1)] = {false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, false};
 
 // Handles
 new Handle:ww_enable;
