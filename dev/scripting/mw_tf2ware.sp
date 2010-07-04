@@ -1115,6 +1115,7 @@ public Action:Player_Say(iClient, iArgs)
         
         if (guess == g_result) {
             SetHudTextParams(-1.0, 0.4, 3.0, 0,255,0, 255, 0, 6.0, 0.2, 0.5);
+            // Replace the current display to include the guess instead of a question mark
             ShowHudText(iClient, 5, "%s = %d", g_mathquestion, guess);            
             SetStateClient(iClient, true, true);
             if (!(g_first)) {
@@ -1124,12 +1125,10 @@ public Action:Player_Say(iClient, iArgs)
         }
         if (guess != g_result) {
             SetHudTextParams(-1.0, 0.4, 3.0, 255,0,0, 255, 0, 6.0, 0.2, 0.5);
+            // Use a notequals sign!
             ShowHudText(iClient, 5, "%s ≠ %d", g_mathquestion, guess);
             ForcePlayerSuicide(iClient);
         }
-        
-        // Replace the current display to include the guess instead of a question mark
-
         
         return Plugin_Handled;
     }
