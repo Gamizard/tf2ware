@@ -4,12 +4,12 @@
 //  4: Saw run
 //  5: Needlejump
 //  6: Heavy Hopscotch (Boss)
-//  7: ??? (Scrapped)
+//  7: Heavy Skydiving (Boss) _[Scrapped]_
 //  8: Airblast
 //  9: Maths
 // 10: Movement
 // 11: Flood
-// 12: Demo DodgeBall (Boss) (Scrapped)
+// 12: Demo DodgeBall (Boss) _[Scrapped]_
 // 13: Demo BBall (Boss)
 // 14: Hugging Heavy (Boss)
 // 15: Simon Says
@@ -79,12 +79,6 @@ OnMinigame(id) {
         RespawnAll(true, false);
     }
     
-    if ((id == 7)) {
-        SetAllClass("heavy");
-        SetStateAll(true);
-        g_respawn = true;
-        RespawnAll(true, false);
-    }
     if ((id == GAME_BOSS_DEMO_DODGEBALL)) {
         SetAllClass("demoman");
         SetStateAll(true);
@@ -260,11 +254,12 @@ OnMinigame(id) {
     if (id == GAME_FLOOD) {
         SetStateAll(true);
 		
+        // Change the clients that are Scout into Demomen
         for (new i = 1; i <= MaxClients; i++) {
             if (IsValidClient(i)) {
                 new TFClassType:class = TF2_GetPlayerClass(i);
                 if (class == TFClass_Scout) {
-                    SetAllClass("demoman");
+                    SetClientClass(i, "demoman");
                 }
             }
         }
@@ -297,11 +292,6 @@ OnMinigame(id) {
 
 OnAlmostEndMinigame() {
     if (minigame == GAME_BOSS_HOPSCOTCH) {
-        for (new i = 1; i <= MaxClients; i++) {
-            if (IsValidClient(i) && (!(IsPlayerAlive(i)))) SetStateClient(i, false);
-        }
-    }
-    if (minigame == 7) {
         for (new i = 1; i <= MaxClients; i++) {
             if (IsValidClient(i) && (!(IsPlayerAlive(i)))) SetStateClient(i, false);
         }
@@ -414,9 +404,6 @@ OnEndMinigame() {
         RespawnAll(true, false);
     }
     if (minigame == GAME_BOSS_HOPSCOTCH) {
-        RespawnAll(true, false);
-    }
-    if (minigame == 7) {
         RespawnAll(true, false);
     }
     if (minigame == GAME_AIRBLAST) {
@@ -642,35 +629,6 @@ justEnteredMinigame(client) {
             ang[2] = 0.0;
             TeleportEntity(client, pos, ang, vel);
             NoCollision(true);
-        }
-        
-        if (minigame == 7) {
-            SetClientClass(client, "heavy");
-            RemoveClientWeapons(client);
-            
-            decl Float:vel[3];
-            vel[0] = 0.0;
-            vel[1] = 0.0;
-            vel[2] = 0.0;
-            
-            new column = client;
-            new row = 0;
-            while (column > 14) {
-                column = column - 14;
-                row = row + 1;
-            }
-            
-            
-            decl Float:pos[3];
-            pos[0] = 2626.0  - float(row*55);
-            pos[1] = -1123.0 - float(column*55);
-            pos[2] = 17.6;
-
-            decl Float:ang[3];
-            ang[0] = 0.0;
-            ang[1] = 270.0;
-            ang[2] = 0.0;
-            TeleportEntity(client, pos, ang, vel);
         }
         if (minigame == GAME_AIRBLAST) {
             SetClientClass(client, "pyro");
@@ -986,35 +944,6 @@ PerformNeedleJump(i) {
     }
 }
 
-public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:angles[3], &weapon) {
-    if ((status == 2) && (minigame == 7) && IsValidClient(client) && ((buttons & IN_FORWARD) || (buttons & IN_BACK) || (buttons & IN_RIGHT) || (buttons & IN_LEFT))) {
-            new Float:velocity[3];
-            new multiplier = 1;
-            GetClientEyeAngles(client, angles); //Get where the player is looking so that TeleportEntity doesn't change your view
-            GetEntPropVector(client, Prop_Data, "m_vecVelocity", velocity);
-            
-            if (buttons & IN_BACK) multiplier = -1;
-            
-            velocity[0] += 40 * Cosine(DegToRad(angles[1])) * multiplier;
-            velocity[1] += 40 * Sine(DegToRad(angles[1])) * multiplier;
-            
-            if(FloatAbs(velocity[0]) > 400.0){
-                if(velocity[0] > 0.0)
-                    velocity[0] = 400.0;
-                else
-                    velocity[0] = -400.0;
-            }
-            if(FloatAbs(velocity[1]) > 400.0){
-                if(velocity[1] > 0.0)
-                    velocity[1] = 400.0;
-                else
-                    velocity[1] = -400.0;
-            }
-            
-            TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, velocity);  
-    }
-}
-
 public OnEntityCreated(entity, const String:classname[]) {
     if ((minigame == GAME_BOSS_DEMO_BBALL) && (status == 2) && (StrEqual(classname, "tf_projectile_pipe"))) {
         SDKHook(entity, SDKHook_StartTouch, Hook_StartTouch_Pipe);
@@ -1030,7 +959,7 @@ public Action:Hook_StartTouch_Pipe(entity, other) {
         if (g_Complete[owner] == false) {
             EmitSoundToClient(owner, WW_MINISCORE, SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, SNDVOL_NORMAL,GetSoundMultiplier());
             g_Minipoints[owner] += 1;
-            if (g_Minipoints[owner] == 7) SetStateClient(owner, true, true);
+            if (g_Minipoints[owner] >= 7) SetStateClient(owner, true, true);
             CDetach(entity);
             AcceptEntityInput(entity, "Kill" );
         }
