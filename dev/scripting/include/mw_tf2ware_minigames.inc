@@ -253,6 +253,7 @@ OnMinigame(id) {
     
     if (id == GAME_FLOOD) {
         SetStateAll(true);
+        new respawn = false;
 		
         // Change the clients that are Scout into Demomen
         for (new i = 1; i <= MaxClients; i++) {
@@ -260,8 +261,14 @@ OnMinigame(id) {
                 new TFClassType:class = TF2_GetPlayerClass(i);
                 if (class == TFClass_Scout) {
                     SetClientClass(i, "demoman");
+                    respawn = true;
                 }
             }
+        }
+        
+        if (respawn) {
+            RespawnAll(true, true);
+            g_respawn = true;
         }
     
         decl Float:pos[3];
