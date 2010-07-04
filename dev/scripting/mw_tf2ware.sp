@@ -1111,16 +1111,16 @@ public Action:Player_Say(iClient, iArgs)
     if ((IsPlayerAlive(iClient)) && (status == 2) && (minigame == 9) && (g_Complete[iClient] == false)) {
         // Retrieve the first argument and check it's a valid trigger
         decl String:strArgument[64]; GetCmdArg(1, strArgument, sizeof(strArgument));
-		new String:strZero[2];
-		new bool:isAnswerZero = false;
-		strZero = "0";
-		
-		if(strcmp(strArgument,strZero) == 0)
-		{
-			isAnswerZero = true;
-		}
+        new String:strZero[2];
+        new bool:isAnswerZero = false;
+        strZero = "0";
+
+        if(strcmp(strArgument,strZero) == 0)
+        {
+            isAnswerZero = true;
+        }
         
-		new guess = StringToInt(strArgument);
+        new guess = StringToInt(strArgument);
         
         if ((guess == g_result) || (g_result == 0 && isAnswerZero == true)) {
             SetHudTextParams(-1.0, 0.4, 3.0, 0,255,0, 255, 0, 6.0, 0.2, 0.5);

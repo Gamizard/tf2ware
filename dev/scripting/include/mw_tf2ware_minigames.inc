@@ -22,16 +22,16 @@
 #define GAME_BARREL_BREAK 3
 #define GAME_SAW_RUN 4
 #define GAME_NEEDLEJUMP 5
-#define GAME_HOPSCOTCH 6
+#define GAME_BOSS_HOPSCOTCH 6
 #define GAME_AIRBLAST 8
 #define GAME_MATHS 9
 #define GAME_MOVEMENT 10
 #define GAME_FLOOD 11
-#define GAME_DEMO_DODGEBALL 12
-#define GAME_DEMO_BBALL 13
-#define GAME_HUGGING_HEAVY 14
+#define GAME_BOSS_DEMO_DODGEBALL 12
+#define GAME_BOSS_DEMO_BBALL 13
+#define GAME_BOSS_HUGGING_HEAVY 14
 #define GAME_SIMON_SAYS 15
-#define GAME_LEAST_WINS 16
+#define GAME_BOSS_LEAST_WINS 16
 
 
 OnMinigame(id) {
@@ -39,13 +39,13 @@ OnMinigame(id) {
 
     GiveId();
 
-    if ((id == GAME_SAW_RUN)) {
+    if (id == GAME_SAW_RUN) {
         SetAllClass("scout");
         g_respawn = true;
         RespawnAll(true, false);
     }
 
-    if ((id == GAME_AIRBLAST)) {
+    if (id == GAME_AIRBLAST) {
         SetAllClass("pyro");
         SetStateAll(true);
         g_respawn = true;
@@ -53,14 +53,14 @@ OnMinigame(id) {
         RespawnAll(true, false);
     }
     
-    if ((id == GAME_HOPSCOTCH)) {
+    if (id == GAME_BOSS_HOPSCOTCH) {
         SetAllClass("heavy");
         g_respawn = true;
         SetStateAll(true);
         RespawnAll(true, false);
     }
     
-    if ((id == GAME_LEAST_WINS)) {
+    if (id == GAME_BOSS_LEAST_WINS) {
         SetAllClass("spy");
         g_respawn = true;
         SetStateAll(true);
@@ -77,7 +77,7 @@ OnMinigame(id) {
         g_respawn = true;
         RespawnAll(true, false);
     }
-    if ((id == GAME_DEMO_DODGEBALL)) {
+    if ((id == GAME_BOSS_DEMO_DODGEBALL)) {
         SetAllClass("demoman");
         SetStateAll(true);
         g_attack = true;
@@ -85,7 +85,7 @@ OnMinigame(id) {
         RespawnAll(true, false);
     }
     
-    if ((id == GAME_DEMO_BBALL)) {
+    if ((id == GAME_BOSS_DEMO_BBALL)) {
         SetAllClass("demoman");
         g_attack = true;
         g_respawn = true;
@@ -163,7 +163,7 @@ OnMinigame(id) {
         SetStateClient(target, false);
     }
     
-    if (id == GAME_HUGGING_HEAVY) {
+    if (id == GAME_BOSS_HUGGING_HEAVY) {
         new AllPlayers = GetClientCount(true);
         new target = 0;
         new attempts = 0;
@@ -288,7 +288,7 @@ OnMinigame(id) {
 }
 
 OnAlmostEndMinigame() {
-    if (minigame == GAME_HOPSCOTCH) {
+    if (minigame == GAME_BOSS_HOPSCOTCH) {
         for (new i = 1; i <= MaxClients; i++) {
             if (IsValidClient(i) && (!(IsPlayerAlive(i)))) SetStateClient(i, false);
         }
@@ -313,6 +313,7 @@ OnAlmostEndMinigame() {
             if (IsValidClient(i)) {
                 ShowHudText(i, 5, "");
             }
+        }
     }
 }
 
@@ -369,7 +370,7 @@ OnEndMinigame() {
     if (minigame == GAME_SAW_RUN) {
         RespawnAll(true, false);
     }
-    if (minigame == GAME_HOPSCOTCH) {
+    if (minigame == GAME_BOSS_HOPSCOTCH) {
         RespawnAll(true, false);
     }
     if (minigame == 7) {
@@ -385,7 +386,7 @@ OnEndMinigame() {
             g_bomb = 0;
         }
     }
-    if (minigame == GAME_DEMO_DODGEBALL) {
+    if (minigame == GAME_BOSS_DEMO_DODGEBALL) {
         RespawnAll(true, false);
         
         decl Float:pos[3];
@@ -401,13 +402,13 @@ OnEndMinigame() {
             CreateTimer(0.1, killprop_timer, prop);
         }
     }
-    if (minigame == GAME_DEMO_BBALL) {
+    if (minigame == GAME_BOSS_DEMO_BBALL) {
         RespawnAll(true, false);
     }
-    if (minigame == GAME_HUGGING_HEAVY) {
+    if (minigame == GAME_BOSS_HUGGING_HEAVY) {
         RespawnAll(true, false);
     }
-    if (minigame == GAME_LEAST_WINS) {
+    if (minigame == GAME_BOSS_LEAST_WINS) {
         RespawnAll(true, false);
     }
 }
@@ -467,7 +468,7 @@ justEnteredMinigame(client) {
                 }    
             }
         }
-        if (minigame == GAME_HUGGING_HEAVY) {
+        if (minigame == GAME_BOSS_HUGGING_HEAVY) {
             decl Float:pos[3];
             decl Float:ang[3];
             decl Float:vel[3];
@@ -561,7 +562,7 @@ justEnteredMinigame(client) {
             g_NeedleDelay[client] = 50;
         }
         
-        if (minigame == GAME_HOPSKOTCH) {
+        if (minigame == GAME_BOSS_HOPSCOTCH) {
             SetClientClass(client, "heavy");
             RemoveClientWeapons(client);
             
@@ -647,7 +648,7 @@ justEnteredMinigame(client) {
             ang[2] = 0.0;
             TeleportEntity(client, pos, ang, vel);
         }
-        if (minigame == GAME_DEMO_DODGEBALL) {
+        if (minigame == GAME_BOSS_DEMO_DODGEBALL) {
             SetClientClass(client, "demoman");
             SetClientSlot(client, 2);
             RemoveClientSlot(client,0);
@@ -682,7 +683,7 @@ justEnteredMinigame(client) {
             NoCollision(true);
         }
         
-        if (minigame == GAME_DEMO_BBALL) {
+        if (minigame == GAME_BOSS_DEMO_BBALL) {
             SetClientClass(client, "demoman");
             RemoveClientSlot(client,1);
             RemoveClientSlot(client,2);
@@ -720,7 +721,7 @@ justEnteredMinigame(client) {
             RemoveClientWeapons(client);
         }
         
-        if (minigame == GAME_LEAST_WINS) {
+        if (minigame == GAME_BOSS_LEAST_WINS) {
             SetClientClass(client, "spy");
             RemoveClientWeapons(client);
             PosPlayer_Minigame16(client);
@@ -729,7 +730,7 @@ justEnteredMinigame(client) {
 }
 
 public Action:PosPlayer_Minigame16_Timer(Handle:hTimer) {
-    if (status == 2 && minigame == GAME_LEAST_WINS) {
+    if (status == 2 && minigame == GAME_BOSS_LEAST_WINS) {
         new activeplayers = 0;
         for (new i = 1; i <= MaxClients; i++) {
             if (IsValidClient(i) && g_Complete[i] && IsPlayerAlive(i) && g_Spawned[i] && GetClientTeam(i) >= 2) {
@@ -822,10 +823,10 @@ public Player_Death(Handle:event, const String:name[], bool:dontBroadcast) {
             SetStateClient(client, false);
         }
         
-        if ((minigame == GAME_DEMO_DODGEBALL) && IsValidClient(client)) {
+        if ((minigame == GAME_BOSS_DEMO_DODGEBALL) && IsValidClient(client)) {
             SetStateClient(client, false);
         }
-        if ((minigame == GAME_LEAST_WINS) && IsValidClient(client)) {
+        if ((minigame == GAME_BOSS_LEAST_WINS) && IsValidClient(client)) {
             SetStateClient(client, false);
         }
     }
@@ -963,7 +964,7 @@ public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:ang
 }
 
 public OnEntityCreated(entity, const String:classname[]) {
-    if ((minigame == GAME_DEMO_BBALL) && (status == 2) && (StrEqual(classname, "tf_projectile_pipe"))) {
+    if ((minigame == GAME_BOSS_DEMO_BBALL) && (status == 2) && (StrEqual(classname, "tf_projectile_pipe"))) {
         SDKHook(entity, SDKHook_StartTouch, Hook_StartTouch_Pipe);
     }
 }
