@@ -164,7 +164,7 @@ public OnPluginStart() {
     ww_enable = CreateConVar("ww_enable", "0", "Enables/Disables TF2 Ware.", FCVAR_PLUGIN);
     ww_force = CreateConVar("ww_force", "0", "Force a certain minigame (0 to not force).", FCVAR_PLUGIN);
     ww_speed = CreateConVar("ww_speed", "1", "Speed level.", FCVAR_PLUGIN);
-    ww_music = CreateConVar("ww_music", "0", "Alternative music play. Should only be on for localhost testing.", FCVAR_PLUGIN);
+    ww_music = CreateConVar("ww_music_fix", "0", "Alternative music play. Should only be on for localhost testing.", FCVAR_PLUGIN);
     ww_log = CreateConVar("ww_log", "0", "Log server events?", FCVAR_PLUGIN);
     HookConVarChange(ww_enable,StartMinigame_cvar);
     HookEvent("post_inventory_application", EventInventoryApplication,  EventHookMode_Post);
