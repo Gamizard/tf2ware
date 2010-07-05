@@ -15,7 +15,7 @@
 #include <mw_achievements_natives>
 #define REQUIRE_PLUGIN
 
-#define PLUGIN_VERSION "0.7.4-15"
+#define PLUGIN_VERSION "0.7.5-15"
 #define MUSIC_START "imgay/tf2ware/tf2ware_intro.mp3"
 #define MUSIC_START_LEN 2.18
 #define MUSIC_WIN "imgay/tf2ware/tf2ware_win.mp3"
