@@ -219,7 +219,7 @@ public OnPluginStart() {
     
     if (GetConVarBool(ww_log)) {
     LogMessage("//////////////////////////////////////////////////////");
-    LogMessage("//                     TF2WARE LOG                  //");
+    LogMessage("//                    TF2WARE LOG                   //");
     LogMessage("//////////////////////////////////////////////////////");
     }
 }
