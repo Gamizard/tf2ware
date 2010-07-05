@@ -16,17 +16,22 @@
 #define REQUIRE_PLUGIN
 
 #define PLUGIN_VERSION "0.7.4-15"
-#define WW_START "imgay/tf2ware/warioman_intro.mp3"
-#define WW_WIN "imgay/tf2ware/warioman_win.mp3"
-#define WW_FAIL "imgay/tf2ware/warioman_fail.mp3"
-#define WW_COMPLETE "imgay/tf2ware/complete_me.mp3"
-#define WW_COMPLETE_YOU "imgay/tf2ware/complete_you.mp3"
-#define WW_SPEEDUP "imgay/tf2ware/warioman_speedup.mp3"
-#define WW_BOSS "imgay/tf2ware/warioman_boss.mp3"
-#define WW_GAMEOVER "imgay/tf2ware/warioman_gameover.mp3"
-#define WW_MINISCORE "items/pumpkin_drop.wav"
-#define WW_HEAVY_KISS "vo/heavy_generic01.wav"
-#define WW_WAITING "imgay/tf2ware/waitingforplayers.mp3"
+#define MUSIC_START "imgay/tf2ware/tf2ware_intro.mp3"
+#define MUSIC_START_LEN 2.18
+#define MUSIC_WIN "imgay/tf2ware/tf2ware_win.mp3"
+#define MUSIC_FAIL "imgay/tf2ware/tf2ware_fail.mp3"
+#define MUSIC_END_LEN 2.2
+#define SOUND_COMPLETE "imgay/tf2ware/complete_me.mp3"
+#define SOUND_COMPLETE_YOU "imgay/tf2ware/complete_you.mp3"
+#define MUSIC_SPEEDUP "imgay/tf2ware/tf2ware_speedup.mp3"
+#define MUSIC_SPEEDUP_LEN 3.29
+#define MUSIC_BOSS "imgay/tf2ware/boss.mp3"
+#define MUSIC_BOSS_LEN 3.9
+#define MUSIC_GAMEOVER "imgay/tf2ware/warioman_gameover.mp3"
+#define MUSIC_GAMEOVER_LEN 8.17
+#define SOUND_MINISCORE "items/pumpkin_drop.wav"
+#define SOUND_HEAVY_KISS "vo/heavy_generic01.wav"
+#define MUSIC_WAITING "imgay/tf2ware/waitingforplayers.mp3"
 
 #define SND_CHANNEL_SPECIFIC 32
 
@@ -159,7 +164,7 @@ public OnPluginStart() {
     ww_enable = CreateConVar("ww_enable", "0", "Enables/Disables TF2 Ware.", FCVAR_PLUGIN);
     ww_force = CreateConVar("ww_force", "0", "Force a certain minigame (0 to not force).", FCVAR_PLUGIN);
     ww_speed = CreateConVar("ww_speed", "1", "Speed level.", FCVAR_PLUGIN);
-    ww_music = CreateConVar("ww_music", "1", "Play music?", FCVAR_PLUGIN);
+    ww_music = CreateConVar("ww_music", "0", "Alternative music play. Should only be on for localhost testing.", FCVAR_PLUGIN);
     ww_log = CreateConVar("ww_log", "0", "Log server events?", FCVAR_PLUGIN);
     HookConVarChange(ww_enable,StartMinigame_cvar);
     HookEvent("post_inventory_application", EventInventoryApplication,  EventHookMode_Post);
@@ -231,17 +236,17 @@ public OnMapStart() {
         g_enabled = false;
     }
 
-    precacheSound(WW_START);
-    precacheSound(WW_WIN);
-    precacheSound(WW_FAIL);
-    precacheSound(WW_COMPLETE);
-    precacheSound(WW_COMPLETE_YOU);
-    precacheSound(WW_SPEEDUP);
-    precacheSound(WW_BOSS);
-    precacheSound(WW_GAMEOVER);
+    precacheSound(MUSIC_START);
+    precacheSound(MUSIC_WIN);
+    precacheSound(MUSIC_FAIL);
+    precacheSound(SOUND_COMPLETE);
+    precacheSound(SOUND_COMPLETE_YOU);
+    precacheSound(MUSIC_SPEEDUP);
+    precacheSound(MUSIC_BOSS);
+    precacheSound(MUSIC_GAMEOVER);
     precacheSound(WW_BOMB);
-    precacheSound(WW_MINISCORE);
-    precacheSound(WW_WAITING);
+    precacheSound(SOUND_MINISCORE);
+    precacheSound(MUSIC_WAITING);
     PrecacheModel("models/props_farm/wooden_barrel.mdl", true);
     PrecacheModel("models/props_farm/gibs/wooden_barrel_break02.mdl", true);
     PrecacheModel("models/props_farm/gibs/wooden_barrel_chunk02.mdl", true);
@@ -376,7 +381,7 @@ public Action:Event_Roundstart(Handle:event,const String:name[],bool:dontBroadca
         if ( Roundstarts == 1 ) {
             g_waiting = false;
             for (new i = 1; i <= MaxClients; i++) {
-                if (IsValidClient(i) && !IsFakeClient(i) && g_Spawned[i]) StopSound(i, SND_CHANNEL_SPECIFIC, WW_WAITING);
+                if (IsValidClient(i) && !IsFakeClient(i) && g_Spawned[i]) StopSound(i, SND_CHANNEL_SPECIFIC, MUSIC_WAITING);
             }
             StartMinigame();
             if (GetConVarBool(ww_log)) LogMessage("Waiting-for-players period has ended");
@@ -491,7 +496,7 @@ public EventInventoryApplication(Handle:event, const String:name[], bool:dontBro
     if (GetConVarBool(ww_log)) LogMessage("Client post inventory");
     new client = GetClientOfUserId(GetEventInt(event, "userid"));
     if (g_Spawned[client] == false && g_waiting && GetConVarBool(ww_enable) && g_enabled && !IsFakeClient(client)) {
-        EmitSoundToClient(client, WW_WAITING, SOUND_FROM_PLAYER, SND_CHANNEL_SPECIFIC);
+        EmitSoundToClient(client, MUSIC_WAITING, SOUND_FROM_PLAYER, SND_CHANNEL_SPECIFIC);
     }
     g_Spawned[client] = true;
     if (GetConVarBool(ww_enable) && g_enabled) {
@@ -616,7 +621,8 @@ StartMinigame() {
         ServerCommand("host_timescale %f", GetHostMultiplier(1.0));
         ServerCommand("phys_timescale %f", GetHostMultiplier(1.0));
         
-        if (GetConVarBool(ww_music)) EmitSoundToAll(WW_START, SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, SNDVOL_NORMAL,GetSoundMultiplier());
+        if (GetConVarBool(ww_music)) EmitSoundToClient(1, MUSIC_START, SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, SNDVOL_NORMAL,GetSoundMultiplier());
+        else EmitSoundToAll(MUSIC_START, SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, SNDVOL_NORMAL,GetSoundMultiplier());
         
         for (new i = 1; i <= MaxClients; i++) {
             if (IsValidClient(i) && (!(IsFakeClient(i)))) {
@@ -629,23 +635,25 @@ StartMinigame() {
         minigame = RollMinigame();
         if (bossBattle) PreviousBoss = minigame;
         else PreviousMicrogame = minigame;
-        CreateTimer(GetSpeedMultiplier(2.1), Game_Start);
+        CreateTimer(GetSpeedMultiplier(MUSIC_START_LEN), Game_Start);
         g_attack = false;
         CreateAllSprites();
-        UpdateHud(GetSpeedMultiplier(2.0));
+        UpdateHud(GetSpeedMultiplier(MUSIC_START_LEN));
     }
 }
 
 public Action:Game_Start(Handle:hTimer) {
     if (status == 1) {
         if (GetConVarBool(ww_log)) LogMessage("Microgame started! Status = 1");
+        
+        // music
         new String:sound[512];
         Format(sound, sizeof(sound), "imgay/tf2ware/minigame_%d.mp3", minigame);
-        if (GetConVarBool(ww_music)) {
-            new channel = SNDCHAN_AUTO;
-            if (var_dynamic[minigame-1]) channel = SND_CHANNEL_SPECIFIC;
-            EmitSoundToAll(sound, SOUND_FROM_PLAYER, channel, SNDLEVEL_NORMAL, SND_NOFLAGS, SNDVOL_NORMAL,GetSoundMultiplier());
-        }
+        new channel = SNDCHAN_AUTO;
+        if (var_dynamic[minigame-1]) channel = SND_CHANNEL_SPECIFIC;
+        if (GetConVarBool(ww_music)) EmitSoundToClient(1, sound, SOUND_FROM_PLAYER, channel, SNDLEVEL_NORMAL, SND_NOFLAGS, SNDVOL_NORMAL,GetSoundMultiplier());
+        else EmitSoundToAll(sound, SOUND_FROM_PLAYER, channel, SNDLEVEL_NORMAL, SND_NOFLAGS, SNDVOL_NORMAL,GetSoundMultiplier());
+        
         SetStateAll(false);
         g_first = false;
         status = 2;
@@ -703,26 +711,24 @@ public Action:EndGame(Handle:hTimer) {
                 if (GetClientTeam(i) >= 2 && (g_Spawned[i])) {
                     decl String:event[128];
                     if (g_Complete[i]) {
-                        Format(sound, sizeof(sound), WW_WIN);
+                        Format(sound, sizeof(sound), MUSIC_WIN);
                         Format(event, sizeof(event), "tf2ware_complete_%d", minigame);
                         if (g_Achievements) mw_AchievementEvent(event, i, 0, 0, 1);
                     }
                     if (g_Complete[i] == false) {
-                        Format(sound, sizeof(sound), WW_FAIL);
+                        Format(sound, sizeof(sound), MUSIC_FAIL);
                         Format(event, sizeof(event), "tf2ware_fail_%d", minigame);
                         if (g_Achievements) mw_AchievementEvent(event, i, 0, 0, 1);
                     }
                     SetEntProp(i, Prop_Send, "m_bDrawViewmodel", 0);
                 }
                 else {
-                    Format(sound, sizeof(sound), WW_WIN);
+                    Format(sound, sizeof(sound), MUSIC_WIN);
                 }
-                if (GetConVarBool(ww_music)) {
-                    new String:oldsound[512];
-                    Format(oldsound, sizeof(oldsound), "imgay/tf2ware/minigame_%d.mp3", minigame);
-                    if (var_dynamic[minigame-1]) StopSound(i, SND_CHANNEL_SPECIFIC, oldsound);
-                    EmitSoundToClient(i, sound, SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, SNDVOL_NORMAL,GetSoundMultiplier());
-                }
+                new String:oldsound[512];
+                Format(oldsound, sizeof(oldsound), "imgay/tf2ware/minigame_%d.mp3", minigame);
+                if (var_dynamic[minigame-1]) StopSound(i, SND_CHANNEL_SPECIFIC, oldsound);
+                EmitSoundToClient(i, sound, SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, SNDVOL_NORMAL,GetSoundMultiplier());
             }
         }
         g_attack = false;
@@ -756,15 +762,15 @@ public Action:EndGame(Handle:hTimer) {
         
         if (speedup == false) {
             status = 10;
-            CreateTimer(GetSpeedMultiplier(1.9), StartMinigame_timer2);
+            CreateTimer(GetSpeedMultiplier(MUSIC_END_LEN), StartMinigame_timer2);
         }
         if (speedup == true) {
             status = 3;
-            CreateTimer(GetSpeedMultiplier(1.9), Speedup_timer);
+            CreateTimer(GetSpeedMultiplier(MUSIC_END_LEN), Speedup_timer);
         }
         if (bossBattle) {
             status = 4;
-            CreateTimer(GetSpeedMultiplier(1.9), Victory_timer);
+            CreateTimer(GetSpeedMultiplier(MUSIC_END_LEN), Victory_timer);
         }
     }
     return Plugin_Stop;
@@ -778,28 +784,30 @@ public Action:Speedup_timer(Handle:hTimer) {
             currentSpeed = GetConVarInt(ww_speed);
             ServerCommand("host_timescale %f", GetHostMultiplier(1.0));
             ServerCommand("phys_timescale %f", GetHostMultiplier(1.0));
-            CreateTimer(GetSpeedMultiplier(4.1), StartMinigame_timer2);
+            CreateTimer(GetSpeedMultiplier(MUSIC_BOSS_LEN), StartMinigame_timer2);
             
-            if (GetConVarBool(ww_music)) EmitSoundToAll(WW_BOSS, SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, SNDVOL_NORMAL,GetSoundMultiplier());
+            if (GetConVarBool(ww_music)) EmitSoundToClient(1, MUSIC_BOSS, SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, SNDVOL_NORMAL,GetSoundMultiplier());
+            else EmitSoundToAll(MUSIC_BOSS, SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, SNDVOL_NORMAL,GetSoundMultiplier());
             for (new i = 1; i <= MaxClients; i++) {
                 if (IsValidClient(i) && (!(IsFakeClient(i)))) {
                     SetOverlay(i,"tf2ware_minigame_boss");
                 }
             }
             
-            UpdateHud(GetSpeedMultiplier(4.0));
+            UpdateHud(GetSpeedMultiplier(MUSIC_BOSS_LEN));
         }
     
         if ((GetConVarInt(ww_speed) < 4) && (bossBattle == false)) {
-            if (GetConVarBool(ww_music)) EmitSoundToAll(WW_SPEEDUP, SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, SNDVOL_NORMAL,GetSoundMultiplier());
+            if (GetConVarBool(ww_music)) EmitSoundToClient(1, MUSIC_SPEEDUP, SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, SNDVOL_NORMAL,GetSoundMultiplier());
+            else EmitSoundToAll(MUSIC_SPEEDUP, SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, SNDVOL_NORMAL,GetSoundMultiplier());
             for (new i = 1; i <= MaxClients; i++) {
                 if (IsValidClient(i) && (!(IsFakeClient(i)))) {
                     SetOverlay(i,"tf2ware_minigame_speed");
                 }
             }
-            UpdateHud(GetSpeedMultiplier(3.7));
+            UpdateHud(GetSpeedMultiplier(MUSIC_SPEEDUP_LEN));
             SetConVarInt(ww_speed, GetConVarInt(ww_speed) + 1);
-            CreateTimer(GetSpeedMultiplier(3.8), StartMinigame_timer2);
+            CreateTimer(GetSpeedMultiplier(MUSIC_SPEEDUP_LEN), StartMinigame_timer2);
         }
         status = 10;
     }
@@ -811,9 +819,10 @@ public Action:Victory_timer(Handle:hTimer) {
         bossBattle = false;
         SetConVarInt(ww_speed, 1);
         currentSpeed = GetConVarInt(ww_speed);
-        CreateTimer(GetSpeedMultiplier(8.17), Restartall_timer);
+        CreateTimer(GetSpeedMultiplier(MUSIC_GAMEOVER_LEN), Restartall_timer);
         
-        if (GetConVarBool(ww_music)) EmitSoundToAll(WW_GAMEOVER, SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, SNDVOL_NORMAL,GetSoundMultiplier());
+        if (GetConVarBool(ww_music)) EmitSoundToClient(1, MUSIC_GAMEOVER, SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, SNDVOL_NORMAL,GetSoundMultiplier());
+        else EmitSoundToAll(MUSIC_GAMEOVER, SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, SNDVOL_NORMAL,GetSoundMultiplier());
         
         status = 5;
         
@@ -974,9 +983,9 @@ SetAllClass(String:tfclass[128]) {
 SetStateClient(client, bool:value, bool:complete=false) {
     if (IsValidClient(client)) {
         if ((complete) && (g_Complete[client] == false)) {
-            EmitSoundToClient(client, WW_COMPLETE);
+            EmitSoundToClient(client, SOUND_COMPLETE);
             for(new i = 1; i <= MaxClients; i++) {
-                if (IsValidClient(i) && !IsFakeClient(i)) EmitSoundToClient(i, WW_COMPLETE_YOU, client);
+                if (IsValidClient(i) && !IsFakeClient(i)) EmitSoundToClient(i, SOUND_COMPLETE_YOU, client);
             }
             new String:effect[128] = PARTICLE_WIN_BLUE;
             if (GetClientTeam(client) == 2) effect = PARTICLE_WIN_RED;
