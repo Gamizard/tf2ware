@@ -689,10 +689,10 @@ StartMinigame() {
         
         status = 1;
         minigame = RollMinigame();
-        CreateTimer(GetSpeedMultiplier(2.1), Game_Start);
+        CreateTimer(GetSpeedMultiplier(MUSIC_START_LEN), Game_Start);
         g_attack = false;
         CreateAllSprites();
-        UpdateHud(GetSpeedMultiplier(2.0));
+        UpdateHud(GetSpeedMultiplier(MUSIC_START_LEN));
     }
 }
 
@@ -820,7 +820,7 @@ public Action:EndGame(Handle:hTimer) {
                 }
             }
         }
-        UpdateHud(GetSpeedMultiplier(2.0));
+        UpdateHud(GetSpeedMultiplier(MUSIC_END_LEN));
         HandOutPoints();
 
         new bool:speedup = false;
@@ -832,15 +832,15 @@ public Action:EndGame(Handle:hTimer) {
         
         if (speedup == false) {
             status = 10;
-            CreateTimer(GetSpeedMultiplier(1.9), StartMinigame_timer2);
+            CreateTimer(GetSpeedMultiplier(MUSIC_END_LEN), StartMinigame_timer2);
         }
         if (speedup == true) {
             status = 3;
-            CreateTimer(GetSpeedMultiplier(1.9), Speedup_timer);
+            CreateTimer(GetSpeedMultiplier(MUSIC_END_LEN), Speedup_timer);
         }
         if (bossBattle) {
             status = 4;
-            CreateTimer(GetSpeedMultiplier(1.9), Victory_timer);
+            CreateTimer(GetSpeedMultiplier(MUSIC_END_LEN), Victory_timer);
         }
     }
     return Plugin_Stop;
@@ -854,7 +854,7 @@ public Action:Speedup_timer(Handle:hTimer) {
             currentSpeed = GetConVarInt(ww_speed);
             ServerCommand("host_timescale %f", GetHostMultiplier(1.0));
             ServerCommand("phys_timescale %f", GetHostMultiplier(1.0));
-            CreateTimer(GetSpeedMultiplier(4.1), StartMinigame_timer2);
+            CreateTimer(GetSpeedMultiplier(MUSIC_BOSS_LEN), StartMinigame_timer2);
             
             if (GetConVarBool(ww_music)) EmitSoundToClient(1, MUSIC_BOSS, SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, SNDVOL_NORMAL,GetSoundMultiplier());
             else EmitSoundToAll(MUSIC_BOSS, SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, SNDVOL_NORMAL,GetSoundMultiplier());
@@ -864,7 +864,7 @@ public Action:Speedup_timer(Handle:hTimer) {
                 }
             }
             
-            UpdateHud(GetSpeedMultiplier(4.0));
+            UpdateHud(GetSpeedMultiplier(MUSIC_BOSS_LEN));
         }
     
         if ((GetConVarInt(ww_speed) < 4) && (bossBattle == false)) {
@@ -875,9 +875,9 @@ public Action:Speedup_timer(Handle:hTimer) {
                     SetOverlay(i,"tf2ware_minigame_speed");
                 }
             }
-            UpdateHud(GetSpeedMultiplier(3.7));
+            UpdateHud(GetSpeedMultiplier(MUSIC_SPEEDUP_LEN));
             SetConVarInt(ww_speed, GetConVarInt(ww_speed) + 1);
-            CreateTimer(GetSpeedMultiplier(3.8), StartMinigame_timer2);
+            CreateTimer(GetSpeedMultiplier(MUSIC_SPEEDUP_LEN), StartMinigame_timer2);
         }
         CreateAllSprites();
         status = 10;
@@ -936,7 +936,7 @@ public Action:Victory_timer(Handle:hTimer) {
         CPrintToChatAll("%s %s (%i points)!", winnerstring_prefix, winnerstring_names, top);
         CloseHandle(ArrayWinners);
         
-        UpdateHud(GetSpeedMultiplier(8.17));
+        UpdateHud(GetSpeedMultiplier(MUSIC_GAMEOVER_LEN));
         SetConVarInt(FindConVar("mp_friendlyfire"), 1);
     }
     return Plugin_Stop;
