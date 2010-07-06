@@ -837,6 +837,7 @@ public Action:Victory_timer(Handle:hTimer) {
         
         for (new i = 1; i <= MaxClients; i++) {
             if (IsValidClient(i)) {
+                SetOverlay(i,"")
                 if (g_Points[i] >= top) {
                     g_Winner[i] = 1;
                     CreateSprite(i);
