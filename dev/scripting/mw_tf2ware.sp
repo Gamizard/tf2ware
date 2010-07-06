@@ -110,6 +110,8 @@ new g_result = 0;
 new String:g_mathquestion[24];
 new g_bomb = 0;
 new Roundstarts = 0;
+new g_lastminigame = 0;
+new g_lastboss = 0;
 
 new g_welcomedisplayed[MAXPLAYERS+1];
 
@@ -631,6 +633,8 @@ RollMinigame() {
         if ((bossBattle == false) && (g_boss[i-1])) accept = false;
         if ((i == 14) && (GetActivePlayers() < 6)) accept = false;
         if ((i == 16) && (GetActivePlayers() < 6)) accept = false;
+        if (i == g_lastminigame) accept = false;
+        if (i == g_lastboss) accept = false;
         if (StrEqual(g_intro1[i-1], "")) accept = false;
         if (accept) PushArrayCell(roll, i);
         if (GetConVarBool(ww_log) && (accept)) LogMessage("-- Microgame %d allowed", i);
@@ -689,6 +693,8 @@ StartMinigame() {
         
         status = 1;
         minigame = RollMinigame();
+        if (bossBattle) g_lastboss = minigame;
+        else g_lastminigame = minigame;
         CreateTimer(GetSpeedMultiplier(MUSIC_START_LEN), Game_Start);
         g_attack = false;
         CreateAllSprites();
