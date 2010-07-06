@@ -1249,8 +1249,7 @@ InitMinigame(id) {
     g_respawn = false;
 
     GiveId();
-    if (g_initFuncs[id-1] > 0) Call_StartFunction(INVALID_HANDLE, g_initFuncs[id-1]);
-    else PrintToServer("Minigame %d lacks initFuncs", id);
+    Call_StartFunction(INVALID_HANDLE, g_initFuncs[id-1]);
     Call_Finish();
     
     if (g_respawn == false) {

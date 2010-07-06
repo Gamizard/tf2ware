@@ -2,7 +2,7 @@
 
 public Hugging_OnMinigame() {
     for (new i = 1; i <= MaxClients; i++) {
-        if (IsClientConnected(i)) {
+        if (IsValidClient(i)) {
             SDKHook(i, SDKHook_Touch, Hugging_OnPlayerTouch);
         }
     }
