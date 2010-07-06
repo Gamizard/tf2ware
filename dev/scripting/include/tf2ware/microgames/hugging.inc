@@ -106,7 +106,7 @@ public Hugging_justEnteredMinigame(client) {
 }
 
 public Hugging_OnPlayerTouch(entity, other) {
-    if (!StrEqual(g_name[minigame-1], "Hugging")) return;
+    if (!StrEqual(minigame, "Hugging")) return;
 
     new String:classname[64];
     new String:classname2[64];
@@ -138,7 +138,7 @@ public Hugging_OnPlayerTouch(entity, other) {
 
 public Action:HeavyLoveTaunt(Handle:hTimer, any:client) {
     heavy_love[client] = INVALID_HANDLE;
-    if (IsValidEntity(client) && status == 2 && minigame == 14 && g_Mission[client] > 0) {
+    if (IsValidEntity(client) && status == 2 && iMinigame == 14 && g_Mission[client] > 0) {
         new random = GetRandomInt(0, sizeof(var_heavy_love)-1);
         EmitSoundToAll(var_heavy_love[random], client);
     }

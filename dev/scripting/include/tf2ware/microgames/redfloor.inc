@@ -34,7 +34,7 @@ public RedFloor_End() {
 }
 
 public Action:PosPlayer_Minigame16_Timer(Handle:hTimer) {
-    if (!StrEqual(g_name[minigame-1], "RedFloor")) return Plugin_Stop;
+    if (!StrEqual(minigame, "RedFloor")) return Plugin_Stop;
     
     if (status == 2) {
         new activeplayers = 0;

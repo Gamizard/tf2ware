@@ -45,7 +45,7 @@ public Math_justEnteredMinigame(client) {
 
 public Action:Math_Player_Say(iClient, iArgs) {
     // Check to make sure this is happening during the math minigame
-    if (!StrEqual(g_name[minigame-1], "Math")) return Plugin_Continue;
+    if (!StrEqual(minigame, "Math")) return Plugin_Continue;
     if (!(IsValidClient(iClient))) return Plugin_Continue;
     if (iArgs < 1) return Plugin_Continue;
     

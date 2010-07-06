@@ -32,7 +32,7 @@ public BBall_End() {
 }
 
 public OnEntityCreated(entity, const String:classname[]) {
-    if (!StrEqual(g_name[minigame-1], "BBall")) return;
+    if (!StrEqual(minigame, "BBall")) return;
     if ((status == 2) && (StrEqual(classname, "tf_projectile_pipe"))) {
         SDKHook(entity, SDKHook_StartTouch, Hook_StartTouch_Pipe);
     }

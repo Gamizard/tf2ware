@@ -73,7 +73,7 @@ public Action:Barrel_OnTakeDamage(victim, &attacker, &inflictor, &Float:damage, 
             DestroyBarrel(victim);
             g_Barrels[i] = -1;
             
-            if (IsValidClient(attacker) && minigame == 3) SetStateClient(attacker, true, true);
+            if (IsValidClient(attacker) && iMinigame == 3) SetStateClient(attacker, true, true);
         }    
     }
     
