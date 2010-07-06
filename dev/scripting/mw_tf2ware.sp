@@ -55,6 +55,7 @@ new String:g_intro2[MAX_MINIGAMES][128];
 new Float:g_time[MAX_MINIGAMES];
 new g_boss[MAX_MINIGAMES];
 new g_dynamic[MAX_MINIGAMES];
+new g_endrespawn[MAX_MINIGAMES];
 new Function:g_initFuncs[MAX_MINIGAMES];
 
 // Language strings
@@ -190,8 +191,10 @@ public OnPluginStart() {
             g_time[i] = KvGetFloat(MinigameConf, "duration");
             g_boss[i] = KvGetNum(MinigameConf, "boss", 0);
             g_dynamic[i] = KvGetNum(MinigameConf, "dynamic", 0);
+            g_endrespawn[i] = KvGetNum(MinigameConf, "endrespawn", 0);
             KvGetString(MinigameConf, "intro1", g_intro1[i], sizeof(g_intro1));
             KvGetString(MinigameConf, "intro2", g_intro2[i], sizeof(g_intro2));
+            PrintToServer("microgame %d. Endrespawn: %d", i, g_endrespawn[i]);
             i++;
         } while (KvGotoNextKey(MinigameConf)); 
         
@@ -758,6 +761,15 @@ public Action:EndGame(Handle:hTimer) {
         Call_StartForward(g_OnAlmostEndMinigame);
         Call_Finish();
 
+        g_attack = false;
+        status = 0;
+        NoCollision(false);
+        
+        if (g_endrespawn[minigame-1] > 0) RespawnAll(true, false);
+        
+        Call_StartForward(g_OnEndMinigame);
+        Call_Finish();
+        
         new String:sound[512];
         for (new i = 1; i <= MaxClients; i++) {
             if (IsValidClient(i) && (!(IsFakeClient(i)))) {
@@ -784,12 +796,7 @@ public Action:EndGame(Handle:hTimer) {
                 EmitSoundToClient(i, sound, SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, SNDVOL_NORMAL,GetSoundMultiplier());
             }
         }
-        g_attack = false;
-        status = 0;
-        NoCollision(false);
         
-        Call_StartForward(g_OnEndMinigame);
-        Call_Finish();
         
         // Clear all functions from forwards
         RemoveAllFromForward(g_justEnteredMinigame, INVALID_HANDLE);
@@ -799,7 +806,6 @@ public Action:EndGame(Handle:hTimer) {
         RemoveAllFromForward(g_OnGameFrame_Minigames, INVALID_HANDLE);
         RemoveAllFromForward(g_PlayerDeath, INVALID_HANDLE);
         
-        //OnEndMinigame();
         RespawnAll();
         RemoveAllWeapons();
         

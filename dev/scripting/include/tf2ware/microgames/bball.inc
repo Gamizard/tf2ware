@@ -26,7 +26,6 @@ public Action:BBall_OnTakeDamageClient(victim, &attacker, &inflictor, &Float:dam
 }
 
 public BBall_End() {
-    RespawnAll(true, false);
     for (new i = 1; i <= MaxClients; i++) {
         SDKUnhook(i, SDKHook_OnTakeDamage, BBall_OnTakeDamageClient);
     }

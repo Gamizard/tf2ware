@@ -49,5 +49,4 @@ public Hopscotch_CheckDeadPlayers() {
 }
 
 public Hopscotch_End() {
-    RespawnAll(true, false);
 }

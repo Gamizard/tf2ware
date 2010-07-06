@@ -61,7 +61,6 @@ public Airblast_RemoveLeftClick(client) {
 }
 
 public Airblast_End() {
-    RespawnAll(true, false);
     for (new i = 1; i <= MaxClients; i++) {
         SDKUnhook(i, SDKHook_PreThink, Airblast_RemoveLeftClick);
     }

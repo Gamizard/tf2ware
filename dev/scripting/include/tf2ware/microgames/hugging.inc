@@ -55,7 +55,6 @@ public Hugging_End() {
     for (new i = 1; i <= MaxClients; i++) {
         SDKUnhook(i, SDKHook_Touch, Hugging_OnPlayerTouch);
     }
-    RespawnAll(true, false);
 }
 
 public Hugging_justEnteredMinigame(client) {

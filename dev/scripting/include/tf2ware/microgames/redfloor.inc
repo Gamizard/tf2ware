@@ -31,7 +31,6 @@ public RedFloor_justEnteredMinigame(client) {
 }
 
 public RedFloor_End() {
-    RespawnAll(true, false);
 }
 
 public Action:PosPlayer_Minigame16_Timer(Handle:hTimer) {

@@ -50,5 +50,4 @@ public SawRun_justEnteredMinigame(client) {
 }
 
 public SawRun_End() {
-    RespawnAll(true, false);
 }
