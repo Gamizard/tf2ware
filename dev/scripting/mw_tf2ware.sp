@@ -50,12 +50,6 @@
 new String:var_heavy_love[][] = {"imgay/tf2ware/heavy_ilu.wav", "vo/heavy_specialcompleted08.wav", "vo/heavy_award04.wav"};
 
 new String:g_name[MAX_MINIGAMES][12];
-new String:g_intro1[MAX_MINIGAMES][128];
-new String:g_intro2[MAX_MINIGAMES][128];
-new Float:g_time[MAX_MINIGAMES];
-new g_boss[MAX_MINIGAMES];
-new g_dynamic[MAX_MINIGAMES];
-new g_endrespawn[MAX_MINIGAMES];
 new Function:g_initFuncs[MAX_MINIGAMES];
 
 // Language strings
@@ -75,6 +69,9 @@ new Handle:GameConf = INVALID_HANDLE;
 new Handle:hGiveNamedItem = INVALID_HANDLE;
 new Handle:hWeaponEquip = INVALID_HANDLE;
 new Handle:microgametimer = INVALID_HANDLE;
+
+// Keyvalues configuration handle
+new Handle:MinigameConf = INVALID_HANDLE;
 
 // Bools
 new bool:g_Complete[MAXPLAYERS+1];
@@ -98,7 +95,7 @@ new g_Minipoints[MAXPLAYERS+1];
 new g_Country[MAXPLAYERS+1];
 new g_Sprites[MAXPLAYERS+1];
 new currentSpeed;
-new minigame;
+new iMinigame;
 new status;
 new randommini;
 new g_offsCollisionGroup;
@@ -113,12 +110,16 @@ new Roundstarts = 0;
 new g_lastminigame = 0;
 new g_lastboss = 0;
 
+new g_iGames = 0;
+
 new g_welcomedisplayed[MAXPLAYERS+1];
 
 // Strings
 new String:materialpath[512] = "imgay/";
+// Name of current minigame being played
+new String:minigame[12];
 
-// VALID MINIGAME FORWARD HANDLERS //////////////
+// VALID iMinigame FORWARD HANDLERS //////////////
 new Handle:g_justEnteredMinigame;
 new Handle:g_OnAlmostEndMinigame;
 new Handle:g_OnTimerMinigame;
@@ -182,7 +183,7 @@ public OnPluginStart() {
     decl String:imFile[PLATFORM_MAX_PATH];
     BuildPath(Path_SM, imFile, sizeof(imFile), "configs/minigames.cfg");
     
-    new Handle:MinigameConf = CreateKeyValues("Minigames");
+    MinigameConf = CreateKeyValues("Minigames");
     if (FileToKeyValues(MinigameConf, imFile)) {
         PrintToServer("Loaded minigames from minigames.cfg");
         
@@ -190,16 +191,10 @@ public OnPluginStart() {
         new i=0;
         do {
             KvGetSectionName(MinigameConf, g_name[i], 32);
-            g_time[i] = KvGetFloat(MinigameConf, "duration");
-            g_boss[i] = KvGetNum(MinigameConf, "boss", 0);
-            g_dynamic[i] = KvGetNum(MinigameConf, "dynamic", 0);
-            g_endrespawn[i] = KvGetNum(MinigameConf, "endrespawn", 0);
-            KvGetString(MinigameConf, "intro1", g_intro1[i], sizeof(g_intro1));
-            KvGetString(MinigameConf, "intro2", g_intro2[i], sizeof(g_intro2));
-            PrintToServer("microgame %d. Endrespawn: %d", i, g_endrespawn[i]);
             i++;
-        } while (KvGotoNextKey(MinigameConf)); 
-        
+          } while (KvGotoNextKey(MinigameConf)); 
+          
+        KvRewind(MinigameConf);
     }
     else {
         PrintToServer("Failed to load minigames.cfg!");
@@ -220,7 +215,7 @@ public OnPluginStart() {
     
     // ConVars
     ww_enable = CreateConVar("ww_enable", "0", "Enables/Disables TF2 Ware.", FCVAR_PLUGIN);
-    ww_force = CreateConVar("ww_force", "0", "Force a certain minigame (0 to not force).", FCVAR_PLUGIN);
+    ww_force = CreateConVar("ww_force", "0", "Force a certain iMinigame (0 to not force).", FCVAR_PLUGIN);
     ww_speed = CreateConVar("ww_speed", "1", "Speed level.", FCVAR_PLUGIN);
     ww_music = CreateConVar("ww_music_fix", "0", "Apply music fix? Should only be on for localhosts during testing", FCVAR_PLUGIN);
     ww_log = CreateConVar("ww_log", "0", "Log server events?", FCVAR_PLUGIN);
@@ -239,7 +234,7 @@ public OnPluginStart() {
     
     // Vars
     currentSpeed = GetConVarInt(ww_speed);
-    minigame = 1;
+    iMinigame = 1;
     status = 0;
     randommini = 0;
     Roundstarts = 0;
@@ -256,7 +251,7 @@ public OnPluginStart() {
     g_PlayerDeath = CreateForward(ET_Ignore, Param_Cell);
     
     
-    // MINIGAME REGISTRATION
+    // iMinigame REGISTRATION
     RegMinigame("HitEnemy", HitEnemy_OnMinigame);
     RegMinigame("Spycrab", Spycrab_OnMinigame);
     RegMinigame("Kamikaze", Kamikaze_OnMinigame);
@@ -388,7 +383,7 @@ public OnMapStart() {
         precacheSound(var_heavy_love[i-1]);
     }
     
-    for (new i = 1; i <= sizeof(g_intro1); i++) {
+/*     for (new i = 1; i <= sizeof(g_intro1); i++) {
         Format(input, sizeof(input), "imgay/tf2ware/minigame_%d.mp3", i);
         precacheSound(input);
         for (new i2 = 1; i2 <= 2; i2++) {
@@ -401,7 +396,29 @@ public OnMapStart() {
                 }
             }
         }
-    }
+    } */
+    
+    KvGotoFirstSubKey(MinigameConf);
+    new i=1;
+    do {
+        new j=1, String:intros[8];
+        Format(input, sizeof(input), "imgay/tf2ware/minigame_%d.mp3", i);
+        precacheSound(input);
+        
+        Format(intros, sizeof(intros), "intro%d", j);
+        while (KvGetNum(MinigameConf, intros)) {
+            for (new k = 0; k < sizeof(var_lang); k++) {
+                Format(input, sizeof(input), "materials/%s%stf2ware_minigame_%d_%d.vmt", materialpath, var_lang[k], i, j);
+                AddFileToDownloadsTable(input);
+                Format(input, sizeof(input), "materials/%s%stf2ware_minigame_%d_%d.vtf", materialpath, var_lang[k], i, j);
+                AddFileToDownloadsTable(input);
+            }
+            j++;
+        }
+        i++;
+      } while (KvGotoNextKey(MinigameConf)); 
+    KvRewind(MinigameConf);
+    g_iGames = i-1;
     
     white = PrecacheModel("materials/sprites/white.vmt");
     g_HaloSprite = PrecacheModel("materials/sprites/halo01.vmt");
@@ -625,27 +642,27 @@ RollMinigame() {
     new Handle:roll = CreateArray();
     new bool:accept = true;
     new out = 1;
-    
-    for (new i = 1; i <= sizeof(g_intro1); i++) {
+    new iplayers = GetActivePlayers();
+    for (new i = 1; i <= g_iGames; i++) {
         accept = true;
-        if ((i == 2) && ((GetActivePlayers(2) <= 1) || (GetActivePlayers(3) <= 1))) accept = false;
-        if ((bossBattle) && (g_boss[i-1] == 0)) accept = false;
-        if ((bossBattle == false) && (g_boss[i-1])) accept = false;
-        if ((i == 14) && (GetActivePlayers() < 6)) accept = false;
-        if ((i == 16) && (GetActivePlayers() < 6)) accept = false;
+        new gameisboss = GetMinigameConfNum(g_name[i-1], "boss", 0);
+        if (iplayers < GetMinigameConfNum(g_name[i-1], "minplayers", 2)) accept = false;
+        if ((bossBattle) && (!gameisboss)) accept = false;
+        if ((!bossBattle) && (gameisboss)) accept = false;
         if (i == g_lastminigame) accept = false;
         if (i == g_lastboss) accept = false;
-        if (StrEqual(g_intro1[i-1], "")) accept = false;
+        if (!GetMinigameConfNum(g_name[i-1], "enable", 1)) accept = false;
         if (accept) PushArrayCell(roll, i);
-        if (GetConVarBool(ww_log) && (accept)) LogMessage("-- Microgame %d allowed", i);
-        if (GetConVarBool(ww_log) && (accept == false)) LogMessage("-- Microgame %d NOT allowed", i);
+        if (GetConVarBool(ww_log) && (accept)) LogMessage("-- Microgame #%d allowed", i);
+        if (GetConVarBool(ww_log) && (accept == false)) LogMessage("-- Microgame #%d NOT allowed", i);
     }
         
     if (GetArraySize(roll) > 0) out = GetArrayCell(roll, GetRandomInt(0, GetArraySize(roll)-1));
-    if (GetConVarBool(ww_log)) LogMessage("Rolled microgame was: %d", out);
     CloseHandle(roll);
     
     if (GetConVarInt(ww_force) > 0) out = GetConVarInt(ww_force);
+    
+    if (GetConVarBool(ww_log)) LogMessage("Rolled microgame was: %s (id:%d)", g_name[out-1], out);
     
     if (GetConVarBool(ww_log)) LogMessage("Roll end");
     return out;
@@ -670,7 +687,7 @@ HandOutPoints() {
 
 StartMinigame() {
     if (GetConVarBool(ww_enable) && g_enabled && (status == 0) && (GetTeamClientCount(2) >= 1) && (GetTeamClientCount(3) >= 1) && g_waiting == false) {
-        if (GetConVarBool(ww_log)) LogMessage("Starting microgame! Status = 0");
+        if (GetConVarBool(ww_log)) LogMessage("Starting microgame %s! Status = 0", minigame);
         RespawnAll();
         RemoveAllWeapons();
         SetConVarInt(FindConVar("mp_respawnwavetime"), 9999);
@@ -692,9 +709,10 @@ StartMinigame() {
         }
         
         status = 1;
-        minigame = RollMinigame();
-        if (bossBattle) g_lastboss = minigame;
-        else g_lastminigame = minigame;
+        iMinigame = RollMinigame();
+        minigame = g_name[iMinigame-1];
+        if (bossBattle) g_lastboss = iMinigame;
+        else g_lastminigame = iMinigame;
         CreateTimer(GetSpeedMultiplier(MUSIC_START_LEN), Game_Start);
         g_attack = false;
         CreateAllSprites();
@@ -704,11 +722,11 @@ StartMinigame() {
 
 public Action:Game_Start(Handle:hTimer) {
     if (status == 1) {
-        if (GetConVarBool(ww_log)) LogMessage("Microgame started! Status = 1");
+        if (GetConVarBool(ww_log)) LogMessage("Microgame %s started! Status = 1", minigame);
         new String:sound[512];
-        Format(sound, sizeof(sound), "imgay/tf2ware/minigame_%d.mp3", minigame);
+        Format(sound, sizeof(sound), "imgay/tf2ware/minigame_%d.mp3", iMinigame);
         new channel = SNDCHAN_AUTO;
-        if (g_dynamic[minigame-1]) channel = SND_CHANNEL_SPECIFIC;
+        if (GetMinigameConfNum(minigame, "dynamic", 0)) channel = SND_CHANNEL_SPECIFIC;
         if (GetConVarBool(ww_music)) EmitSoundToClient(1, sound, SOUND_FROM_PLAYER, channel, SNDLEVEL_NORMAL, SND_NOFLAGS, SNDVOL_NORMAL,GetSoundMultiplier());
         else EmitSoundToAll(sound, SOUND_FROM_PLAYER, channel, SNDLEVEL_NORMAL, SND_NOFLAGS, SNDVOL_NORMAL,GetSoundMultiplier());
         SetStateAll(false);
@@ -718,14 +736,15 @@ public Action:Game_Start(Handle:hTimer) {
         SetMissionAll(0);
         g_attack = false;
         if (GetConVarBool(ww_log)) LogMessage("- Pre part 2");
-        InitMinigame(minigame);
+        InitMinigame(iMinigame);
         if (GetConVarBool(ww_log)) LogMessage("- Pre-Mission");
         PrintMissionText();
         timeleft = 8;
         if (GetConVarBool(ww_log)) LogMessage("- Pre part 3");
         if (bossBattle) CreateTimer(GetSpeedMultiplier(3.0), CountDown_Timer);
         else CreateTimer(GetSpeedMultiplier(1.0), CountDown_Timer);
-        microgametimer = CreateTimer(GetSpeedMultiplier(g_time[minigame-1]), EndGame);
+
+        microgametimer = CreateTimer(GetSpeedMultiplier(GetMinigameConfFloat(minigame, "duration")), EndGame);
         if (GetConVarBool(ww_log)) LogMessage("Microgame started post");
     }
     return Plugin_Stop;
@@ -736,7 +755,7 @@ PrintMissionText() {
     for (new i = 1; i <= MaxClients; i++) {
         if (IsValidClient(i)) {
             new String:input[512];
-            Format(input, sizeof(input), "tf2ware_minigame_%d_%d", minigame, g_Mission[i]+1);
+            Format(input, sizeof(input), "tf2ware_minigame_%d_%d", iMinigame, g_Mission[i]+1);
             SetOverlay(i,input);
         }
     }
@@ -761,7 +780,7 @@ public Action:CountDown_Timer(Handle:hTimer) {
 }
 
 public Action:EndGame(Handle:hTimer) {
-    if (GetConVarBool(ww_log)) LogMessage("Microgame %d ended!", minigame);
+    if (GetConVarBool(ww_log)) LogMessage("Microgame %s, (id:%d) ended!", minigame, iMinigame);
     microgametimer = INVALID_HANDLE;
     if (status == 2) {
         Call_StartForward(g_OnAlmostEndMinigame);
@@ -771,7 +790,7 @@ public Action:EndGame(Handle:hTimer) {
         status = 0;
         NoCollision(false);
         
-        if (g_endrespawn[minigame-1] > 0) RespawnAll(true, false);
+        if (GetMinigameConfNum(minigame, "endrespawn", 0) > 0) RespawnAll(true, false);
         
         Call_StartForward(g_OnEndMinigame);
         Call_Finish();
@@ -783,12 +802,12 @@ public Action:EndGame(Handle:hTimer) {
                     decl String:event[128];
                     if (g_Complete[i]) {
                         Format(sound, sizeof(sound), MUSIC_WIN);
-                        Format(event, sizeof(event), "tf2ware_complete_%d", minigame);
+                        Format(event, sizeof(event), "tf2ware_complete_%d", iMinigame);
                         if (g_Achievements) mw_AchievementEvent(event, i, 0, 0, 1);
                     }
                     if (g_Complete[i] == false) {
                         Format(sound, sizeof(sound), MUSIC_FAIL);
-                        Format(event, sizeof(event), "tf2ware_fail_%d", minigame);
+                        Format(event, sizeof(event), "tf2ware_fail_%d", iMinigame);
                         if (g_Achievements) mw_AchievementEvent(event, i, 0, 0, 1);
                     }
                     SetEntProp(i, Prop_Send, "m_bDrawViewmodel", 0);
@@ -797,8 +816,8 @@ public Action:EndGame(Handle:hTimer) {
                     Format(sound, sizeof(sound), MUSIC_WIN);
                 }
                 new String:oldsound[512];
-                Format(oldsound, sizeof(oldsound), "imgay/tf2ware/minigame_%d.mp3", minigame);
-                if (g_dynamic[minigame-1]) StopSound(i, SND_CHANNEL_SPECIFIC, oldsound);
+                Format(oldsound, sizeof(oldsound), "imgay/tf2ware/minigame_%d.mp3", iMinigame);
+                if (GetMinigameConfNum(minigame, "dynamic", 0)) StopSound(i, SND_CHANNEL_SPECIFIC, oldsound);
                 EmitSoundToClient(i, sound, SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, SNDVOL_NORMAL,GetSoundMultiplier());
             }
         }
@@ -1280,4 +1299,32 @@ public Player_Death(Handle:event, const String:name[], bool:dontBroadcast) {
             Call_Finish();
         }
     }
+}
+
+// Some convenience functions for parsing the configuration file more simply.
+p_GotoGameConf(String:game[]) {
+    if (!KvJumpToKey(MinigameConf, game)) {
+        PrintToServer("ERROR: Couldn't find requested iMinigame %s in configuration file!", game);
+        KvRewind(MinigameConf);
+    }
+}
+
+GetMinigameConfStr(String:game[], String:key[], String:buffer, size) {
+    p_GotoGameConf(game);
+    KvGetString(MinigameConf, key, buffer, size);
+    KvGoBack(MinigameConf);
+}
+
+Float:GetMinigameConfFloat(String:game[], String:key[], Float:def=4.0) {
+    p_GotoGameConf(game);
+    new Float:value = KvGetFloat(MinigameConf, key, def);
+    KvGoBack(MinigameConf);
+    return value;
+}
+
+GetMinigameConfNum(String:game[], String:key[], def=0) {
+    p_GotoGameConf(game);
+    new value = KvGetNum(MinigameConf, key, def);
+    KvGoBack(MinigameConf);
+    return value;
 }
