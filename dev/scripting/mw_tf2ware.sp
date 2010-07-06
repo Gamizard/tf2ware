@@ -251,7 +251,7 @@ public OnPluginStart() {
     g_PlayerDeath = CreateForward(ET_Ignore, Param_Cell);
     
     
-    // iMinigame REGISTRATION
+    // MINIGAME REGISTRATION
     RegMinigame("HitEnemy", HitEnemy_OnMinigame);
     RegMinigame("Spycrab", Spycrab_OnMinigame);
     RegMinigame("Kamikaze", Kamikaze_OnMinigame);
@@ -382,21 +382,6 @@ public OnMapStart() {
         AddFileToDownloadsTable(input);
         precacheSound(var_heavy_love[i-1]);
     }
-    
-/*     for (new i = 1; i <= sizeof(g_intro1); i++) {
-        Format(input, sizeof(input), "imgay/tf2ware/minigame_%d.mp3", i);
-        precacheSound(input);
-        for (new i2 = 1; i2 <= 2; i2++) {
-            if (((i2 == 1) && (!(StrEqual(g_intro1[i-1], "")))) || ((i2 == 2) && (!(StrEqual(g_intro2[i-1], ""))))) {
-                for (new i3 = 0; i3 < sizeof(var_lang); i3++) {
-                    Format(input, sizeof(input), "materials/%s%stf2ware_minigame_%d_%d.vmt", materialpath, var_lang[i3], i, i2);
-                    AddFileToDownloadsTable(input);
-                    Format(input, sizeof(input), "materials/%s%stf2ware_minigame_%d_%d.vtf", materialpath, var_lang[i3], i, i2);
-                    AddFileToDownloadsTable(input);
-                }
-            }
-        }
-    } */
     
     KvGotoFirstSubKey(MinigameConf);
     new i=1;
