@@ -15,7 +15,9 @@
 #include <mw_achievements_natives>
 #define REQUIRE_PLUGIN
 
-#define PLUGIN_VERSION "0.7.5-15"
+#define MAX_MINIGAMES 20
+
+#define PLUGIN_VERSION "0.8.0-15"
 #define MUSIC_START "imgay/tf2ware/tf2ware_intro.mp3"
 #define MUSIC_START_LEN 2.18
 #define MUSIC_WIN "imgay/tf2ware/tf2ware_win.mp3"
@@ -47,20 +49,16 @@
 
 new String:var_heavy_love[][] = {"imgay/tf2ware/heavy_ilu.wav", "vo/heavy_specialcompleted08.wav", "vo/heavy_award04.wav"};
 
-
-// Main intro texts
-new String:var_intro1[][] = {"Hit an enemy", "Avoid the kamikaze", "Break a barrel", "Get to the end", "Needlejump", "Reach the end", "", "Airblast", "Type answer in chat", "Don't stop moving", "Get on a platform", "", "Score 7 goals", "Avoid the Cuddly Heavy", "Simon says: Taunt", "Stand on the Green", "Do the Spycrab"};
-
-// Alternative intro texts
-new String:var_intro2[][] = {"", "Explode 2 players", "", "", "", "", "", "", "", "Don't move", "", "", "", "Hug all Scouts", "Someone says: Taunt", "Avoid the Red Floor", ""};
+new String:g_name[MAX_MINIGAMES][12];
+new String:g_intro1[MAX_MINIGAMES][128];
+new String:g_intro2[MAX_MINIGAMES][128];
+new Float:g_time[MAX_MINIGAMES];
+new g_boss[MAX_MINIGAMES];
+new g_dynamic[MAX_MINIGAMES];
+new Function:g_initFuncs[MAX_MINIGAMES];
 
 // Language strings
 new String:var_lang[][] = {"", "it/"};
-
-// Time each microgame lasts
-new Float:var_time[sizeof(var_intro1)] = {4.0, 4.0, 4.0, 4.0, 4.0, 52.5, 32.3, 4.0, 4.0, 4.0, 4.0, 32.0, 31.4, 64.8, 4.0, 88.0, 4.0};
-new bool:var_boss[sizeof(var_intro1)] = {false, false, false, false, false, true, false, false, false, false, false, true, true, true, false, true, false};
-new bool:var_dynamic[sizeof(var_intro1)] = {false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, false};
 
 // Handles
 new Handle:ww_enable;
@@ -81,6 +79,7 @@ new Handle:microgametimer = INVALID_HANDLE;
 new bool:g_Complete[MAXPLAYERS+1];
 new bool:g_Spawned[MAXPLAYERS+1];
 new bool:g_attack = false;
+new bool:g_respawn = false;
 new bool:bossBattle = false;
 new bool:g_enabled = false;
 new bool:g_first = false;
@@ -110,16 +109,38 @@ new g_result = 0;
 new String:g_mathquestion[24];
 new g_bomb = 0;
 new Roundstarts = 0;
-new PreviousMicrogame = 0;
-new PreviousBoss = 0;
 
 new g_welcomedisplayed[MAXPLAYERS+1];
 
 // Strings
 new String:materialpath[512] = "imgay/";
 
-#include mw_tf2ware_features.inc
-#include mw_tf2ware_minigames.inc
+// VALID MINIGAME FORWARD HANDLERS //////////////
+new Handle:g_justEnteredMinigame;
+new Handle:g_OnAlmostEndMinigame;
+new Handle:g_OnTimerMinigame;
+new Handle:g_OnEndMinigame;
+new Handle:g_OnGameFrame_Minigames;
+new Handle:g_PlayerDeath;
+/////////////////////////////////////////
+
+#include tf2ware\microgames\hitenemy.inc
+#include tf2ware\microgames\spycrab.inc
+#include tf2ware\microgames\kamikaze.inc
+#include tf2ware\microgames\math.inc
+#include tf2ware\microgames\sawrun.inc
+#include tf2ware\microgames\barrel.inc
+#include tf2ware\microgames\needlejump.inc
+#include tf2ware\microgames\hopscotch.inc
+#include tf2ware\microgames\airblast.inc
+#include tf2ware\microgames\movement.inc
+#include tf2ware\microgames\flood.inc
+#include tf2ware\microgames\simonsays.inc
+#include tf2ware\microgames\bball.inc
+#include tf2ware\microgames\hugging.inc
+#include tf2ware\microgames\redfloor.inc
+
+#include tf2ware\mw_tf2ware_features.inc
 
 public Plugin:myinfo = {
     name = "TF2 Ware",
@@ -137,18 +158,49 @@ public OnPluginStart() {
     {
         SetFailState("This plugin is only for Team Fortress 2, not %s", game);
     }
+    
+    // Check for SDKHooks
     if(GetExtensionFileStatus("sdkhooks.ext") < 1)
         SetFailState("SDK Hooks is not loaded.");
     
+    // Find collision group offsets
     g_offsCollisionGroup = FindSendPropOffs("CBaseEntity", "m_CollisionGroup");
     if (g_offsCollisionGroup == -1) {
         PrintToServer("* FATAL ERROR: Failed to get offset for CBaseEntity::m_CollisionGroup");
     }
     
+    // Add server tag
     AddServerTag("TF2Ware");
     
+    // Load game config
     GameConf = LoadGameConfigFile("tf2ware.games");
-
+    
+    // Load minigames
+    decl String:imFile[PLATFORM_MAX_PATH];
+    BuildPath(Path_SM, imFile, sizeof(imFile), "configs/minigames.cfg");
+    
+    new Handle:MinigameConf = CreateKeyValues("Minigames");
+    if (FileToKeyValues(MinigameConf, imFile)) {
+        PrintToServer("Loaded minigames from minigames.cfg");
+        
+        KvGotoFirstSubKey(MinigameConf);
+        new i=0;
+        do {
+            KvGetSectionName(MinigameConf, g_name[i], 32);
+            g_time[i] = KvGetFloat(MinigameConf, "duration");
+            g_boss[i] = KvGetNum(MinigameConf, "boss", 0);
+            g_dynamic[i] = KvGetNum(MinigameConf, "dynamic", 0);
+            KvGetString(MinigameConf, "intro1", g_intro1[i], sizeof(g_intro1));
+            KvGetString(MinigameConf, "intro2", g_intro2[i], sizeof(g_intro2));
+            i++;
+        } while (KvGotoNextKey(MinigameConf)); 
+        
+    }
+    else {
+        PrintToServer("Failed to load minigames.cfg!");
+    }
+    
+    // SDK
     StartPrepSDKCall(SDKCall_Player);
     PrepSDKCall_SetFromConf(GameConf, SDKConf_Virtual, "GiveNamedItem");
     PrepSDKCall_AddParameter(SDKType_String, SDKPass_Pointer);
@@ -161,11 +213,14 @@ public OnPluginStart() {
     PrepSDKCall_AddParameter(SDKType_CBaseEntity, SDKPass_Pointer);
     hWeaponEquip = EndPrepSDKCall();
     
+    // ConVars
     ww_enable = CreateConVar("ww_enable", "0", "Enables/Disables TF2 Ware.", FCVAR_PLUGIN);
     ww_force = CreateConVar("ww_force", "0", "Force a certain minigame (0 to not force).", FCVAR_PLUGIN);
     ww_speed = CreateConVar("ww_speed", "1", "Speed level.", FCVAR_PLUGIN);
-    ww_music = CreateConVar("ww_music_fix", "0", "Alternative music play. Should only be on for localhost testing.", FCVAR_PLUGIN);
+    ww_music = CreateConVar("ww_music_fix", "0", "Apply music fix? Should only be on for localhosts during testing", FCVAR_PLUGIN);
     ww_log = CreateConVar("ww_log", "0", "Log server events?", FCVAR_PLUGIN);
+    
+    // Hooks
     HookConVarChange(ww_enable,StartMinigame_cvar);
     HookEvent("post_inventory_application", EventInventoryApplication,  EventHookMode_Post);
     HookEvent("player_death", Player_Death);
@@ -174,24 +229,45 @@ public OnPluginStart() {
     HookEvent("teamplay_game_over", Event_Roundend, EventHookMode_PostNoCopy);
     HookEvent("teamplay_round_stalemate", Event_Roundend, EventHookMode_PostNoCopy);
     HookEvent("teamplay_round_win", Event_Roundend, EventHookMode_PostNoCopy);
-    
     HookEvent("player_changeclass",Event_ChangeClass);
-    
-    RegConsoleCmd("say", Player_Say);
-    RegConsoleCmd("say_team", Player_Say);
     RegAdminCmd("ww_give", Command_points, ADMFLAG_GENERIC, "Gives you 20 points - You're a winner! (testing feature)");
     
+    // Vars
     currentSpeed = GetConVarInt(ww_speed);
-    
     minigame = 1;
     status = 0;
     randommini = 0;
     Roundstarts = 0;
-    
     SetStateAll(false);
     ResetWinners();
     SetMissionAll(0);
     
+    // FORWARDS FOR MINIGAMES
+    g_justEnteredMinigame = CreateForward(ET_Ignore, Param_Cell);
+    g_OnAlmostEndMinigame = CreateForward(ET_Ignore);
+    g_OnTimerMinigame = CreateForward(ET_Ignore, Param_Cell);
+    g_OnEndMinigame = CreateForward(ET_Ignore);
+    g_OnGameFrame_Minigames = CreateForward(ET_Ignore);
+    g_PlayerDeath = CreateForward(ET_Ignore, Param_Cell);
+    
+    
+    // MINIGAME REGISTRATION
+    RegMinigame("HitEnemy", HitEnemy_OnMinigame);
+    RegMinigame("Spycrab", Spycrab_OnMinigame);
+    RegMinigame("Kamikaze", Kamikaze_OnMinigame);
+    RegMinigame("Math", Math_OnMinigame);
+    RegMinigame("SawRun", SawRun_OnMinigame);
+    RegMinigame("Barrel", Barrel_OnMinigame);
+    RegMinigame("Needlejump", Needlejump_OnMinigame);
+    RegMinigame("Hopscotch", Hopscotch_OnMinigame);
+    RegMinigame("Airblast", Airblast_OnMinigame);
+    RegMinigame("Movement", Movement_OnMinigame);
+    RegMinigame("Flood", Flood_OnMinigame);
+    RegMinigame("SimonSays", SimonSays_OnMinigame);
+    RegMinigame("BBall", BBall_OnMinigame);
+    RegMinigame("Hugging", Hugging_OnMinigame);
+    RegMinigame("RedFloor", RedFloor_OnMinigame);
+
     // CHEATS
     HookConVarChange(FindConVar("sv_cheats"), OnConVarChanged_SvCheats);
     ww_allowedCommands = CreateArray(64);
@@ -209,17 +285,20 @@ public OnPluginStart() {
     hudScore = CreateHudSynchronizer();
     ResetScores();
     
+    // Remove Notification Flags
     RemoveNotifyFlag("sv_tags");
     RemoveNotifyFlag("mp_respawnwavetime");
     RemoveNotifyFlag("mp_friendlyfire");
     RemoveNotifyFlag("tf_tournament_hide_domination_icons");
     SetConVarInt(FindConVar("tf_tournament_hide_domination_icons"), 0, true);
     
+    // Include optional achievements
     if (LibraryExists("mw_ach")) g_Achievements = true;
     
+    // Add logging
     if (GetConVarBool(ww_log)) {
     LogMessage("//////////////////////////////////////////////////////");
-    LogMessage("//                    TF2WARE LOG                   //");
+    LogMessage("//                     TF2WARE LOG                  //");
     LogMessage("//////////////////////////////////////////////////////");
     }
 }
@@ -304,11 +383,11 @@ public OnMapStart() {
         precacheSound(var_heavy_love[i-1]);
     }
     
-    for (new i = 1; i <= sizeof(var_intro1); i++) {
+    for (new i = 1; i <= sizeof(g_intro1); i++) {
         Format(input, sizeof(input), "imgay/tf2ware/minigame_%d.mp3", i);
         precacheSound(input);
         for (new i2 = 1; i2 <= 2; i2++) {
-            if (((i2 == 1) && (!(StrEqual(var_intro1[i-1], "")))) || ((i2 == 2) && (!(StrEqual(var_intro2[i-1], ""))))) {
+            if (((i2 == 1) && (!(StrEqual(g_intro1[i-1], "")))) || ((i2 == 2) && (!(StrEqual(g_intro2[i-1], ""))))) {
                 for (new i3 = 0; i3 < sizeof(var_lang); i3++) {
                     Format(input, sizeof(input), "materials/%s%stf2ware_minigame_%d_%d.vmt", materialpath, var_lang[i3], i, i2);
                     AddFileToDownloadsTable(input);
@@ -414,10 +493,9 @@ public OnClientPostAdminCheck(client) {
 }
 
 public OnClientPutInServer(client) {
-    if (GetConVarBool(ww_log)) LogMessage("Client put in server and hooked");
-    SDKHook(client, SDKHook_PreThink, OnPreThink);
-    SDKHook(client, SDKHook_OnTakeDamage, OnTakeDamageClient);
-    SDKHook(client, SDKHook_Touch, OnPlayerTouch);
+   if (GetConVarBool(ww_log)) LogMessage("Client put in server and hooked");
+   SDKHook(client, SDKHook_PreThink, OnPreThink);
+   SDKHook(client, SDKHook_OnTakeDamage, OnTakeDamageClient);
     
 }
 
@@ -425,15 +503,11 @@ public OnClientDisconnect(client) {
     if (GetConVarBool(ww_log)) LogMessage("Client disconnected");
     SDKUnhook(client, SDKHook_PreThink, OnPreThink);
     SDKUnhook(client, SDKHook_OnTakeDamage, OnTakeDamageClient);
-    SDKUnhook(client, SDKHook_Touch, OnPlayerTouch);
+
     g_Spawned[client] = false;
 }
 
-public Action:OnTakeDamageClient(victim, &attacker, &inflictor, &Float:damage, &damagetype) {    
-    if ((status == 2) && (minigame == 13)) {
-        if (damage > 0) damage = 1.0;
-        return Plugin_Changed;
-    }
+public Action:OnTakeDamageClient(victim, &attacker, &inflictor, &Float:damage, &damagetype) {
     
     if ((g_Winner[victim] >= 1) && (status != 2)) {
         damage = 0.0;
@@ -445,23 +519,6 @@ public Action:OnTakeDamageClient(victim, &attacker, &inflictor, &Float:damage, &
         return Plugin_Changed;
     }
     
-    if (GetConVarBool(ww_enable) && (IsValidClient(victim)) && (victim != attacker) && (status == 2)) {
-        if ((minigame == 1) && IsValidClient(attacker)) {
-            SetStateClient(attacker, true, true);
-            damage = 450.0;
-            return Plugin_Changed;
-        }
-        if ((minigame == 2) && IsValidClient(attacker) && (g_Mission[victim] == 1)) {
-            SetStateClient(attacker, true, true);
-        }
-        if (minigame == 5 && IsValidClient(victim)) {
-            decl Float:fVelocity[3];
-            GetEntPropVector(victim, Prop_Data, "m_vecVelocity", fVelocity);
-            fVelocity[2] -= 70.0;
-            TeleportEntity(victim, NULL_VECTOR, NULL_VECTOR, fVelocity);
-        }
-    }
-    
     return Plugin_Continue;
 }
 
@@ -471,13 +528,6 @@ public OnPreThink(client) {
         if ((iButtons & IN_ATTACK2) || (iButtons & IN_ATTACK)) {
         iButtons &= ~IN_ATTACK;
         iButtons &= ~IN_ATTACK2;
-        SetEntProp(client, Prop_Data, "m_nButtons", iButtons);
-        }
-    }
-    
-    if ((status == 2) && (minigame == 8) && GetConVarBool(ww_enable) && g_enabled) {
-        if ((iButtons & IN_ATTACK)) {
-        iButtons &= ~IN_ATTACK;
         SetEntProp(client, Prop_Data, "m_nButtons", iButtons);
         }
     }
@@ -507,14 +557,16 @@ public EventInventoryApplication(Handle:event, const String:name[], bool:dontBro
             if (status != 5) CreateSprite(client);
         }
         if (status == 2) {
-            justEnteredMinigame(client);
+            Call_StartForward(g_justEnteredMinigame);
+            Call_PushCell(client);
+            Call_Finish();
             CreateSprite(client);
         }
         if (status == 5 && g_Winner[client] > 0) CreateSprite(client);
         SetOverlay(client, "");
+        if ((status == 2 && g_attack) || (g_Winner[client] > 0)) SetEntProp(client, Prop_Send, "m_bDrawViewmodel", 1);
+        else SetEntProp(client, Prop_Send, "m_bDrawViewmodel", 0);
     }
-    if ((status == 2 && g_attack) || (g_Winner[client] > 0)) SetEntProp(client, Prop_Send, "m_bDrawViewmodel", 1);
-    else SetEntProp(client, Prop_Send, "m_bDrawViewmodel", 0);
 }
 
 precacheSound(String:var[]) {
@@ -540,7 +592,10 @@ public StartMinigame_cvar(Handle:cvar, const String:oldVal[], const String:newVa
 }
 
 public OnGameFrame() {
-    if (GetConVarBool(ww_enable) && g_enabled && (status == 2)) OnGameFrame_Minigames();
+    if (GetConVarBool(ww_enable) && g_enabled && (status == 2) && (g_OnGameFrame_Minigames != INVALID_HANDLE)) {
+        Call_StartForward(g_OnGameFrame_Minigames);
+        Call_Finish();
+    }
 }
 
 public Action:StartMinigame_timer(Handle:hTimer) {
@@ -559,22 +614,21 @@ public Action:StartMinigame_timer2(Handle:hTimer) {
 }
 
 RollMinigame() {
+    // FIXME: Need to move a lot of this to the cfg file
     if (GetConVarBool(ww_log) && bossBattle == false) LogMessage("Rolling normal microgame...");
     if (GetConVarBool(ww_log) && bossBattle) LogMessage("Rolling boss microgame...");
     new Handle:roll = CreateArray();
     new bool:accept = true;
     new out = 1;
     
-    for (new i = 1; i <= sizeof(var_intro1); i++) {
+    for (new i = 1; i <= sizeof(g_intro1); i++) {
         accept = true;
         if ((i == 2) && ((GetActivePlayers(2) <= 1) || (GetActivePlayers(3) <= 1))) accept = false;
-        if ((bossBattle) && (var_boss[i-1] == false)) accept = false;
-        if ((bossBattle == false) && (var_boss[i-1])) accept = false;
+        if ((bossBattle) && (g_boss[i-1] == 0)) accept = false;
+        if ((bossBattle == false) && (g_boss[i-1])) accept = false;
         if ((i == 14) && (GetActivePlayers() < 6)) accept = false;
         if ((i == 16) && (GetActivePlayers() < 6)) accept = false;
-        if (StrEqual(var_intro1[i-1], "")) accept = false;
-        if (i == PreviousMicrogame) accept = false;
-        if (i == PreviousBoss) accept = false;
+        if (StrEqual(g_intro1[i-1], "")) accept = false;
         if (accept) PushArrayCell(roll, i);
         if (GetConVarBool(ww_log) && (accept)) LogMessage("-- Microgame %d allowed", i);
         if (GetConVarBool(ww_log) && (accept == false)) LogMessage("-- Microgame %d NOT allowed", i);
@@ -610,7 +664,6 @@ HandOutPoints() {
 StartMinigame() {
     if (GetConVarBool(ww_enable) && g_enabled && (status == 0) && (GetTeamClientCount(2) >= 1) && (GetTeamClientCount(3) >= 1) && g_waiting == false) {
         if (GetConVarBool(ww_log)) LogMessage("Starting microgame! Status = 0");
-        DestroyAllBarrels();
         RespawnAll();
         RemoveAllWeapons();
         SetConVarInt(FindConVar("mp_respawnwavetime"), 9999);
@@ -633,44 +686,37 @@ StartMinigame() {
         
         status = 1;
         minigame = RollMinigame();
-        if (bossBattle) PreviousBoss = minigame;
-        else PreviousMicrogame = minigame;
-        CreateTimer(GetSpeedMultiplier(MUSIC_START_LEN), Game_Start);
+        CreateTimer(GetSpeedMultiplier(2.1), Game_Start);
         g_attack = false;
         CreateAllSprites();
-        UpdateHud(GetSpeedMultiplier(MUSIC_START_LEN));
+        UpdateHud(GetSpeedMultiplier(2.0));
     }
 }
 
 public Action:Game_Start(Handle:hTimer) {
     if (status == 1) {
         if (GetConVarBool(ww_log)) LogMessage("Microgame started! Status = 1");
-        
-        // music
         new String:sound[512];
         Format(sound, sizeof(sound), "imgay/tf2ware/minigame_%d.mp3", minigame);
         new channel = SNDCHAN_AUTO;
-        if (var_dynamic[minigame-1]) channel = SND_CHANNEL_SPECIFIC;
+        if (g_dynamic[minigame-1]) channel = SND_CHANNEL_SPECIFIC;
         if (GetConVarBool(ww_music)) EmitSoundToClient(1, sound, SOUND_FROM_PLAYER, channel, SNDLEVEL_NORMAL, SND_NOFLAGS, SNDVOL_NORMAL,GetSoundMultiplier());
         else EmitSoundToAll(sound, SOUND_FROM_PLAYER, channel, SNDLEVEL_NORMAL, SND_NOFLAGS, SNDVOL_NORMAL,GetSoundMultiplier());
-        
         SetStateAll(false);
         g_first = false;
         status = 2;
-        if (GetConVarBool(ww_log)) LogMessage("- Pre-sprite creation");
-        CreateAllSprites();
         if (GetConVarBool(ww_log)) LogMessage("- Pre part 1");
         SetMissionAll(0);
         g_attack = false;
         if (GetConVarBool(ww_log)) LogMessage("- Pre part 2");
-        OnMinigame(minigame);
+        InitMinigame(minigame);
         if (GetConVarBool(ww_log)) LogMessage("- Pre-Mission");
         PrintMissionText();
         timeleft = 8;
         if (GetConVarBool(ww_log)) LogMessage("- Pre part 3");
         if (bossBattle) CreateTimer(GetSpeedMultiplier(3.0), CountDown_Timer);
         else CreateTimer(GetSpeedMultiplier(1.0), CountDown_Timer);
-        microgametimer = CreateTimer(GetSpeedMultiplier(var_time[minigame-1]), EndGame);
+        microgametimer = CreateTimer(GetSpeedMultiplier(g_time[minigame-1]), EndGame);
         if (GetConVarBool(ww_log)) LogMessage("Microgame started post");
     }
     return Plugin_Stop;
@@ -691,7 +737,12 @@ public Action:CountDown_Timer(Handle:hTimer) {
     if ((status == 2) && (timeleft > 0)) {
         timeleft = timeleft - 1;
         CreateTimer(GetSpeedMultiplier(0.4), CountDown_Timer);
-        if (bossBattle == false) OnTimerMinigame(timeleft);
+        if (bossBattle == false) {
+            Call_StartForward(g_OnTimerMinigame);
+            Call_PushCell(timeleft);
+            Call_Finish();
+            //OnTimerMinigame(timeleft);
+        }
         if (timeleft == 3) {
             for (new i = 1; i <= MaxClients; i++) {
                 if (IsValidClient(i)) SetOverlay(i,"");
@@ -704,7 +755,9 @@ public Action:EndGame(Handle:hTimer) {
     if (GetConVarBool(ww_log)) LogMessage("Microgame %d ended!", minigame);
     microgametimer = INVALID_HANDLE;
     if (status == 2) {
-        OnAlmostEndMinigame();
+        Call_StartForward(g_OnAlmostEndMinigame);
+        Call_Finish();
+
         new String:sound[512];
         for (new i = 1; i <= MaxClients; i++) {
             if (IsValidClient(i) && (!(IsFakeClient(i)))) {
@@ -727,15 +780,26 @@ public Action:EndGame(Handle:hTimer) {
                 }
                 new String:oldsound[512];
                 Format(oldsound, sizeof(oldsound), "imgay/tf2ware/minigame_%d.mp3", minigame);
-                if (var_dynamic[minigame-1]) StopSound(i, SND_CHANNEL_SPECIFIC, oldsound);
+                if (g_dynamic[minigame-1]) StopSound(i, SND_CHANNEL_SPECIFIC, oldsound);
                 EmitSoundToClient(i, sound, SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, SNDVOL_NORMAL,GetSoundMultiplier());
             }
         }
         g_attack = false;
         status = 0;
-        CreateAllSprites();
         NoCollision(false);
-        OnEndMinigame();
+        
+        Call_StartForward(g_OnEndMinigame);
+        Call_Finish();
+        
+        // Clear all functions from forwards
+        RemoveAllFromForward(g_justEnteredMinigame, INVALID_HANDLE);
+        RemoveAllFromForward(g_OnAlmostEndMinigame, INVALID_HANDLE);
+        RemoveAllFromForward(g_OnTimerMinigame, INVALID_HANDLE);
+        RemoveAllFromForward(g_OnEndMinigame, INVALID_HANDLE);
+        RemoveAllFromForward(g_OnGameFrame_Minigames, INVALID_HANDLE);
+        RemoveAllFromForward(g_PlayerDeath, INVALID_HANDLE);
+        
+        //OnEndMinigame();
         RespawnAll();
         RemoveAllWeapons();
         
@@ -762,15 +826,15 @@ public Action:EndGame(Handle:hTimer) {
         
         if (speedup == false) {
             status = 10;
-            CreateTimer(GetSpeedMultiplier(MUSIC_END_LEN), StartMinigame_timer2);
+            CreateTimer(GetSpeedMultiplier(1.9), StartMinigame_timer2);
         }
         if (speedup == true) {
             status = 3;
-            CreateTimer(GetSpeedMultiplier(MUSIC_END_LEN), Speedup_timer);
+            CreateTimer(GetSpeedMultiplier(1.9), Speedup_timer);
         }
         if (bossBattle) {
             status = 4;
-            CreateTimer(GetSpeedMultiplier(MUSIC_END_LEN), Victory_timer);
+            CreateTimer(GetSpeedMultiplier(1.9), Victory_timer);
         }
     }
     return Plugin_Stop;
@@ -784,7 +848,7 @@ public Action:Speedup_timer(Handle:hTimer) {
             currentSpeed = GetConVarInt(ww_speed);
             ServerCommand("host_timescale %f", GetHostMultiplier(1.0));
             ServerCommand("phys_timescale %f", GetHostMultiplier(1.0));
-            CreateTimer(GetSpeedMultiplier(MUSIC_BOSS_LEN), StartMinigame_timer2);
+            CreateTimer(GetSpeedMultiplier(4.1), StartMinigame_timer2);
             
             if (GetConVarBool(ww_music)) EmitSoundToClient(1, MUSIC_BOSS, SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, SNDVOL_NORMAL,GetSoundMultiplier());
             else EmitSoundToAll(MUSIC_BOSS, SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, SNDVOL_NORMAL,GetSoundMultiplier());
@@ -794,7 +858,7 @@ public Action:Speedup_timer(Handle:hTimer) {
                 }
             }
             
-            UpdateHud(GetSpeedMultiplier(MUSIC_BOSS_LEN));
+            UpdateHud(GetSpeedMultiplier(4.0));
         }
     
         if ((GetConVarInt(ww_speed) < 4) && (bossBattle == false)) {
@@ -805,10 +869,11 @@ public Action:Speedup_timer(Handle:hTimer) {
                     SetOverlay(i,"tf2ware_minigame_speed");
                 }
             }
-            UpdateHud(GetSpeedMultiplier(MUSIC_SPEEDUP_LEN));
+            UpdateHud(GetSpeedMultiplier(3.7));
             SetConVarInt(ww_speed, GetConVarInt(ww_speed) + 1);
-            CreateTimer(GetSpeedMultiplier(MUSIC_SPEEDUP_LEN), StartMinigame_timer2);
+            CreateTimer(GetSpeedMultiplier(3.8), StartMinigame_timer2);
         }
+        CreateAllSprites();
         status = 10;
     }
     return Plugin_Stop;
@@ -819,7 +884,7 @@ public Action:Victory_timer(Handle:hTimer) {
         bossBattle = false;
         SetConVarInt(ww_speed, 1);
         currentSpeed = GetConVarInt(ww_speed);
-        CreateTimer(GetSpeedMultiplier(MUSIC_GAMEOVER_LEN), Restartall_timer);
+        CreateTimer(GetSpeedMultiplier(8.17), Restartall_timer);
         
         if (GetConVarBool(ww_music)) EmitSoundToClient(1, MUSIC_GAMEOVER, SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, SNDVOL_NORMAL,GetSoundMultiplier());
         else EmitSoundToAll(MUSIC_GAMEOVER, SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, SNDVOL_NORMAL,GetSoundMultiplier());
@@ -836,8 +901,8 @@ public Action:Victory_timer(Handle:hTimer) {
         decl String:winnerstring_names[128];
         
         for (new i = 1; i <= MaxClients; i++) {
+            SetOverlay(i, "");
             if (IsValidClient(i)) {
-                SetOverlay(i,"");
                 if (g_Points[i] >= top) {
                     g_Winner[i] = 1;
                     CreateSprite(i);
@@ -1098,7 +1163,7 @@ UpdateHud(Float:time) {
     decl String:output[512];
     decl String:add[5];
     for(new i = 1; i <= MaxClients; i++) {
-        if (IsValidClient(i) && GetClientTeam(i) >= 2 && g_Spawned[i]) {
+        if (IsValidClient(i)) {
             Format(add, sizeof(add), "");
             if (g_Complete[i] && bossBattle) Format(add, sizeof(add), "+5");
             if (g_Complete[i] && !bossBattle) Format(add, sizeof(add), "+1");
@@ -1152,54 +1217,6 @@ GetAverageScore() {
     return out;
 }
 
-public Action:Player_Say(iClient, iArgs)
-{
-    if (!(IsValidClient(iClient))) return Plugin_Continue;
-    if (iArgs < 1) return Plugin_Continue;
-    
-    if ((IsPlayerAlive(iClient)) && (status == 2) && (minigame == 9) && (g_Complete[iClient] == false)) {
-        // Retrieve the first argument and check it's a valid trigger
-        decl String:strArgument[64]; GetCmdArg(1, strArgument, sizeof(strArgument));
-        new String:strZero[2];
-        new bool:isAnswerZero = false;
-        strZero = "0";
-
-        if(strcmp(strArgument,strZero) == 0)
-        {
-            isAnswerZero = true;
-        }
-        
-        new guess = StringToInt(strArgument);
-        
-        if ((guess == g_result) || (g_result == 0 && isAnswerZero == true)) {
-            SetHudTextParams(-1.0, 0.4, 3.0, 0,255,0, 255, 0, 6.0, 0.2, 0.5);
-            // Replace the current display to include the guess instead of a question mark
-            ShowHudText(iClient, 5, "%s = %d", g_mathquestion, guess);            
-            SetStateClient(iClient, true, true);
-            if (!(g_first)) {
-                for (new i = 1; i <= MaxClients; i++) {
-                    if (IsValidClient(i)) {
-                        if (g_Country[i] == 1) CPrintToChatEx(i, iClient, "{teamcolor}%N{green} ha indovinato la risposta per primo!", iClient);
-                        else CPrintToChatEx(i, iClient, "{teamcolor}%N{green} guessed the answer first!", iClient);
-                    }
-                }
-                g_first = true;
-            }
-        }
-        if (guess != g_result) {
-            SetHudTextParams(-1.0, 0.4, 3.0, 255,0,0, 255, 0, 6.0, 0.2, 0.5);
-            // Use a notequals sign!
-            ShowHudText(iClient, 5, "%s ≠ %d", g_mathquestion, guess);
-            ForcePlayerSuicide(iClient);
-        }
-        
-        return Plugin_Handled;
-    }
-    
-    // If no valid argument found, pass
-    return Plugin_Continue;
-}
-
 ResetWinners() {
         for (new i = 1; i <= MaxClients; i++) {
             g_Winner[i] = 0;
@@ -1220,4 +1237,35 @@ RemoveNotifyFlag(String:name[128]) {
     flags &= ~FCVAR_REPLICATED;
     flags &= ~FCVAR_NOTIFY;
     SetConVarFlags(cv1, flags);
+}
+
+InitMinigame(id) {
+    g_respawn = false;
+
+    GiveId();
+    Call_StartFunction(INVALID_HANDLE, g_initFuncs[id-1]);
+    Call_Finish();
+    
+    if (g_respawn == false) {
+        for (new i = 1; i <= MaxClients; i++) {
+            Call_StartForward(g_justEnteredMinigame);
+            Call_PushCell(i);
+            Call_Finish();
+        }
+    }
+}
+
+public Player_Death(Handle:event, const String:name[], bool:dontBroadcast) {
+    new client = GetClientOfUserId(GetEventInt(event, "userid"));
+    
+    DestroySprite(client);
+    
+    if (GetConVarBool(ww_enable) && (status == 2)) {
+    
+        if (g_PlayerDeath != INVALID_HANDLE && IsValidClient(client)) {
+            Call_StartForward(g_PlayerDeath);
+            Call_PushCell(client);
+            Call_Finish();
+        }
+    }
 }
