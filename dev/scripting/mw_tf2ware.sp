@@ -190,7 +190,7 @@ public OnPluginStart() {
         KvGotoFirstSubKey(MinigameConf);
         new i=0;
         do {
-            KvGetSectionName(MinigameConf, g_name[i], 32);
+            KvGetSectionName(MinigameConf, g_name[KvGetNum(MinigameConf, "id")-1], 32);
             i++;
           } while (KvGotoNextKey(MinigameConf)); 
           
@@ -640,10 +640,11 @@ RollMinigame() {
     if (GetConVarBool(ww_log) && bossBattle == false) LogMessage("Rolling normal microgame...");
     if (GetConVarBool(ww_log) && bossBattle) LogMessage("Rolling boss microgame...");
     new Handle:roll = CreateArray();
-    new bool:accept = true;
+    new bool:accept = false;
     new out = 1;
     new iplayers = GetActivePlayers();
     for (new i = 1; i <= g_iGames; i++) {
+        if (StrEqual(g_name[i-1], "")) continue;
         accept = true;
         new gameisboss = GetMinigameConfNum(g_name[i-1], "boss", 0);
         if (iplayers < GetMinigameConfNum(g_name[i-1], "minplayers", 2)) accept = false;
@@ -660,7 +661,11 @@ RollMinigame() {
     if (GetArraySize(roll) > 0) out = GetArrayCell(roll, GetRandomInt(0, GetArraySize(roll)-1));
     CloseHandle(roll);
     
-    if (GetConVarInt(ww_force) > 0) out = GetConVarInt(ww_force);
+    new force = GetConVarInt(ww_force);
+    if (force > 0) {
+        if (force-1 < sizeof(g_name) && !StrEqual(g_name[force-1], "")) out = GetConVarInt(ww_force);
+        else PrintToServer("Warning: Couldn't find a game with id %d, continuing with random roll.", GetConVarInt(ww_force));
+    }
     
     if (GetConVarBool(ww_log)) LogMessage("Rolled microgame was: %s (id:%d)", g_name[out-1], out);
     

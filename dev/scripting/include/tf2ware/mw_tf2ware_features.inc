@@ -10,9 +10,10 @@ RegMinigame(String:game_name[], Function:initFunc) {
         if (StrEqual(game_name, g_name[i])) {
             PrintToServer("Registered minigame %s, id %d", game_name, i+1);
             g_initFuncs[i] = initFunc;
-            break;
+            return;
         }
     }
+    PrintToServer("Warning: Attempted to register minigame %s and failed--configuration not found", game_name);
 }
 
 
