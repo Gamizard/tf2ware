@@ -1,4 +1,5 @@
-new String:var_target_models[][] = {"models/props_training/target_sniper.mdl"};
+//new String:var_target_models[][] = {"models/props_training/target_sniper.mdl"};
+new String:var_target_models[][] = {"models/props_farm/wooden_barrel.mdl"};
 new var_targets[MAXPLAYERS+1];
 
 public SniperTarget_Init() {
@@ -34,16 +35,31 @@ public SniperTarget_OnMinigame() {
             decl String:model[128];
             Format(model, sizeof(model), var_target_models[GetRandomInt(0, sizeof(var_target_models)-1)]);
             DispatchKeyValue(var_targets[i], "model", model);
-            DispatchSpawn(var_targets[i]);
             vel[0]=GetRandomFloat(-300.0, 300.0);
             vel[1]= GetRandomFloat(-300.0, 300.0);
             vel[2] = GetRandomFloat(-300.0, 300.0);
             pos[2] += 150;
             TeleportEntity(var_targets[i], pos, NULL_VECTOR, vel);
-            SetEntityMoveType(var_targets[i], MOVETYPE_NOCLIP);
-            //SDKHook(var_targets[i], SDKHook_OnTakeDamage, Barrel_OnTakeDamage);
+            SetEntPropFloat(var_targets[i], Prop_Data, "m_flGravity",  0.001);
+            DispatchSpawn(var_targets[i]);
+            SDKHook(var_targets[i], SDKHook_OnTakeDamage, Target_OnTakeDamage);
         }
     }
+}
+
+public Action:Target_OnTakeDamage(victim, &attacker, &inflictor, &Float:damage, &damagetype)
+{
+    if (IsValidClient(attacker) && iMinigame == 18 && status == 2) SetStateClient(attacker, true, true);
+    
+    damage = 0.0;
+    
+    decl Float:vel[3];
+    vel[0]=GetRandomFloat(-300.0, 300.0);
+    vel[1]= GetRandomFloat(-300.0, 300.0);
+    vel[2] = GetRandomFloat(-300.0, 300.0);
+    TeleportEntity(victim, NULL_VECTOR, NULL_VECTOR, vel);
+    
+    return Plugin_Changed;
 }
 
 public SniperTarget_End() {
