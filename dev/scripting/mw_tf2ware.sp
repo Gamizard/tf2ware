@@ -110,8 +110,6 @@ new Roundstarts = 0;
 new g_lastminigame = 0;
 new g_lastboss = 0;
 
-new g_iGames = 0;
-
 new g_welcomedisplayed[MAXPLAYERS+1];
 
 // Strings
@@ -389,16 +387,13 @@ public OnMapStart() {
     do {
         id = KvGetNum(MinigameConf, "id");
         new j=1, String:intros[8];
-        Format(input, sizeof(input), "imgay/tf2ware/minigame_%d.mp3", i);
+        Format(input, sizeof(input), "imgay/tf2ware/minigame_%d.mp3", id);
         precacheSound(input);
-        PrintToServer(input);
         
         Format(intros, sizeof(intros), "intro%d", j);
         while (KvJumpToKey(MinigameConf, intros)) {
-            PrintToServer("Looking at %s", intros);
             for (new k = 0; k < sizeof(var_lang); k++) {
                 Format(input, sizeof(input), "materials/%s%stf2ware_minigame_%d_%d.vmt", materialpath, var_lang[k], id, j);
-                PrintToServer(input);
                 AddFileToDownloadsTable(input);
                 Format(input, sizeof(input), "materials/%s%stf2ware_minigame_%d_%d.vtf", materialpath, var_lang[k], id, j);
                 AddFileToDownloadsTable(input);
@@ -410,7 +405,6 @@ public OnMapStart() {
         i++;
       } while (KvGotoNextKey(MinigameConf)); 
     KvRewind(MinigameConf);
-    g_iGames = i-1;
     
     white = PrecacheModel("materials/sprites/white.vmt");
     g_HaloSprite = PrecacheModel("materials/sprites/halo01.vmt");
@@ -635,7 +629,7 @@ RollMinigame() {
     new bool:accept = false;
     new out = 1;
     new iplayers = GetActivePlayers();
-    for (new i = 1; i <= g_iGames; i++) {
+    for (new i = 1; i <= sizeof(g_name); i++) {
         if (StrEqual(g_name[i-1], "")) continue;
         accept = true;
         new gameisboss = GetMinigameConfNum(g_name[i-1], "boss", 0);
@@ -753,7 +747,6 @@ PrintMissionText() {
         if (IsValidClient(i)) {
             new String:input[512];
             Format(input, sizeof(input), "tf2ware_minigame_%d_%d", iMinigame, g_Mission[i]+1);
-            PrintToServer("Mission display file: %s", input);
             SetOverlay(i,input);
         }
     }
