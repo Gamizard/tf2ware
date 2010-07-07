@@ -2,12 +2,12 @@
 
 public Hopscotch_OnMinigame() {
     AddToForward(g_justEntered, INVALID_HANDLE, Hopscotch_justEntered);
-    AddToForward(g_OnEndMinigame, INVALID_HANDLE, Hopscotch_End);
-    AddToForward(g_OnAlmostEnd, INVALID_HANDLE, Hopscotch_CheckDeadPlayers);
+    // AddToForward(g_OnAlmostEnd, INVALID_HANDLE, Hopscotch_CheckDeadPlayers);
+    AddToForward(g_OnGameFrame_Minigames, INVALID_HANDLE, Hopscotch_OnGameFrame);
     
     SetAllClass("heavy");
     g_respawn = true;
-    SetStateAll(true);
+    SetStateAll(false);
     RespawnAll(true, false);
 }
 
@@ -42,11 +42,12 @@ public Hopscotch_justEntered(client) {
     }
 }
 
-public Hopscotch_CheckDeadPlayers() {
+public Hopscotch_OnGameFrame() {
     for (new i = 1; i <= MaxClients; i++) {
-        if (IsValidClient(i) && (!(IsPlayerAlive(i)))) SetStateClient(i, false);
+        if (IsValidClient(i) && IsPlayerAlive(i)) {
+            decl Float:pos[3];
+            GetClientAbsOrigin(i, pos);
+            if (pos[1] > 2235.0 ) SetStateClient(i, true, true);
+        }
     }
-}
-
-public Hopscotch_End() {
 }

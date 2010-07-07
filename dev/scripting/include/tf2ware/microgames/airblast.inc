@@ -10,7 +10,7 @@ public Airblast_OnMinigame() {
     AddToForward(g_justEntered, INVALID_HANDLE, Airblast_justEntered);
     AddToForward(g_OnEndMinigame, INVALID_HANDLE, Airblast_End);
     // Hopscotch game has the same exact check
-    AddToForward(g_OnAlmostEnd, INVALID_HANDLE, Hopscotch_CheckDeadPlayers);
+    AddToForward(g_OnAlmostEnd, INVALID_HANDLE, Airblast_CheckDeadPlayers);
     
     SetAllClass("pyro");
     SetStateAll(true);
@@ -57,6 +57,12 @@ public Airblast_RemoveLeftClick(client) {
             iButtons &= ~IN_ATTACK;
             SetEntProp(client, Prop_Data, "m_nButtons", iButtons);
         }
+    }
+}
+
+public Airblast_CheckDeadPlayers() {
+    for (new i = 1; i <= MaxClients; i++) {
+        if (IsValidClient(i) && (!(IsPlayerAlive(i)))) SetStateClient(i, false);
     }
 }
 
