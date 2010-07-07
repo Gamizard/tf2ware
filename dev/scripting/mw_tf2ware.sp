@@ -213,7 +213,7 @@ public OnPluginStart() {
     
     // ConVars
     ww_enable = CreateConVar("ww_enable", "0", "Enables/Disables TF2 Ware.", FCVAR_PLUGIN);
-    ww_force = CreateConVar("ww_force", "0", "Force a certain iMinigame (0 to not force).", FCVAR_PLUGIN);
+    ww_force = CreateConVar("ww_force", "0", "Force a certain minigame (0 to not force).", FCVAR_PLUGIN);
     ww_speed = CreateConVar("ww_speed", "1", "Speed level.", FCVAR_PLUGIN);
     ww_music = CreateConVar("ww_music_fix", "0", "Apply music fix? Should only be on for localhosts during testing", FCVAR_PLUGIN);
     ww_log = CreateConVar("ww_log", "0", "Log server events?", FCVAR_PLUGIN);
@@ -234,6 +234,7 @@ public OnPluginStart() {
     HookEvent("teamplay_game_over", Event_Roundend, EventHookMode_PostNoCopy);
     HookEvent("teamplay_round_stalemate", Event_Roundend, EventHookMode_PostNoCopy);
     HookEvent("teamplay_round_win", Event_Roundend, EventHookMode_PostNoCopy);
+    RegAdminCmd("ww_list", Command_list, ADMFLAG_GENERIC, "Lists all the registered, enabled plugins and their ids");
     RegAdminCmd("ww_give", Command_points, ADMFLAG_GENERIC, "Gives you 20 points - You're a winner! (testing feature)");
     
     // Vars
@@ -1094,12 +1095,12 @@ HookAllCheatCommands() {
 }
 
 UpdateClientCheatValue() {
-        if (GetConVarBool(ww_log)) LogMessage("Updating client cheat value");
-        for(new i = 1; i <= MaxClients; i++) {
-            if(IsValidClient(i) && (!(IsFakeClient(i)))) {
-                SendConVarValue(i, FindConVar("sv_cheats"), "1");
-            }
+    if (GetConVarBool(ww_log)) LogMessage("Updating client cheat value");
+    for(new i = 1; i <= MaxClients; i++) {
+        if(IsValidClient(i) && (!(IsFakeClient(i)))) {
+            SendConVarValue(i, FindConVar("sv_cheats"), "1");
         }
+    }
 }
 
 public OnConVarChanged_SvCheats(Handle:convar, const String:oldValue[], const String:newValue[]) {
@@ -1210,9 +1211,9 @@ GetAverageScore() {
 }
 
 ResetWinners() {
-        for (new i = 1; i <= MaxClients; i++) {
-            g_Winner[i] = 0;
-        }
+    for (new i = 1; i <= MaxClients; i++) {
+        g_Winner[i] = 0;
+    }
 }
 
 public Action:Command_points(client, args) {
@@ -1221,6 +1222,19 @@ public Action:Command_points(client, args) {
     g_Points[0] += 20;
     g_Points[1] += 20;
     return Plugin_Handled;
+}
+
+public Action:Command_list(client, args) {
+    PrintToConsole(client, "Listing all registered minigames...");
+    new String:output[128];
+    for (new i=0; i<sizeof(g_name); i++) {
+        if (StrEqual(g_name[i], "")) continue;
+        if (GetMinigameConfNum(g_name[i], "enable", 1))
+            Format(output, sizeof(output), " %2d - %s", GetMinigameConfNum(g_name[i], "id"), g_name[i]);
+        else
+            Format(output, sizeof(output), " %2d - %s (disabled)", GetMinigameConfNum(g_name[i], "id"), g_name[i]);
+        PrintToConsole(client, output);
+    }
 }
 
 RemoveNotifyFlag(String:name[128]) {
