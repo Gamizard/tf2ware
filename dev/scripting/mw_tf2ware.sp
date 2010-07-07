@@ -110,8 +110,6 @@ new Roundstarts = 0;
 new g_lastminigame = 0;
 new g_lastboss = 0;
 
-new g_welcomedisplayed[MAXPLAYERS+1];
-
 // Strings
 new String:materialpath[512] = "imgay/";
 // Name of current minigame being played
@@ -227,7 +225,6 @@ public OnPluginStart() {
     HookEvent("teamplay_game_over", Event_Roundend, EventHookMode_PostNoCopy);
     HookEvent("teamplay_round_stalemate", Event_Roundend, EventHookMode_PostNoCopy);
     HookEvent("teamplay_round_win", Event_Roundend, EventHookMode_PostNoCopy);
-    HookEvent("player_changeclass",Event_ChangeClass);
     RegAdminCmd("ww_give", Command_points, ADMFLAG_GENERIC, "Gives you 20 points - You're a winner! (testing feature)");
     
     // Vars
@@ -334,23 +331,14 @@ public OnMapStart() {
     
     decl String:input[512];
     
+    new String:materials[5][20] = { "minigame_win", "minigame_fail", "minigame_speed", "minigame_boss", "welcome" };
     for (new i = 0; i < sizeof(var_lang); i++) {
-        Format(input, sizeof(input), "materials/%s%stf2ware_minigame_win.vmt", materialpath, var_lang[i]);
-        AddFileToDownloadsTable(input);
-        Format(input, sizeof(input), "materials/%s%stf2ware_minigame_win.vtf", materialpath, var_lang[i]);
-        AddFileToDownloadsTable(input);
-        Format(input, sizeof(input), "materials/%s%stf2ware_minigame_fail.vmt", materialpath, var_lang[i]);
-        AddFileToDownloadsTable(input);
-        Format(input, sizeof(input), "materials/%s%stf2ware_minigame_fail.vtf", materialpath, var_lang[i]);
-        AddFileToDownloadsTable(input);
-        Format(input, sizeof(input), "materials/%s%stf2ware_minigame_speed.vmt", materialpath, var_lang[i]);
-        AddFileToDownloadsTable(input);
-        Format(input, sizeof(input), "materials/%s%stf2ware_minigame_speed.vtf", materialpath, var_lang[i]);
-        AddFileToDownloadsTable(input);
-        Format(input, sizeof(input), "materials/%s%stf2ware_minigame_boss.vmt", materialpath, var_lang[i]);
-        AddFileToDownloadsTable(input);
-        Format(input, sizeof(input), "materials/%s%stf2ware_minigame_boss.vtf", materialpath, var_lang[i]);
-        AddFileToDownloadsTable(input);
+        for (new j = 0; j < sizeof(materials); j++) {
+            Format(input, sizeof(input), "materials/%s%stf2ware_%s.vmt", materialpath, var_lang[i], materials[j]);
+            AddFileToDownloadsTable(input);
+            Format(input, sizeof(input), "materials/%s%stf2ware_%s.vtf", materialpath, var_lang[i], materials[j]);
+            AddFileToDownloadsTable(input);
+        }
     }
     
     for (new i = 1; i <= 19; i++) {
@@ -430,31 +418,13 @@ public Action:OnGetGameDescription(String:gameDesc[64]) {
     return Plugin_Changed;
 }
 
-public OnClientConnected(client)
-{
-    g_welcomedisplayed[client] = false;
-}
 
-public Action:Event_ChangeClass(Handle:event, const String:name[], bool:dontBroadcast)
-{
-// We want the player to see the message as soon as he sees the hud (when he chooses classes for the first time).
-    new client = GetClientOfUserId(GetEventInt(event, "userid"));
-    if (!g_welcomedisplayed[client])
-    {
-        CreateTimer(2.0, Timer_DisplayWelcome, client);
-        g_welcomedisplayed[client] = true;
-    }
-    return Plugin_Continue;
-}
-
-public Action:Timer_DisplayWelcome(Handle:timer, any:client)
+public Action:Timer_DisplayVersion(Handle:timer, any:client)
 {
     if (IsValidClient(client))
     {
-        SetHudTextParams(-1.0,0.30,5.0,0,255,0,255,1,3.0,1.0,3.0);
-        ShowHudText(client,1,"Welcome to TF2Ware %s!", PLUGIN_VERSION);
-        SetHudTextParams(-1.0,0.35,5.5,255,255,0,255,1,3.0,1.5,3.0);
-        ShowHudText(client, 2, "Have fun!");
+        SetHudTextParams(0.66,0.15,25.0,255,255,255,255,1,3.0,0.0,3.0);
+        ShowHudText(client,1,"v%s", PLUGIN_VERSION);
     }
     return Plugin_Handled;
 }
@@ -555,6 +525,11 @@ public EventInventoryApplication(Handle:event, const String:name[], bool:dontBro
     new client = GetClientOfUserId(GetEventInt(event, "userid"));
     if (g_Spawned[client] == false && g_waiting && GetConVarBool(ww_enable) && g_enabled && !IsFakeClient(client)) {
         EmitSoundToClient(client, MUSIC_WAITING, SOUND_FROM_PLAYER, SND_CHANNEL_SPECIFIC);
+        SetOverlay(client, "tf2ware_welcome");
+        CreateTimer(0.25, Timer_DisplayVersion, client);
+    }
+    else {
+        SetOverlay(client, "");
     }
     g_Spawned[client] = true;
     if (GetConVarBool(ww_enable) && g_enabled) {
@@ -571,7 +546,6 @@ public EventInventoryApplication(Handle:event, const String:name[], bool:dontBro
             CreateSprite(client);
         }
         if (status == 5 && g_Winner[client] > 0) CreateSprite(client);
-        SetOverlay(client, "");
         if ((status == 2 && g_attack) || (g_Winner[client] > 0)) SetEntProp(client, Prop_Send, "m_bDrawViewmodel", 1);
         else SetEntProp(client, Prop_Send, "m_bDrawViewmodel", 0);
     }
