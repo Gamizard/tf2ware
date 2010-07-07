@@ -391,7 +391,8 @@ public OnMapStart() {
         precacheSound(input);
         
         Format(intros, sizeof(intros), "intro%d", j);
-        while (KvGetNum(MinigameConf, intros)) {
+        while (KvJumpToKey(MinigameConf, intros)) {
+            PrintToServer("Looking at %s", intros);
             for (new k = 0; k < sizeof(var_lang); k++) {
                 Format(input, sizeof(input), "materials/%s%stf2ware_minigame_%d_%d.vmt", materialpath, var_lang[k], i, j);
                 AddFileToDownloadsTable(input);
@@ -399,6 +400,8 @@ public OnMapStart() {
                 AddFileToDownloadsTable(input);
             }
             j++;
+            Format(intros, sizeof(intros), "intro%d", j);
+            KvGoBack(MinigameConf);
         }
         i++;
       } while (KvGotoNextKey(MinigameConf)); 
