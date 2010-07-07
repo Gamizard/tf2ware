@@ -17,7 +17,7 @@
 
 #define MAX_MINIGAMES 20
 
-#define PLUGIN_VERSION "0.8.0-15"
+#define PLUGIN_VERSION "0.8.1-15"
 #define MUSIC_START "imgay/tf2ware/tf2ware_intro.mp3"
 #define MUSIC_START_LEN 2.18
 #define MUSIC_WIN "imgay/tf2ware/tf2ware_win.mp3"
@@ -337,6 +337,10 @@ public OnMapStart() {
     PrecacheModel("models/props_farm/gibs/wooden_barrel_chunk03.mdl", true);
     PrecacheModel("models/props_farm/gibs/wooden_barrel_chunk01.mdl", true);
     PrecacheModel(WW_BOMB_MODEL, true);
+    AddFileToDownloadsTable("materials/imgay/tf2ware_welcome.vmt");
+    AddFileToDownloadsTable("materials/imgay/tf2ware_welcome.vtf");
+    AddFileToDownloadsTable("materials/imgay/it/tf2ware_welcome.vmt");
+    AddFileToDownloadsTable("materials/imgay/it/tf2ware_welcome.vtf");
     
     decl String:input[512];
     
@@ -436,7 +440,10 @@ public Action:Event_Roundstart(Handle:event,const String:name[],bool:dontBroadca
         if ( Roundstarts == 1 ) {
             g_waiting = false;
             for (new i = 1; i <= MaxClients; i++) {
-                if (IsValidClient(i) && !IsFakeClient(i) && g_Spawned[i]) StopSound(i, SND_CHANNEL_SPECIFIC, MUSIC_WAITING);
+                if (IsValidClient(i) && !IsFakeClient(i) && g_Spawned[i]) {
+                StopSound(i, SND_CHANNEL_SPECIFIC, MUSIC_WAITING);
+                SetOverlay(i, "");
+                }
             }
             StartMinigame();
             if (GetConVarBool(ww_log)) LogMessage("Waiting-for-players period has ended");
@@ -524,9 +531,6 @@ public EventInventoryApplication(Handle:event, const String:name[], bool:dontBro
         EmitSoundToClient(client, MUSIC_WAITING, SOUND_FROM_PLAYER, SND_CHANNEL_SPECIFIC);
         SetOverlay(client, "tf2ware_welcome");
         CreateTimer(0.25, Timer_DisplayVersion, client);
-    }
-    else {
-        SetOverlay(client, "");
     }
     g_Spawned[client] = true;
     if (GetConVarBool(ww_enable) && g_enabled) {
@@ -1284,11 +1288,12 @@ p_GotoGameConf(String:game[]) {
     }
 }
 
-GetMinigameConfStr(String:game[], String:key[], String:buffer, size) {
+// This is never used... yet. No need for it for now.
+/*GetMinigameConfStr(String:game[], String:key[], String:buffer, size) {
     p_GotoGameConf(game);
     KvGetString(MinigameConf, key, buffer, size);
     KvGoBack(MinigameConf);
-}
+}*/
 
 Float:GetMinigameConfFloat(String:game[], String:key[], Float:def=4.0) {
     p_GotoGameConf(game);
