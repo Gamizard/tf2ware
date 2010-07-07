@@ -42,7 +42,7 @@
 
 #define TF2_PLAYER_TAUNTING        (1 << 7)    // 128        Taunting
 
-new String:g_name[MAX_MINIGAMES][12];
+new String:g_name[MAX_MINIGAMES][24];
 new Function:g_initFuncs[MAX_MINIGAMES];
 
 // Language strings
@@ -107,7 +107,7 @@ new g_lastboss = 0;
 // Strings
 new String:materialpath[512] = "imgay/";
 // Name of current minigame being played
-new String:minigame[12];
+new String:minigame[24];
 
 // VALID iMinigame FORWARD HANDLERS //////////////
 new Handle:g_OnMapStart;
@@ -330,10 +330,6 @@ public OnMapStart() {
     PrecacheModel("models/props_farm/gibs/wooden_barrel_chunk04.mdl", true);
     PrecacheModel("models/props_farm/gibs/wooden_barrel_chunk03.mdl", true);
     PrecacheModel("models/props_farm/gibs/wooden_barrel_chunk01.mdl", true);
-    AddFileToDownloadsTable("materials/imgay/tf2ware_welcome.vmt");
-    AddFileToDownloadsTable("materials/imgay/tf2ware_welcome.vtf");
-    AddFileToDownloadsTable("materials/imgay/it/tf2ware_welcome.vmt");
-    AddFileToDownloadsTable("materials/imgay/it/tf2ware_welcome.vtf");
     
     decl String:input[512];
     
@@ -832,6 +828,7 @@ public Action:EndGame(Handle:hTimer) {
 
 public Action:Speedup_timer(Handle:hTimer) {
     if (status == 3) {
+    //    DrawScoresheet();
         if ((GetConVarInt(ww_speed) >= 4)  && (bossBattle == false)) {
             bossBattle = true;
             SetConVarInt(ww_speed, 1);
@@ -998,6 +995,33 @@ RemoveAllWeapons() {
     }
 }
 
+/* DrawScoresheet() {
+    new players[GetClientCount()+1];
+    for (new i=1; i<=GetClientCount(); i++) {
+        players[i] = i;
+    }
+    SortCustom1D(players, GetClientCount(), ScoreGreaterThan);
+    new String:cName[128];
+    new String:Lines[10][128];
+    new String:Sheet[512];
+    new count = 0;
+    for (new i=GetClientCount(); i>0; i--) {
+        if (count >= 10) break;
+        if (IsValidClient(i) && !IsClientObserver(i)) {
+            GetClientName(players[i], cName, sizeof(cName));
+            Format(Lines[count], 128, "%2d - %s", g_Points[players[i]], cName);            
+            count++;
+        }
+    }
+    ImplodeStrings(Lines, 10, "\n", Sheet, 512);
+    SetHudTextParams(0.30, 0.30, 5.0, 255, 255, 255, 0);
+    for (new i=1; i<=GetClientCount(); i++) {
+        if (IsValidClient(i)) {
+            ShowHudText(i, 7, Sheet);
+        }
+    }
+}
+ */
 RemoveClientWeapons(i) {
     if (GetConVarBool(ww_log)) LogMessage("Removing all client weapons");
     if (IsValidClient(i) && (IsPlayerAlive(i)) && (g_Winner[i] == 0)) {
@@ -1272,6 +1296,12 @@ public Player_Death(Handle:event, const String:name[], bool:dontBroadcast) {
         }
     }
 }
+
+/* public ScoreGreaterThan(left, right, playerids[], Handle:data) {
+    if (g_Points[left] < g_Points[right]) return -1;
+    if (g_Points[left] == g_Points[right]) return 0;
+    return 1;
+} */
 
 // Some convenience functions for parsing the configuration file more simply.
 p_GotoGameConf(String:game[]) {
