@@ -1,5 +1,18 @@
 // Hugging module
 
+public Hugging_Init() {
+    AddToForward(g_OnMapStart, INVALID_HANDLE, Hugging_OnMapStart);
+}   
+
+public Hugging_OnMapStart() {
+    decl String:input[512];
+    for (new i = 1; i <= sizeof(var_heavy_love); i++) {
+        Format(input, sizeof(input), "sound/%s", var_heavy_love[i-1]);
+        AddFileToDownloadsTable(input);
+        precacheSound(var_heavy_love[i-1]);
+    }
+}
+
 public Hugging_OnMinigame() {
     for (new i = 1; i <= MaxClients; i++) {
         if (IsValidClient(i)) {

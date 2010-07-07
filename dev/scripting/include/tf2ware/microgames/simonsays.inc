@@ -10,8 +10,8 @@ public SimonSays_OnMinigame() {
             g_Mission[i] = mission;
         }
     }
+    SetStateAll(mission == 1);
     
-    SetStateAll(false);
     g_respawn = true;
     RespawnAll(true, true);
 }
@@ -23,25 +23,19 @@ public SimonSays_justEnteredMinigame(client) {
 
 public SimonSays_OnGameFrame() {
     for (new i = 1; i <= MaxClients; i++) {
-        if((IsValidClient(i) && IsPlayerAlive(i))) {
-            new failed = 0;
-            if((g_Mission[i] == 0) && IsPlayerTaunting(i))
-            {
+        // If the player is valid and taunting
+        if((IsValidClient(i) && IsPlayerAlive(i)) && IsPlayerTaunting(i)) {
+            if(g_Mission[i] == 0) {
+            // If simon says it
                 SetStateClient(i, true, true);
             }
-            if((g_Mission[i] >= 1))
-            {
-                if(IsPlayerTaunting(i))
-                {
-                    SetOverlay(i,"");
-                    SetOverlay(i,"simon_fail");
-                    SetStateClient(i, false);
-                    failed = 1;
-                }
-                else if(failed == 0)
-                {
-                    SetStateClient(i, true);
-                }
+            else if (g_Complete[i]) {
+            // Otherwise, simon didn't say it and if we still haven't lost
+                new String:input[512];
+                // Display "Simon didn't say it!"
+                Format(input, sizeof(input), "tf2ware_minigame_%d_3", GetMinigameConfNum("SimonSays", "id"));
+                SetOverlay(i, input);
+                SetStateClient(i, false);
             }
         }
     }

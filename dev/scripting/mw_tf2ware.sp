@@ -110,12 +110,14 @@ new Roundstarts = 0;
 new g_lastminigame = 0;
 new g_lastboss = 0;
 
+
 // Strings
 new String:materialpath[512] = "imgay/";
 // Name of current minigame being played
 new String:minigame[12];
 
 // VALID iMinigame FORWARD HANDLERS //////////////
+new Handle:g_OnMapStart;
 new Handle:g_justEnteredMinigame;
 new Handle:g_OnAlmostEndMinigame;
 new Handle:g_OnTimerMinigame;
@@ -216,6 +218,13 @@ public OnPluginStart() {
     ww_music = CreateConVar("ww_music_fix", "0", "Apply music fix? Should only be on for localhosts during testing", FCVAR_PLUGIN);
     ww_log = CreateConVar("ww_log", "0", "Log server events?", FCVAR_PLUGIN);
     
+    // Add logging
+    if (GetConVarBool(ww_log)) {
+    LogMessage("//////////////////////////////////////////////////////");
+    LogMessage("//                     TF2WARE LOG                  //");
+    LogMessage("//////////////////////////////////////////////////////");
+    }
+    
     // Hooks
     HookConVarChange(ww_enable,StartMinigame_cvar);
     HookEvent("post_inventory_application", EventInventoryApplication,  EventHookMode_Post);
@@ -238,6 +247,7 @@ public OnPluginStart() {
     SetMissionAll(0);
     
     // FORWARDS FOR MINIGAMES
+    g_OnMapStart = CreateForward(ET_Ignore);
     g_justEnteredMinigame = CreateForward(ET_Ignore, Param_Cell);
     g_OnAlmostEndMinigame = CreateForward(ET_Ignore);
     g_OnTimerMinigame = CreateForward(ET_Ignore, Param_Cell);
@@ -260,7 +270,7 @@ public OnPluginStart() {
     RegMinigame("Flood", Flood_OnMinigame);
     RegMinigame("SimonSays", SimonSays_OnMinigame);
     RegMinigame("BBall", BBall_OnMinigame);
-    RegMinigame("Hugging", Hugging_OnMinigame);
+    RegMinigame("Hugging", Hugging_OnMinigame, Hugging_Init);
     RegMinigame("RedFloor", RedFloor_OnMinigame);
 
     // CHEATS
@@ -290,12 +300,6 @@ public OnPluginStart() {
     // Include optional achievements
     if (LibraryExists("mw_ach")) g_Achievements = true;
     
-    // Add logging
-    if (GetConVarBool(ww_log)) {
-    LogMessage("//////////////////////////////////////////////////////");
-    LogMessage("//                     TF2WARE LOG                  //");
-    LogMessage("//////////////////////////////////////////////////////");
-    }
 }
 
 public OnMapStart() {
@@ -310,6 +314,10 @@ public OnMapStart() {
         g_enabled = false;
     }
 
+    if (GetConVarBool(ww_log)) LogMessage("Calling OnMapStart Forward");
+    Call_StartForward(g_OnMapStart);
+    Call_Finish();
+    
     precacheSound(MUSIC_START);
     precacheSound(MUSIC_WIN);
     precacheSound(MUSIC_FAIL);
@@ -354,40 +362,29 @@ public OnMapStart() {
     AddFileToDownloadsTable(input);
     Format(input, sizeof(input), "materials/imgay/tf2ware_points99.vtf");
     AddFileToDownloadsTable(input);
-    Format(input, sizeof(input), "materials/imgay/simon_fail.vmt");
-    AddFileToDownloadsTable(input);
-    Format(input, sizeof(input), "materials/imgay/simon_fail.vtf");
-    AddFileToDownloadsTable(input);
-    Format(input, sizeof(input), "materials/imgay/it/simon_fail.vmt");
-    AddFileToDownloadsTable(input);
-    Format(input, sizeof(input), "materials/imgay/it/simon_fail.vtf");
-    AddFileToDownloadsTable(input);
-   
-    for (new i = 1; i <= sizeof(var_heavy_love); i++) {
-        Format(input, sizeof(input), "sound/%s", var_heavy_love[i-1]);
-        AddFileToDownloadsTable(input);
-        precacheSound(var_heavy_love[i-1]);
-    }
     
     KvGotoFirstSubKey(MinigameConf);
     decl id;
     new i=1;
+    if (GetConVarBool(ww_log)) LogMessage("--Adding the following to downloads table from information in minigames.cfg:", input);
     do {
         id = KvGetNum(MinigameConf, "id");
-        new j=1, String:intros[8];
+        new j=1, String:overlays[12];
         Format(input, sizeof(input), "imgay/tf2ware/minigame_%d.mp3", id);
+        if (GetConVarBool(ww_log)) LogMessage("%s", input);
         precacheSound(input);
         
-        Format(intros, sizeof(intros), "intro%d", j);
-        while (KvJumpToKey(MinigameConf, intros)) {
+        Format(overlays, sizeof(overlays), "overlay%d", j);
+        while (KvJumpToKey(MinigameConf, overlays)) {
             for (new k = 0; k < sizeof(var_lang); k++) {
                 Format(input, sizeof(input), "materials/%s%stf2ware_minigame_%d_%d.vmt", materialpath, var_lang[k], id, j);
                 AddFileToDownloadsTable(input);
                 Format(input, sizeof(input), "materials/%s%stf2ware_minigame_%d_%d.vtf", materialpath, var_lang[k], id, j);
                 AddFileToDownloadsTable(input);
+                if (GetConVarBool(ww_log)) LogMessage("%s / .vmt", input);
             }
             j++;
-            Format(intros, sizeof(intros), "intro%d", j);
+            Format(overlays, sizeof(overlays), "overlay%d", j);
             KvGoBack(MinigameConf);
         }
         i++;
@@ -518,7 +515,6 @@ public OnPreThink(client) {
         }
     }
 }
-
 
 public EventInventoryApplication(Handle:event, const String:name[], bool:dontBroadcast) {
     if (GetConVarBool(ww_log)) LogMessage("Client post inventory");

@@ -5,11 +5,17 @@ stock bool:IsValidClient(iClient) {
     return IsClientInGame(iClient);
 }
 
-RegMinigame(String:game_name[], Function:initFunc) {
+RegMinigame(String:game_name[], Function:initFunc, Function:onMinigameLoad = INVALID_FUNCTION) {
     for (new i=0; i<sizeof(g_name); i++) {
         if (StrEqual(game_name, g_name[i])) {
-            PrintToServer("Registered minigame %s, id %d", game_name, i+1);
+            if (GetConVarBool(ww_log)) LogMessage("Registered minigame %s, id %d", game_name, i+1);
             g_initFuncs[i] = initFunc;
+            
+            if (onMinigameLoad != INVALID_FUNCTION) {
+                if (GetConVarBool(ww_log)) LogMessage("--Running onMinigameLoad function for %s", game_name);
+                Call_StartFunction(INVALID_HANDLE, onMinigameLoad);
+                Call_Finish();
+            }
             return;
         }
     }
