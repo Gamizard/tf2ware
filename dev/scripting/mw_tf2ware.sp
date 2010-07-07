@@ -362,7 +362,7 @@ public OnMapStart() {
     AddFileToDownloadsTable(input);
     Format(input, sizeof(input), "materials/imgay/it/simon_fail.vtf");
     AddFileToDownloadsTable(input);
-    
+   
     for (new i = 1; i <= sizeof(var_heavy_love); i++) {
         Format(input, sizeof(input), "sound/%s", var_heavy_love[i-1]);
         AddFileToDownloadsTable(input);
