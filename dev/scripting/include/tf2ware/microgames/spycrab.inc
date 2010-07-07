@@ -1,7 +1,7 @@
 // Spycrab module
 
 public Spycrab_OnMinigame() {
-    AddToForward(g_justEnteredMinigame, INVALID_HANDLE, Spycrab_justEnteredMinigame);
+    AddToForward(g_justEntered, INVALID_HANDLE, Spycrab_justEntered);
     AddToForward(g_OnTimerMinigame, INVALID_HANDLE, Spycrab_TimerMinigame);
 
     SetStateAll(true);
@@ -48,7 +48,7 @@ public Spycrab_TimerMinigame(timer) {
     }
 }
 
-public Spycrab_justEnteredMinigame(client) {
+public Spycrab_justEntered(client) {
     SetClientClass(client, "spy");
     RemoveClientSlot(client,0);
     RemoveClientSlot(client,1);

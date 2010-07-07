@@ -1,7 +1,7 @@
 // Barrel module
 
 public Barrel_OnMinigame() {
-    AddToForward(g_justEnteredMinigame, INVALID_HANDLE, Barrel_justEnteredMinigame);
+    AddToForward(g_justEntered, INVALID_HANDLE, Barrel_justEntered);
     AddToForward(g_OnEndMinigame, INVALID_HANDLE, Barrel_End);
     AddToForward(g_OnGameFrame_Minigames, INVALID_HANDLE, Barrel_OnGameFrame);
     
@@ -44,7 +44,7 @@ public Barrel_OnGameFrame() {
     }
 }
 
-public Barrel_justEnteredMinigame(client) {
+public Barrel_justEntered(client) {
     if (IsValidClient(client)) {
         SetClientClass(client, "scout");
         RemoveClientSlot(client,0);

@@ -1,7 +1,7 @@
 // SimonSays module
 
 public SimonSays_OnMinigame() {
-    AddToForward(g_justEnteredMinigame, INVALID_HANDLE, SimonSays_justEnteredMinigame);
+    AddToForward(g_justEntered, INVALID_HANDLE, SimonSays_justEntered);
     AddToForward(g_OnGameFrame_Minigames, INVALID_HANDLE, SimonSays_OnGameFrame);
 
     new mission = GetRandomInt(0,1);
@@ -16,7 +16,7 @@ public SimonSays_OnMinigame() {
     RespawnAll(true, true);
 }
 
-public SimonSays_justEnteredMinigame(client) {
+public SimonSays_justEntered(client) {
     SetClientSlot(client, 0);
     RemoveClientWeapons(client);
 }

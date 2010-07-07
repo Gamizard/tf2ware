@@ -7,10 +7,10 @@ public Airblast_OnMinigame() {
         }
     }
 
-    AddToForward(g_justEnteredMinigame, INVALID_HANDLE, Airblast_justEnteredMinigame);
+    AddToForward(g_justEntered, INVALID_HANDLE, Airblast_justEntered);
     AddToForward(g_OnEndMinigame, INVALID_HANDLE, Airblast_End);
     // Hopscotch game has the same exact check
-    AddToForward(g_OnAlmostEndMinigame, INVALID_HANDLE, Hopscotch_CheckDeadPlayers);
+    AddToForward(g_OnAlmostEnd, INVALID_HANDLE, Hopscotch_CheckDeadPlayers);
     
     SetAllClass("pyro");
     SetStateAll(true);
@@ -19,7 +19,7 @@ public Airblast_OnMinigame() {
     RespawnAll(true, false);
 }
 
-public Airblast_justEnteredMinigame(client) {
+public Airblast_justEntered(client) {
     if (IsValidClient(client)) {
         SetClientClass(client, "pyro");
         ReplaceClientWeapon(client, 40, "tf_weapon_flamethrower");

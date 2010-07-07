@@ -3,7 +3,7 @@
 // BROKEN, LIKELY GOING TO BE SCRAPPED
 
 public RedFloor_OnMinigame() {
-    AddToForward(g_justEnteredMinigame, INVALID_HANDLE, RedFloor_justEnteredMinigame);
+    AddToForward(g_justEntered, INVALID_HANDLE, RedFloor_justEntered);
     AddToForward(g_OnEndMinigame, INVALID_HANDLE, RedFloor_End);
     AddToForward(g_PlayerDeath, INVALID_HANDLE, RedFloor_PlayerDeath);
 
@@ -24,7 +24,7 @@ public RedFloor_OnMinigame() {
     RespawnAll(true, false);
 }
 
-public RedFloor_justEnteredMinigame(client) {
+public RedFloor_justEntered(client) {
     SetClientClass(client, "spy");
     RemoveClientWeapons(client);
     PosPlayer_Minigame16(client);

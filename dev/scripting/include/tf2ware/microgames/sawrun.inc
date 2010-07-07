@@ -1,7 +1,7 @@
 // SawRun module
 
 public SawRun_OnMinigame() {
-    AddToForward(g_justEnteredMinigame, INVALID_HANDLE, SawRun_justEnteredMinigame);
+    AddToForward(g_justEntered, INVALID_HANDLE, SawRun_justEntered);
     AddToForward(g_OnEndMinigame, INVALID_HANDLE, SawRun_End);
     AddToForward(g_OnGameFrame_Minigames, INVALID_HANDLE, SawRun_OnGameFrame);
     
@@ -20,7 +20,7 @@ public SawRun_OnGameFrame() {
     }
 }
 
-public SawRun_justEnteredMinigame(client) {
+public SawRun_justEntered(client) {
     SetClientClass(client, "scout");
     RemoveClientWeapons(client);
     

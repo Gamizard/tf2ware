@@ -1,9 +1,9 @@
 // Hopscotch module
 
 public Hopscotch_OnMinigame() {
-    AddToForward(g_justEnteredMinigame, INVALID_HANDLE, Hopscotch_justEnteredMinigame);
+    AddToForward(g_justEntered, INVALID_HANDLE, Hopscotch_justEntered);
     AddToForward(g_OnEndMinigame, INVALID_HANDLE, Hopscotch_End);
-    AddToForward(g_OnAlmostEndMinigame, INVALID_HANDLE, Hopscotch_CheckDeadPlayers);
+    AddToForward(g_OnAlmostEnd, INVALID_HANDLE, Hopscotch_CheckDeadPlayers);
     
     SetAllClass("heavy");
     g_respawn = true;
@@ -11,7 +11,7 @@ public Hopscotch_OnMinigame() {
     RespawnAll(true, false);
 }
 
-public Hopscotch_justEnteredMinigame(client) {
+public Hopscotch_justEntered(client) {
     if (IsValidClient(client)) {
         SetClientClass(client, "heavy");
         RemoveClientWeapons(client);

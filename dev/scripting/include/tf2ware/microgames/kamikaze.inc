@@ -1,5 +1,19 @@
 // Kamikaze module
 
+#define WW_BOMB "pl_hoodoo/alarm_clock_ticking_3.wav"
+#define WW_BOMB_MODEL "models/custom/dirty_bomb_cart.mdl"
+#define PARTICLE_BOMB "cinefx_goldrush_embers"
+#define PARTICLE_EXPLODE "cinefx_goldrush_initial_smoke"
+
+public Kamikaze_Init() {
+    AddToForward(g_OnMapStart, INVALID_HANDLE, Kamikaze_OnMapStart);
+}   
+
+public Kamikaze_OnMapStart() {
+    PrecacheModel(WW_BOMB_MODEL, true);
+    precacheSound(WW_BOMB);
+}
+
 public Kamikaze_OnMinigame() {
     for (new i = 1; i <= MaxClients; i++) {
         if (IsValidClient(i)) {
@@ -7,8 +21,8 @@ public Kamikaze_OnMinigame() {
         }
     }
     
-    AddToForward(g_justEnteredMinigame, INVALID_HANDLE, Kamikaze_justEnteredMinigame);
-    AddToForward(g_OnAlmostEndMinigame, INVALID_HANDLE, Kamikaze_OnAlmostEndMinigame);
+    AddToForward(g_justEntered, INVALID_HANDLE, Kamikaze_justEntered);
+    AddToForward(g_OnAlmostEnd, INVALID_HANDLE, Kamikaze_OnAlmostEnd);
     AddToForward(g_OnEndMinigame, INVALID_HANDLE, Kamikaze_End);
     AddToForward(g_OnTimerMinigame, INVALID_HANDLE, Kamikaze_TimerMinigame);
     AddToForward(g_PlayerDeath, INVALID_HANDLE, Kamikaze_PlayerDeath);
@@ -59,7 +73,7 @@ public Action:Kamikaze_OnTakeDamageClient(victim, &attacker, &inflictor, &Float:
     return Plugin_Continue;
 }
 
-public Kamikaze_OnAlmostEndMinigame() {
+public Kamikaze_OnAlmostEnd() {
     for (new i = 1; i <= MaxClients; i++) {
         if (IsValidClient(i) && (g_Mission[i] == 1) && (g_result >= 2)) SetStateClient(i, true);
     }
@@ -95,7 +109,7 @@ public Kamikaze_TimerMinigame(timer) {
     }
 }
 
-public Kamikaze_justEnteredMinigame(client) {
+public Kamikaze_justEntered(client) {
     if (g_Mission[client] == 0) {
         SetClientClass(client, "heavy");
         RemoveClientWeapons(client);

@@ -1,5 +1,7 @@
 // Hugging module
 
+new String:var_heavy_love[][] = {"imgay/tf2ware/heavy_ilu.wav", "vo/heavy_specialcompleted08.wav", "vo/heavy_award04.wav"};
+
 public Hugging_Init() {
     AddToForward(g_OnMapStart, INVALID_HANDLE, Hugging_OnMapStart);
 }   
@@ -20,7 +22,7 @@ public Hugging_OnMinigame() {
         }
     }
 
-    AddToForward(g_justEnteredMinigame, INVALID_HANDLE, Hugging_justEnteredMinigame);
+    AddToForward(g_justEntered, INVALID_HANDLE, Hugging_justEntered);
     AddToForward(g_OnEndMinigame, INVALID_HANDLE, Hugging_End);
 
     new AllPlayers = GetClientCount(true);
@@ -70,7 +72,7 @@ public Hugging_End() {
     }
 }
 
-public Hugging_justEnteredMinigame(client) {
+public Hugging_justEntered(client) {
     decl Float:pos[3];
     decl Float:ang[3];
     decl Float:vel[3];

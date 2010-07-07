@@ -6,7 +6,7 @@ public HitEnemy_OnMinigame() {
             SDKHook(i, SDKHook_OnTakeDamage, HitEnemy_OnTakeDamageClient);
         }
     }
-    AddToForward(g_justEnteredMinigame, INVALID_HANDLE, HitEnemy_justEnteredMinigame);
+    AddToForward(g_justEntered, INVALID_HANDLE, HitEnemy_justEntered);
     AddToForward(g_OnEndMinigame, INVALID_HANDLE, HitEnemy_End);
 
     randommini = GetRandomInt(0, 2);
@@ -43,7 +43,7 @@ public Action:HitEnemy_OnTakeDamageClient(victim, &attacker, &inflictor, &Float:
 }
 
 
-public HitEnemy_justEnteredMinigame(client) {
+public HitEnemy_justEntered(client) {
     if (randommini <= 0) {
         SetClientClass(client, "spy");
         RemoveClientSlot(client,1);

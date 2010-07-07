@@ -1,7 +1,7 @@
 // Math module
 
 public Math_OnMinigame() {
-    AddToForward(g_justEnteredMinigame, INVALID_HANDLE, Math_justEnteredMinigame);
+    AddToForward(g_justEntered, INVALID_HANDLE, Math_justEntered);
     
     RegConsoleCmd("say", Math_Player_Say);
     RegConsoleCmd("say_team", Math_Player_Say);
@@ -36,7 +36,7 @@ public Math_OnMinigame() {
 
 }
 
-public Math_justEnteredMinigame(client) {
+public Math_justEntered(client) {
     if (IsValidClient(client)) {
         SetHudTextParams(-1.0, 0.4, 4.0, 255,255,255, 255, 0, 6.0, 0.2, 0.5);
         ShowHudText(client, 5, "%s = ?", g_mathquestion);

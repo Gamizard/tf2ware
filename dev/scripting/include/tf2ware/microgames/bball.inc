@@ -7,7 +7,7 @@ public BBall_OnMinigame() {
         }
     }
 
-    AddToForward(g_justEnteredMinigame, INVALID_HANDLE, BBall_justEnteredMinigame);
+    AddToForward(g_justEntered, INVALID_HANDLE, BBall_justEntered);
     AddToForward(g_OnEndMinigame, INVALID_HANDLE, BBall_End);
 
     SetAllClass("demoman");
@@ -54,7 +54,7 @@ public Action:Hook_StartTouch_Pipe(entity, other) {
     }
 }
 
-public BBall_justEnteredMinigame(client) {
+public BBall_justEntered(client) {
     SetClientClass(client, "demoman");
     RemoveClientSlot(client,1);
     RemoveClientSlot(client,2);

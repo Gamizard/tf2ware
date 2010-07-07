@@ -39,15 +39,8 @@
 
 #define PARTICLE_WIN_BLUE "teleportedin_blue"
 #define PARTICLE_WIN_RED "teleportedin_red"
-#define PARTICLE_BOMB "cinefx_goldrush_embers"
-#define PARTICLE_EXPLODE "cinefx_goldrush_initial_smoke"
 
 #define TF2_PLAYER_TAUNTING        (1 << 7)    // 128        Taunting
-
-#define WW_BOMB "pl_hoodoo/alarm_clock_ticking_3.wav"
-#define WW_BOMB_MODEL "models/custom/dirty_bomb_cart.mdl"
-
-new String:var_heavy_love[][] = {"imgay/tf2ware/heavy_ilu.wav", "vo/heavy_specialcompleted08.wav", "vo/heavy_award04.wav"};
 
 new String:g_name[MAX_MINIGAMES][12];
 new Function:g_initFuncs[MAX_MINIGAMES];
@@ -118,8 +111,8 @@ new String:minigame[12];
 
 // VALID iMinigame FORWARD HANDLERS //////////////
 new Handle:g_OnMapStart;
-new Handle:g_justEnteredMinigame;
-new Handle:g_OnAlmostEndMinigame;
+new Handle:g_justEntered;
+new Handle:g_OnAlmostEnd;
 new Handle:g_OnTimerMinigame;
 new Handle:g_OnEndMinigame;
 new Handle:g_OnGameFrame_Minigames;
@@ -141,6 +134,7 @@ new Handle:g_PlayerDeath;
 #include tf2ware\microgames\bball.inc
 #include tf2ware\microgames\hugging.inc
 #include tf2ware\microgames\redfloor.inc
+#include tf2ware\microgames\snipertarget.inc
 
 #include tf2ware\mw_tf2ware_features.inc
 
@@ -249,8 +243,8 @@ public OnPluginStart() {
     
     // FORWARDS FOR MINIGAMES
     g_OnMapStart = CreateForward(ET_Ignore);
-    g_justEnteredMinigame = CreateForward(ET_Ignore, Param_Cell);
-    g_OnAlmostEndMinigame = CreateForward(ET_Ignore);
+    g_justEntered = CreateForward(ET_Ignore, Param_Cell);
+    g_OnAlmostEnd = CreateForward(ET_Ignore);
     g_OnTimerMinigame = CreateForward(ET_Ignore, Param_Cell);
     g_OnEndMinigame = CreateForward(ET_Ignore);
     g_OnGameFrame_Minigames = CreateForward(ET_Ignore);
@@ -273,6 +267,7 @@ public OnPluginStart() {
     RegMinigame("BBall", BBall_OnMinigame);
     RegMinigame("Hugging", Hugging_OnMinigame, Hugging_Init);
     RegMinigame("RedFloor", RedFloor_OnMinigame);
+    RegMinigame("SniperTarget", SniperTarget_OnMinigame);
 
     // CHEATS
     HookConVarChange(FindConVar("sv_cheats"), OnConVarChanged_SvCheats);
@@ -327,7 +322,6 @@ public OnMapStart() {
     precacheSound(MUSIC_SPEEDUP);
     precacheSound(MUSIC_BOSS);
     precacheSound(MUSIC_GAMEOVER);
-    precacheSound(WW_BOMB);
     precacheSound(SOUND_MINISCORE);
     precacheSound(MUSIC_WAITING);
     PrecacheModel("models/props_farm/wooden_barrel.mdl", true);
@@ -336,7 +330,6 @@ public OnMapStart() {
     PrecacheModel("models/props_farm/gibs/wooden_barrel_chunk04.mdl", true);
     PrecacheModel("models/props_farm/gibs/wooden_barrel_chunk03.mdl", true);
     PrecacheModel("models/props_farm/gibs/wooden_barrel_chunk01.mdl", true);
-    PrecacheModel(WW_BOMB_MODEL, true);
     AddFileToDownloadsTable("materials/imgay/tf2ware_welcome.vmt");
     AddFileToDownloadsTable("materials/imgay/tf2ware_welcome.vtf");
     AddFileToDownloadsTable("materials/imgay/it/tf2ware_welcome.vmt");
@@ -541,7 +534,7 @@ public EventInventoryApplication(Handle:event, const String:name[], bool:dontBro
             if (status != 5) CreateSprite(client);
         }
         if (status == 2) {
-            Call_StartForward(g_justEnteredMinigame);
+            Call_StartForward(g_justEntered);
             Call_PushCell(client);
             Call_Finish();
             CreateSprite(client);
@@ -749,7 +742,7 @@ public Action:EndGame(Handle:hTimer) {
     if (GetConVarBool(ww_log)) LogMessage("Microgame %s, (id:%d) ended!", minigame, iMinigame);
     microgametimer = INVALID_HANDLE;
     if (status == 2) {
-        Call_StartForward(g_OnAlmostEndMinigame);
+        Call_StartForward(g_OnAlmostEnd);
         Call_Finish();
 
         g_attack = false;
@@ -790,8 +783,8 @@ public Action:EndGame(Handle:hTimer) {
         
         
         // Clear all functions from forwards
-        RemoveAllFromForward(g_justEnteredMinigame, INVALID_HANDLE);
-        RemoveAllFromForward(g_OnAlmostEndMinigame, INVALID_HANDLE);
+        RemoveAllFromForward(g_justEntered, INVALID_HANDLE);
+        RemoveAllFromForward(g_OnAlmostEnd, INVALID_HANDLE);
         RemoveAllFromForward(g_OnTimerMinigame, INVALID_HANDLE);
         RemoveAllFromForward(g_OnEndMinigame, INVALID_HANDLE);
         RemoveAllFromForward(g_OnGameFrame_Minigames, INVALID_HANDLE);
@@ -1258,7 +1251,7 @@ InitMinigame(id) {
     
     if (g_respawn == false) {
         for (new i = 1; i <= MaxClients; i++) {
-            Call_StartForward(g_justEnteredMinigame);
+            Call_StartForward(g_justEntered);
             Call_PushCell(i);
             Call_Finish();
         }

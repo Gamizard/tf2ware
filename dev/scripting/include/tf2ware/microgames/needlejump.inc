@@ -7,7 +7,7 @@ public Needlejump_OnMinigame() {
         }
     }
 
-    AddToForward(g_justEnteredMinigame, INVALID_HANDLE, Needlejump_justEnteredMinigame);
+    AddToForward(g_justEntered, INVALID_HANDLE, Needlejump_justEntered);
     AddToForward(g_OnEndMinigame, INVALID_HANDLE, Needlejump_End);
     AddToForward(g_OnGameFrame_Minigames, INVALID_HANDLE, Needlejump_OnGameFrame);
     AddToForward(g_OnTimerMinigame, INVALID_HANDLE, Needlejump_TimerMinigame);
@@ -61,7 +61,7 @@ public Needlejump_TimerMinigame(timer) {
     }
 }
 
-public Needlejump_justEnteredMinigame(client) {
+public Needlejump_justEntered(client) {
     if (IsValidClient(client)) {
         SetClientClass(client, "medic");
         RemoveClientSlot(client,1);
