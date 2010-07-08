@@ -362,28 +362,32 @@ public OnMapStart() {
     
     KvGotoFirstSubKey(MinigameConf);
     decl id;
+    decl enable;
     new i=1;
     if (GetConVarBool(ww_log)) LogMessage("--Adding the following to downloads table from information in minigames.cfg:", input);
     do {
         id = KvGetNum(MinigameConf, "id");
-        Format(input, sizeof(input), "imgay/tf2ware/minigame_%d.mp3", id);
-        if (GetConVarBool(ww_log)) LogMessage("%s", input);
-        precacheSound(input);
-        
-        /*new j=1, String:overlays[12];
-        Format(overlays, sizeof(overlays), "overlay%d", j);
-        while (KvJumpToKey(MinigameConf, overlays)) {
-            for (new k = 0; k < sizeof(var_lang); k++) {
-                Format(input, sizeof(input), "materials/%s%stf2ware_minigame_%d_%d.vmt", materialpath, var_lang[k], id, j);
-                AddFileToDownloadsTable(input);
-                Format(input, sizeof(input), "materials/%s%stf2ware_minigame_%d_%d.vtf", materialpath, var_lang[k], id, j);
-                AddFileToDownloadsTable(input);
-                if (GetConVarBool(ww_log)) LogMessage("%s / .vmt", input);
-            }
-            j++;
+        enable = KvGetNum(MinigameConf, "enable", 1);
+        if (enable) {
+            Format(input, sizeof(input), "imgay/tf2ware/minigame_%d.mp3", id);
+            if (GetConVarBool(ww_log)) LogMessage("%s", input);
+            precacheSound(input);
+            
+            /*new j=1, String:overlays[12];
             Format(overlays, sizeof(overlays), "overlay%d", j);
-            KvGoBack(MinigameConf);
-        }*/
+            while (KvJumpToKey(MinigameConf, overlays)) {
+                for (new k = 0; k < sizeof(var_lang); k++) {
+                    Format(input, sizeof(input), "materials/%s%stf2ware_minigame_%d_%d.vmt", materialpath, var_lang[k], id, j);
+                    AddFileToDownloadsTable(input);
+                    Format(input, sizeof(input), "materials/%s%stf2ware_minigame_%d_%d.vtf", materialpath, var_lang[k], id, j);
+                    AddFileToDownloadsTable(input);
+                    if (GetConVarBool(ww_log)) LogMessage("%s / .vmt", input);
+                }
+                j++;
+                Format(overlays, sizeof(overlays), "overlay%d", j);
+                KvGoBack(MinigameConf);
+            }*/
+        }
         i++;
       } while (KvGotoNextKey(MinigameConf)); 
     KvRewind(MinigameConf);
