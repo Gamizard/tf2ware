@@ -105,7 +105,7 @@ new g_lastboss = 0;
 
 
 // Strings
-new String:materialpath[512] = "imgay/";
+new String:materialpath[512] = "tf2ware/";
 // Name of current minigame being played
 new String:minigame[24];
 
@@ -344,17 +344,17 @@ public OnMapStart() {
     }
     
     for (new i = 1; i <= 19; i++) {
-        Format(input, sizeof(input), "materials/imgay/tf2ware_points%d.vmt", i);
+        Format(input, sizeof(input), "materials/tf2ware/tf2ware_points%d.vmt", i);
         AddFileToDownloadsTable(input);
         PrecacheGeneric(input, true);
-        Format(input, sizeof(input), "materials/imgay/tf2ware_points%d.vtf", i);
+        Format(input, sizeof(input), "materials/tf2ware/tf2ware_points%d.vtf", i);
         AddFileToDownloadsTable(input);
         PrecacheGeneric(input, true);
     }
     
-    Format(input, sizeof(input), "materials/imgay/tf2ware_points99.vmt");
+    Format(input, sizeof(input), "materials/tf2ware/tf2ware_points99.vmt");
     AddFileToDownloadsTable(input);
-    Format(input, sizeof(input), "materials/imgay/tf2ware_points99.vtf");
+    Format(input, sizeof(input), "materials/tf2ware/tf2ware_points99.vtf");
     AddFileToDownloadsTable(input);
     
     KvGotoFirstSubKey(MinigameConf);
@@ -363,11 +363,11 @@ public OnMapStart() {
     if (GetConVarBool(ww_log)) LogMessage("--Adding the following to downloads table from information in minigames.cfg:", input);
     do {
         id = KvGetNum(MinigameConf, "id");
-        new j=1, String:overlays[12];
         Format(input, sizeof(input), "imgay/tf2ware/minigame_%d.mp3", id);
         if (GetConVarBool(ww_log)) LogMessage("%s", input);
         precacheSound(input);
         
+        /*new j=1, String:overlays[12];
         Format(overlays, sizeof(overlays), "overlay%d", j);
         while (KvJumpToKey(MinigameConf, overlays)) {
             for (new k = 0; k < sizeof(var_lang); k++) {
@@ -380,7 +380,7 @@ public OnMapStart() {
             j++;
             Format(overlays, sizeof(overlays), "overlay%d", j);
             KvGoBack(MinigameConf);
-        }
+        }*/
         i++;
       } while (KvGotoNextKey(MinigameConf)); 
     KvRewind(MinigameConf);

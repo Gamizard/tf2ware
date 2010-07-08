@@ -129,7 +129,7 @@ stock CreateSprite(client) {
             if (points > 19) points = 19;
             if (g_Winner[client] > 0) points = 99;
             decl String:sprite[256];
-            Format(sprite, sizeof(sprite), "materials/imgay/tf2ware_points%d.vmt", points);
+            Format(sprite, sizeof(sprite), "materials/tf2ware/tf2ware_points%d.vmt", points);
 
             new Float:vOrigin[3];
             GetClientAbsOrigin(client, vOrigin);

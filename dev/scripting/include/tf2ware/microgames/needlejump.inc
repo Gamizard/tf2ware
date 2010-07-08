@@ -88,9 +88,9 @@ PerformNeedleJump(i) {
         if(GetEntData(GetPlayerWeaponSlot(i, 0), FindSendPropInfo("CTFWeaponBase", "m_iClip1")) != 0){
             GetClientEyeAngles(i, fEyeAngle);
             GetEntPropVector(i, Prop_Data, "m_vecVelocity", fVelocity);
-            fVelocity[0] += 10 * Cosine(DegToRad(fEyeAngle[1])) * -1;
-            fVelocity[1] += 10 * Sine(DegToRad(fEyeAngle[1])) * -1;
-            fVelocity[2] -= 40 * Sine(DegToRad(fEyeAngle[0])) * -1;
+            fVelocity[0] += 10.0 * Cosine(DegToRad(fEyeAngle[1])) * -1.0;
+            fVelocity[1] += 10.0 * Sine(DegToRad(fEyeAngle[1])) * -1.0;
+            fVelocity[2] -= 40.0 * Sine(DegToRad(fEyeAngle[0])) * -1.0;
             if(FloatAbs(fVelocity[0]) > 400.0){
                 if(fVelocity[0] > 0.0)
                     fVelocity[0] = 400.0;

@@ -37,7 +37,7 @@ public SimonSays_OnMinigame() {
 
 public Action:SimonSays_DisplayInstruct(Handle:h_timer) {
     AddToForward(g_OnGameFrame_Minigames, INVALID_HANDLE, SimonSays_OnGameFrame);
-    for (new i=1; i<MaxClients; i++) {
+    for (new i=1; i<=MaxClients; i++) {
         if (IsValidClient(i)) {
             SetHudTextParams(-1.0,0.30,5.0,255,255,255,0,1,3.0);
             // Needs localization (translation file would be very good).

@@ -1,39 +1,78 @@
 // RedFloor module
 
-// BROKEN, LIKELY GOING TO BE SCRAPPED
-
 public RedFloor_OnMinigame() {
+    for (new i = 1; i <= MaxClients; i++) {
+        if (IsValidClient(i)) {
+            SDKHook(i, SDKHook_OnTakeDamage, RedFloor_OnTakeDamageClient);
+        }
+    }
+
     AddToForward(g_justEntered, INVALID_HANDLE, RedFloor_justEntered);
     AddToForward(g_OnEndMinigame, INVALID_HANDLE, RedFloor_End);
     AddToForward(g_PlayerDeath, INVALID_HANDLE, RedFloor_PlayerDeath);
-
-    new mission = GetRandomInt(0,1);
-    for (new i = 1; i <= MaxClients; i++) {
-        if (IsValidClient(i)) {
-            g_Mission[i] = mission;
-        }
-    }
     
     SetAllClass("spy");
     g_respawn = true;
+    g_attack = true;
     SetStateAll(true);
-    for (new i = 1; i <= MaxClients; i++) {
-        g_Mission[i] = 1;
-    }
-    CreateTimer(22.0, PosPlayer_Minigame16_Timer);
+    
+    CreateTimer(5.0, Minigame16_Timer);
     RespawnAll(true, false);
+}
+
+public Action:RedFloor_OnTakeDamageClient(victim, &attacker, &inflictor, &Float:damage, &damagetype) {
+    if (IsValidClient(attacker) && IsValidClient(victim)) {
+        decl Float:ang[3];
+        decl Float:vel[3];
+        GetClientEyeAngles(attacker, ang);
+        GetEntPropVector(victim, Prop_Data, "m_vecVelocity", vel);
+        vel[0] -= 4.0 * Cosine(DegToRad(ang[1])) * -1.0 * damage;
+        vel[1] -= 4.0 * Sine(DegToRad(ang[1])) * -1.0 * damage;
+        vel[2] += 6.0 * damage;
+        TeleportEntity(victim, NULL_VECTOR, NULL_VECTOR, vel);
+        damage = 0.0;
+    }
+    return Plugin_Changed;
 }
 
 public RedFloor_justEntered(client) {
     SetClientClass(client, "spy");
-    RemoveClientWeapons(client);
-    PosPlayer_Minigame16(client);
+    RemoveClientSlot(client,0);
+    RemoveClientSlot(client,1);
+    RemoveClientSlot(client,3);
+    RemoveClientSlot(client,4);
+    RemoveClientSlot(client,5);
+    SetClientSlot(client, 2);
+    
+    decl Float:vel[3];
+    vel[0] = 0.0;
+    vel[1] = 0.0;
+    vel[2] = 0.0;
+    
+    new total = GetClientCount(true);
+    new posa = 360 / total * (g_Id[client]-1);
+    
+    decl Float:pos[3];
+    pos[0] = -4639.0   + (Cosine(DegToRad(float(posa)))*220.0);
+    pos[1] = -1311.0  - (Sine(DegToRad(float(posa)))*220.0);
+    pos[2] = -31.49;
+
+    decl Float:ang[3];
+    ang[0] = 0.0;
+    ang[1] = float(180-posa);
+    ang[2] = 0.0;
+    TeleportEntity(client, pos, ang, vel);
 }
 
 public RedFloor_End() {
+    for (new i = 1; i <= MaxClients; i++) {
+        if (IsValidClient(i)) {
+            SDKUnhook(i, SDKHook_OnTakeDamage, RedFloor_OnTakeDamageClient);
+        }
+    }
 }
 
-public Action:PosPlayer_Minigame16_Timer(Handle:hTimer) {
+public Action:Minigame16_Timer(Handle:hTimer) {
     if (!StrEqual(minigame, "RedFloor")) return Plugin_Stop;
     
     if (status == 2) {
@@ -44,45 +83,14 @@ public Action:PosPlayer_Minigame16_Timer(Handle:hTimer) {
             }
         }
             
-        if (activeplayers > 3) {
-            for (new i = 1; i <= MaxClients; i++) {
-                if(IsValidClient(i)) {
-                    PosPlayer_Minigame16(i);
-                }
-            }
-            CreateTimer(22.0, PosPlayer_Minigame16_Timer);
+        if (activeplayers > 2) {
+            CreateTimer(5.0, Minigame16_Timer);
         }
         else {
             TriggerTimer(microgametimer);
         }
     }
     return Plugin_Stop;
-}
-
-
-PosPlayer_Minigame16(client) {
-    decl Float:vel[3];
-    vel[0] = 0.0;
-    vel[1] = 0.0;
-    vel[2] = 0.0;
-    
-    new column = client;
-    new row = 0;
-    while (column > 10) {
-        column = column - 10;
-        row = row + 1;
-    }   
-    
-    decl Float:pos[3];
-    pos[0] = -4954.0  + float(column*55);
-    pos[1] = -2186.0 - float(row*55);
-    pos[2] = -344.0;
-
-    decl Float:ang[3];
-    ang[0] = 0.0;
-    ang[1] = 90.0;
-    ang[2] = 0.0;
-    TeleportEntity(client, pos, ang, vel);
 }
 
 public RedFloor_PlayerDeath(client) {
