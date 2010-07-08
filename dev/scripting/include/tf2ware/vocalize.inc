@@ -64,9 +64,10 @@ CleanupAllVocalizations() {
     g_ivTimers = 0;
 }
 
-StopVocalization(id) {
+// Never being used. Disabled until.
+/*StopVocalization(id) {
     CloseHandle(vTimers[id]);
-}
+}*/
 
 AddRandVocalization(String:strid[], clients[MAXPLAYERS+1], Float:mindelay=4.0, Float:maxdelay=8.0) {
     new Float:rand = GetRandomFloat(mindelay, maxdelay);

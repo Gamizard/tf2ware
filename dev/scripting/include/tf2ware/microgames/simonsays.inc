@@ -43,21 +43,23 @@ public SimonSays_justEntered(client) {
 }
 
 public SimonSays_OnGameFrame() {
-    for (new i = 1; i <= MaxClients; i++) {
-        // If the player is valid and taunting
-        if(IsValidClient(i) && IsPlayerAlive(i)) {
-            if (IsPlayerDoing(i)) {
-                if (simon_or_someone == 0) {
-                // If simon says it
-                    SetStateClient(i, true, true);
-                }
-                else if (g_Complete[i]) {
-                // Otherwise, simon didn't say it and if we still haven't lost
-                    new String:input[512];
-                    // Display "Simon didn't say it!"
-                    Format(input, sizeof(input), "tf2ware_minigame_%d_11", GetMinigameConfNum("SimonSays", "id"));
-                    SetOverlay(i, input);
-                    SetStateClient(i, false);
+    if (timeleft <= 6) {
+        for (new i = 1; i <= MaxClients; i++) {
+            // If the player is valid and taunting
+            if(IsValidClient(i) && IsPlayerAlive(i)) {
+                if (IsPlayerDoing(i)) {
+                    if (simon_or_someone == 0) {
+                    // If simon says it
+                        SetStateClient(i, true, true);
+                    }
+                    else if (g_Complete[i]) {
+                    // Otherwise, simon didn't say it and if we still haven't lost
+                        new String:input[512];
+                        // Display "Simon didn't say it!"
+                        Format(input, sizeof(input), "tf2ware_minigame_%d_11", GetMinigameConfNum("SimonSays", "id"));
+                        SetOverlay(i, input);
+                        SetStateClient(i, false);
+                    }
                 }
             }
         }
