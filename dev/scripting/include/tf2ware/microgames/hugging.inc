@@ -31,6 +31,8 @@ public Hugging_OnMinigame() {
     new heavies = GetActivePlayers() / 4;
     if (heavies <= 1) heavies = 2;
     if (heavies >= 4) heavies = 3;
+    new heavyclients[MAXPLAYERS+1];
+    new scoutclients[MAXPLAYERS+1];
     for (new i = 1; i <= heavies; i++) {
         attempts = 0;
         target = GetRandomInt(1, AllPlayers);
@@ -47,15 +49,21 @@ public Hugging_OnMinigame() {
             if (g_Mission[i] == 0) {
                 SetClientClass(i, "scout");
                 SetStateClient(i, true);
+                scoutclients[i-1] = i;
             }
             else {
                 SetClientClass(i, "heavy");
                 SetStateClient(i, false);
+                heavyclients[i-1] = i;
             }
         }
     }
     g_respawn = true;
     RespawnAll(true, false);
+    
+    AddRandVocalization("heaviestaunt", heavyclients, 4.0, 8.0);
+    AddRandVocalization("scoutdisgust", scoutclients, 1.5, 5.0);
+    
 }
 
 public Action:Hugging_OnTakeDamageClient(victim, &attacker, &inflictor, &Float:damage, &damagetype) {
@@ -117,7 +125,7 @@ public Hugging_justEntered(client) {
         ang[2] = 0.0;
     }
     TeleportEntity(client, pos, ang, vel);
-    if (heavy_love[client] == INVALID_HANDLE) heavy_love[client] = CreateTimer(5.0, HeavyLoveTaunt, client);
+    //if (heavy_love[client] == INVALID_HANDLE) heavy_love[client] = CreateTimer(5.0, HeavyLoveTaunt, client);
 }
 
 public Hugging_OnPlayerTouch(entity, other) {
@@ -151,7 +159,7 @@ public Hugging_OnPlayerTouch(entity, other) {
     }
 }
 
-public Action:HeavyLoveTaunt(Handle:hTimer, any:client) {
+/* public Action:HeavyLoveTaunt(Handle:hTimer, any:client) {
     heavy_love[client] = INVALID_HANDLE;
     if (IsValidEntity(client) && status == 2 && iMinigame == 14 && g_Mission[client] > 0) {
         new random = GetRandomInt(0, sizeof(var_heavy_love)-1);
@@ -160,4 +168,4 @@ public Action:HeavyLoveTaunt(Handle:hTimer, any:client) {
         heavy_love[client] = CreateTimer(timerrandom, HeavyLoveTaunt, client);
     }
     return Plugin_Stop;
-}
+} */

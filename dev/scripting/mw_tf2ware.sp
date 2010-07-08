@@ -54,7 +54,7 @@ new Handle:ww_speed;
 new Handle:ww_music;
 new Handle:ww_force;
 new Handle:ww_log;
-new Handle:heavy_love[MAXPLAYERS+1] = INVALID_HANDLE;
+//new Handle:heavy_love[MAXPLAYERS+1] = INVALID_HANDLE;
 new Handle:ww_allowedCommands;
 new Handle:hudScore;
 // REPLACE WEAPON
@@ -138,6 +138,7 @@ new Handle:g_PlayerDeath;
 #include tf2ware\microgames\snipertarget.inc
 
 #include tf2ware\mw_tf2ware_features.inc
+#include tf2ware\vocalize.inc
 
 public Plugin:myinfo = {
     name = "TF2 Ware",
@@ -755,6 +756,8 @@ public Action:EndGame(Handle:hTimer) {
         Call_StartForward(g_OnEndMinigame);
         Call_Finish();
         
+        CleanupAllVocalizations();
+        
         new String:sound[512];
         for (new i = 1; i <= MaxClients; i++) {
             if (IsValidClient(i) && (!(IsFakeClient(i)))) {
@@ -1309,7 +1312,7 @@ public Player_Death(Handle:event, const String:name[], bool:dontBroadcast) {
 } */
 
 // Some convenience functions for parsing the configuration file more simply.
-p_GotoGameConf(String:game[]) {
+GotoGameConf(String:game[]) {
     if (!KvJumpToKey(MinigameConf, game)) {
         PrintToServer("ERROR: Couldn't find requested iMinigame %s in configuration file!", game);
         KvRewind(MinigameConf);
@@ -1318,20 +1321,20 @@ p_GotoGameConf(String:game[]) {
 
 // This is never used... yet. No need for it for now.
 /*GetMinigameConfStr(String:game[], String:key[], String:buffer, size) {
-    p_GotoGameConf(game);
+    GotoGameConf(game);
     KvGetString(MinigameConf, key, buffer, size);
     KvGoBack(MinigameConf);
 }*/
 
 Float:GetMinigameConfFloat(String:game[], String:key[], Float:def=4.0) {
-    p_GotoGameConf(game);
+    GotoGameConf(game);
     new Float:value = KvGetFloat(MinigameConf, key, def);
     KvGoBack(MinigameConf);
     return value;
 }
 
 GetMinigameConfNum(String:game[], String:key[], def=0) {
-    p_GotoGameConf(game);
+    GotoGameConf(game);
     new value = KvGetNum(MinigameConf, key, def);
     KvGoBack(MinigameConf);
     return value;
