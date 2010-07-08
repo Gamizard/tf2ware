@@ -69,6 +69,7 @@ new Handle:MinigameConf = INVALID_HANDLE;
 // Bools
 new bool:g_Complete[MAXPLAYERS+1];
 new bool:g_Spawned[MAXPLAYERS+1];
+new bool:g_ModifiedOverlay[MAXPLAYERS+1];
 new bool:g_attack = false;
 new bool:g_respawn = false;
 new bool:bossBattle = false;
@@ -713,6 +714,7 @@ PrintMissionText() {
             new String:input[512];
             Format(input, sizeof(input), "tf2ware_minigame_%d_%d", iMinigame, g_Mission[i]+1);
             SetOverlay(i,input);
+            g_ModifiedOverlay[i] = false;
         }
     }
 }
@@ -725,11 +727,10 @@ public Action:CountDown_Timer(Handle:hTimer) {
             Call_StartForward(g_OnTimerMinigame);
             Call_PushCell(timeleft);
             Call_Finish();
-            //OnTimerMinigame(timeleft);
         }
         if (timeleft == 2) {
             for (new i = 1; i <= MaxClients; i++) {
-                if (IsValidClient(i) && (!(IsFakeClient(i)))) {
+                if (IsValidClient(i) && (!(IsFakeClient(i))) && g_ModifiedOverlay[i] == false) {
                     SetOverlay(i, "");
                 }
             }
@@ -1172,6 +1173,7 @@ SetOverlay(i, String:overlay[512]) {
             Format(input, sizeof(input), "r_screenoverlay \"%s%s%s\"", materialpath,language,overlay);
         }
         ClientCommand(i,input);
+        g_ModifiedOverlay[i] = true;
     }
 }
 

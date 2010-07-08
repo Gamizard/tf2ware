@@ -6,44 +6,33 @@
 #define A_LOOKUP 3
 #define A_LOOKDOWN 4
 
-new String:simon_actions[5][24] = { "TAUNT!", "JUMP!", "CROUCH!", "LOOK UP!", "LOOK DOWN!" };
+// simon_action == 0 | Taunt
+// simon_action == 1 | Jump
+// simon_action == 2 | Crouch
+// simon_action == 3 | Look Up
+// simon_action == 4 | Look Down
 
 new simon_action;
-new Handle:h_simonhud;
+new simon_or_someone;
 
 public SimonSays_OnMinigame() {
     AddToForward(g_justEntered, INVALID_HANDLE, SimonSays_justEntered);
-    AddToForward(g_OnEndMinigame, INVALID_HANDLE, SimonSays_End);
+    AddToForward(g_OnGameFrame_Minigames, INVALID_HANDLE, SimonSays_OnGameFrame);
 
     simon_action = GetRandomInt(0,2);
-    new simon = GetRandomInt(0,1);
+    simon_or_someone = GetRandomInt(0,1);
     for (new i = 1; i <= MaxClients; i++) {
         if (IsValidClient(i)) {
-            g_Mission[i] = simon;
+            g_Mission[i] = simon_action * 2 + simon_or_someone;
         }
     }
     
-    h_simonhud = CreateHudSynchronizer();
-    
-    // If simon says it (simon == 0) set state to false until proven true
+    // If simon says it (simon_or_someone == 0) set state to false until proven true
     // Otherwise, set to true until proven false
-    SetStateAll(simon == 1);
+    SetStateAll(simon_or_someone == 1);
     
     g_respawn = true;
     RespawnAll(true, true);
-    
-    CreateTimer(0.50, SimonSays_DisplayInstruct);
-}
-
-public Action:SimonSays_DisplayInstruct(Handle:h_timer) {
-    AddToForward(g_OnGameFrame_Minigames, INVALID_HANDLE, SimonSays_OnGameFrame);
-    for (new i=1; i<=MaxClients; i++) {
-        if (IsValidClient(i)) {
-            SetHudTextParams(-1.0,0.30,5.0,255,255,255,0,1,3.0);
-            // Needs localization (translation file would be very good).
-            ShowSyncHudText(i,h_simonhud, simon_actions[simon_action]);
-        }
-    }
 }
 
 public SimonSays_justEntered(client) {
@@ -53,21 +42,12 @@ public SimonSays_justEntered(client) {
     }
 }
 
-public SimonSays_End() {
-    for (new i = 1; i <= MaxClients; i++) {
-        if(IsValidClient(i)) {
-            ClearSyncHud(i, h_simonhud);
-        }
-    }
-    CloseHandle(h_simonhud);
-}
-
 public SimonSays_OnGameFrame() {
     for (new i = 1; i <= MaxClients; i++) {
         // If the player is valid and taunting
         if(IsValidClient(i) && IsPlayerAlive(i)) {
             if (IsPlayerDoing(i)) {
-                if (!g_Mission[i]) {
+                if (simon_or_someone == 0) {
                 // If simon says it
                     SetStateClient(i, true, true);
                 }
@@ -75,9 +55,8 @@ public SimonSays_OnGameFrame() {
                 // Otherwise, simon didn't say it and if we still haven't lost
                     new String:input[512];
                     // Display "Simon didn't say it!"
-                    Format(input, sizeof(input), "tf2ware_minigame_%d_3", GetMinigameConfNum("SimonSays", "id"));
+                    Format(input, sizeof(input), "tf2ware_minigame_%d_11", GetMinigameConfNum("SimonSays", "id"));
                     SetOverlay(i, input);
-                    ClearSyncHud(i, h_simonhud);
                     SetStateClient(i, false);
                 }
             }
