@@ -156,8 +156,8 @@ public Action:HeavyLoveTaunt(Handle:hTimer, any:client) {
     if (IsValidEntity(client) && status == 2 && iMinigame == 14 && g_Mission[client] > 0) {
         new random = GetRandomInt(0, sizeof(var_heavy_love)-1);
         EmitSoundToAll(var_heavy_love[random], client);
+        new Float:timerrandom = GetRandomFloat(8.0, 13.0);
+        heavy_love[client] = CreateTimer(timerrandom, HeavyLoveTaunt, client);
     }
-    new Float:timerrandom = GetRandomFloat(8.0, 13.0);
-    heavy_love[client] = CreateTimer(timerrandom, HeavyLoveTaunt, client);
     return Plugin_Stop;
 }

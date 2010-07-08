@@ -18,6 +18,7 @@ public RedFloor_OnMinigame() {
     
     CreateTimer(5.0, Minigame16_Timer);
     RespawnAll(true, false);
+    SetConVarInt(FindConVar("mp_friendlyfire"), 1);
 }
 
 public Action:RedFloor_OnTakeDamageClient(victim, &attacker, &inflictor, &Float:damage, &damagetype) {
@@ -70,6 +71,7 @@ public RedFloor_End() {
             SDKUnhook(i, SDKHook_OnTakeDamage, RedFloor_OnTakeDamageClient);
         }
     }
+    SetConVarInt(FindConVar("mp_friendlyfire"), 0);
 }
 
 public Action:Minigame16_Timer(Handle:hTimer) {

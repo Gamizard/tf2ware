@@ -334,6 +334,7 @@ public OnMapStart() {
     
     decl String:input[512];
     
+    /*
     new String:materials[5][20] = { "minigame_win", "minigame_fail", "minigame_speed", "minigame_boss", "welcome" };
     for (new i = 0; i < sizeof(var_lang); i++) {
         for (new j = 0; j < sizeof(materials); j++) {
@@ -356,7 +357,7 @@ public OnMapStart() {
     Format(input, sizeof(input), "materials/tf2ware/tf2ware_points99.vmt");
     AddFileToDownloadsTable(input);
     Format(input, sizeof(input), "materials/tf2ware/tf2ware_points99.vtf");
-    AddFileToDownloadsTable(input);
+    AddFileToDownloadsTable(input);*/
     
     KvGotoFirstSubKey(MinigameConf);
     decl id;
