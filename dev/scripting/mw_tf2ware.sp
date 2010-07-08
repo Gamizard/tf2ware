@@ -414,7 +414,7 @@ public Action:Timer_DisplayVersion(Handle:timer, any:client)
 {
     if (IsValidClient(client))
     {
-        SetHudTextParams(0.66,0.15,25.0,255,255,255,255,1,3.0,0.0,3.0);
+        SetHudTextParams(0.63,0.73,25.0,255,255,255,255,1,3.0,0.0,3.0);
         ShowHudText(client,1,"v%s", PLUGIN_VERSION);
     }
     return Plugin_Handled;
@@ -586,7 +586,6 @@ public Action:StartMinigame_timer2(Handle:hTimer) {
 }
 
 RollMinigame() {
-    // FIXME: Need to move a lot of this to the cfg file
     if (GetConVarBool(ww_log) && bossBattle == false) LogMessage("Rolling normal microgame...");
     if (GetConVarBool(ww_log) && bossBattle) LogMessage("Rolling boss microgame...");
     new Handle:roll = CreateArray();
@@ -603,7 +602,9 @@ RollMinigame() {
         if (i == g_lastminigame) accept = false;
         if (i == g_lastboss) accept = false;
         if (!GetMinigameConfNum(g_name[i-1], "enable", 1)) accept = false;
-        if (accept) PushArrayCell(roll, i);
+        for (new j=0; j<GetMinigameConfNum(g_name[i-1], "chance", 1); j++) {
+            if (accept) PushArrayCell(roll, i);
+        }
         if (GetConVarBool(ww_log) && (accept)) LogMessage("-- Microgame #%d allowed", i);
         if (GetConVarBool(ww_log) && (accept == false)) LogMessage("-- Microgame #%d NOT allowed", i);
     }
@@ -726,9 +727,11 @@ public Action:CountDown_Timer(Handle:hTimer) {
             Call_Finish();
             //OnTimerMinigame(timeleft);
         }
-        if (timeleft == 3) {
+        if (timeleft == 2) {
             for (new i = 1; i <= MaxClients; i++) {
-                if (IsValidClient(i)) SetOverlay(i,"");
+                if (IsValidClient(i) && (!(IsFakeClient(i)))) {
+                    SetOverlay(i, "");
+                }
             }
         }
     }
@@ -1168,7 +1171,6 @@ SetOverlay(i, String:overlay[512]) {
         if (!(StrEqual(overlay, ""))) {
             Format(input, sizeof(input), "r_screenoverlay \"%s%s%s\"", materialpath,language,overlay);
         }
-
         ClientCommand(i,input);
     }
 }
