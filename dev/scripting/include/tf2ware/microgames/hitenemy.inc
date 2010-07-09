@@ -1,11 +1,6 @@
 // Hit Enemy module
 
 public HitEnemy_OnMinigame() {
-    for (new i = 1; i <= MaxClients; i++) {
-        if (IsValidClient(i)) {
-            SDKHook(i, SDKHook_OnTakeDamage, HitEnemy_OnTakeDamageClient);
-        }
-    }
     AddToForward(g_justEntered, INVALID_HANDLE, HitEnemy_justEntered);
     AddToForward(g_OnEndMinigame, INVALID_HANDLE, HitEnemy_End);
 
@@ -44,6 +39,8 @@ public Action:HitEnemy_OnTakeDamageClient(victim, &attacker, &inflictor, &Float:
 
 
 public HitEnemy_justEntered(client) {
+    SDKHook(client, SDKHook_OnTakeDamage, HitEnemy_OnTakeDamageClient);
+
     if (randommini <= 0) {
         SetClientClass(client, "spy");
         RemoveClientSlot(client,1);

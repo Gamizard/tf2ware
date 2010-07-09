@@ -368,7 +368,7 @@ public OnMapStart() {
     do {
         id = KvGetNum(MinigameConf, "id");
         enable = KvGetNum(MinigameConf, "enable", 1);
-        if (enable) {
+        if (enable >= 1) {
             Format(input, sizeof(input), "imgay/tf2ware/minigame_%d.mp3", id);
             if (GetConVarBool(ww_log)) LogMessage("%s", input);
             precacheSound(input);
@@ -389,7 +389,7 @@ public OnMapStart() {
             }*/
         }
         i++;
-      } while (KvGotoNextKey(MinigameConf)); 
+    } while (KvGotoNextKey(MinigameConf)); 
     KvRewind(MinigameConf);
     
     white = PrecacheModel("materials/sprites/white.vmt");
@@ -531,7 +531,9 @@ public EventInventoryApplication(Handle:event, const String:name[], bool:dontBro
     g_Spawned[client] = true;
     if (GetConVarBool(ww_enable) && g_enabled) {
         // Replace huntsman with sniper rifle to avoid taunt killers
+        // Also replace Frontier with Shotgun
         ReplaceClientWeapon(client, 56, "tf_weapon_sniperrifle");
+        ReplaceClientWeapon(client, 141, "tf_weapon_shotgun_primary");
         if ((status != 2) && (g_Winner[client] == 0)) {
             RemoveClientWeapons(client);
             if (status != 5) CreateSprite(client);
