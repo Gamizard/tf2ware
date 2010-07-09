@@ -51,7 +51,7 @@ public Action:Timer_Vocalize(Handle:hTimer, any:pack) {
 RollFromValid(clients[MAXPLAYERS+1]) {
     new Handle:list = CreateArray();
     for (new i=0; i<sizeof(clients); i++) {
-        if (IsValidClient(clients[i])) {
+        if (IsValidClient(clients[i]) && IsPlayerAlive(clients[i])) {
             PushArrayCell(list, clients[i]);
         }
     }
