@@ -136,6 +136,7 @@ new Handle:g_PlayerDeath;
 #include tf2ware\microgames\hugging.inc
 #include tf2ware\microgames\redfloor.inc
 #include tf2ware\microgames\snipertarget.inc
+#include tf2ware\microgames\airraid.inc
 
 #include tf2ware\mw_tf2ware_features.inc
 #include tf2ware\vocalize.inc
@@ -280,6 +281,7 @@ public OnMapStart() {
         RegMinigame("Hugging", Hugging_OnMinigame, Hugging_Init);
         RegMinigame("RedFloor", RedFloor_OnMinigame);
         RegMinigame("SniperTarget", SniperTarget_OnMinigame);
+        RegMinigame("Airraid", Airraid_OnMinigame);
 
         // CHEATS
         HookConVarChange(FindConVar("sv_cheats"), OnConVarChanged_SvCheats);

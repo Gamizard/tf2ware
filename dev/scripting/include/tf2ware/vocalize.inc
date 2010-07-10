@@ -42,8 +42,10 @@ public Action:Timer_Vocalize(Handle:hTimer, any:pack) {
             CloseHandle(sounds);
             
             new client = RollFromValid(clients);
-            EmitSoundToAll(buffer, client);
-            
+            // RollFromValid returns -1 if there are no clients to choose from
+            if (client != -1) {
+                EmitSoundToAll(buffer, client);
+            }        
             AddRandVocalization(id, clients, mindelay, maxdelay);
         }
     }
@@ -57,7 +59,12 @@ RollFromValid(clients[MAXPLAYERS+1]) {
             PushArrayCell(list, clients[i]);
         }
     }
-    new result = GetArrayCell(list, GetRandomInt(0, GetArraySize(list)-1));
+    new result;
+    // Check to avoid "invalid index 0" if array size is <1
+    if (GetArraySize(list) > 0) {
+        result = GetArrayCell(list, GetRandomInt(0, GetArraySize(list)-1));
+    }
+    else result = -1;
     CloseHandle(list);
     return result;
 }
