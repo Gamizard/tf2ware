@@ -167,136 +167,12 @@ public OnPluginStart() {
         PrintToServer("* FATAL ERROR: Failed to get offset for CBaseEntity::m_CollisionGroup");
     }
     
-    // Add server tag
-    AddServerTag("TF2Ware");
-    
-    // Load game config
-    GameConf = LoadGameConfigFile("tf2ware.games");
-    
-    // Load minigames
-    decl String:imFile[PLATFORM_MAX_PATH];
-    BuildPath(Path_SM, imFile, sizeof(imFile), "configs/minigames.cfg");
-    
-    MinigameConf = CreateKeyValues("Minigames");
-    if (FileToKeyValues(MinigameConf, imFile)) {
-        PrintToServer("Loaded minigames from minigames.cfg");
-        
-        KvGotoFirstSubKey(MinigameConf);
-        new i=0;
-        do {
-            KvGetSectionName(MinigameConf, g_name[KvGetNum(MinigameConf, "id")-1], 32);
-            i++;
-          } while (KvGotoNextKey(MinigameConf)); 
-          
-        KvRewind(MinigameConf);
-    }
-    else {
-        PrintToServer("Failed to load minigames.cfg!");
-    }
-    
-    // SDK
-    StartPrepSDKCall(SDKCall_Player);
-    PrepSDKCall_SetFromConf(GameConf, SDKConf_Virtual, "GiveNamedItem");
-    PrepSDKCall_AddParameter(SDKType_String, SDKPass_Pointer);
-    PrepSDKCall_AddParameter(SDKType_PlainOldData, SDKPass_Plain);
-    PrepSDKCall_SetReturnInfo(SDKType_CBaseEntity, SDKPass_Plain);
-    hGiveNamedItem = EndPrepSDKCall();
-
-    StartPrepSDKCall(SDKCall_Player);
-    PrepSDKCall_SetFromConf(GameConf, SDKConf_Virtual, "WeaponEquip");
-    PrepSDKCall_AddParameter(SDKType_CBaseEntity, SDKPass_Pointer);
-    hWeaponEquip = EndPrepSDKCall();
-    
-    // ConVars
+     // ConVars
     ww_enable = CreateConVar("ww_enable", "0", "Enables/Disables TF2 Ware.", FCVAR_PLUGIN);
     ww_force = CreateConVar("ww_force", "0", "Force a certain minigame (0 to not force).", FCVAR_PLUGIN);
     ww_speed = CreateConVar("ww_speed", "1", "Speed level.", FCVAR_PLUGIN);
     ww_music = CreateConVar("ww_music_fix", "0", "Apply music fix? Should only be on for localhosts during testing", FCVAR_PLUGIN);
     ww_log = CreateConVar("ww_log", "0", "Log server events?", FCVAR_PLUGIN);
-    
-    // Add logging
-    if (GetConVarBool(ww_log)) {
-    LogMessage("//////////////////////////////////////////////////////");
-    LogMessage("//                     TF2WARE LOG                  //");
-    LogMessage("//////////////////////////////////////////////////////");
-    }
-    
-    // Hooks
-    HookConVarChange(ww_enable,StartMinigame_cvar);
-    HookEvent("post_inventory_application", EventInventoryApplication,  EventHookMode_Post);
-    HookEvent("player_death", Player_Death);
-    HookEvent("player_team", Player_Team);
-    HookEvent("teamplay_round_start", Event_Roundstart, EventHookMode_PostNoCopy);
-    HookEvent("teamplay_game_over", Event_Roundend, EventHookMode_PostNoCopy);
-    HookEvent("teamplay_round_stalemate", Event_Roundend, EventHookMode_PostNoCopy);
-    HookEvent("teamplay_round_win", Event_Roundend, EventHookMode_PostNoCopy);
-    RegAdminCmd("ww_list", Command_list, ADMFLAG_GENERIC, "Lists all the registered, enabled plugins and their ids");
-    RegAdminCmd("ww_give", Command_points, ADMFLAG_GENERIC, "Gives you 20 points - You're a winner! (testing feature)");
-    
-    // Vars
-    currentSpeed = GetConVarInt(ww_speed);
-    iMinigame = 1;
-    status = 0;
-    randommini = 0;
-    Roundstarts = 0;
-    SetStateAll(false);
-    ResetWinners();
-    SetMissionAll(0);
-    
-    // FORWARDS FOR MINIGAMES
-    g_OnMapStart = CreateForward(ET_Ignore);
-    g_justEntered = CreateForward(ET_Ignore, Param_Cell);
-    g_OnAlmostEnd = CreateForward(ET_Ignore);
-    g_OnTimerMinigame = CreateForward(ET_Ignore, Param_Cell);
-    g_OnEndMinigame = CreateForward(ET_Ignore);
-    g_OnGameFrame_Minigames = CreateForward(ET_Ignore);
-    g_PlayerDeath = CreateForward(ET_Ignore, Param_Cell);
-    
-    
-    // MINIGAME REGISTRATION
-    RegMinigame("HitEnemy", HitEnemy_OnMinigame);
-    RegMinigame("Spycrab", Spycrab_OnMinigame);
-    RegMinigame("Kamikaze", Kamikaze_OnMinigame);
-    RegMinigame("Math", Math_OnMinigame);
-    RegMinigame("SawRun", SawRun_OnMinigame);
-    RegMinigame("Barrel", Barrel_OnMinigame);
-    RegMinigame("Needlejump", Needlejump_OnMinigame);
-    RegMinigame("Hopscotch", Hopscotch_OnMinigame);
-    RegMinigame("Airblast", Airblast_OnMinigame);
-    RegMinigame("Movement", Movement_OnMinigame);
-    RegMinigame("Flood", Flood_OnMinigame);
-    RegMinigame("SimonSays", SimonSays_OnMinigame);
-    RegMinigame("BBall", BBall_OnMinigame);
-    RegMinigame("Hugging", Hugging_OnMinigame, Hugging_Init);
-    RegMinigame("RedFloor", RedFloor_OnMinigame);
-    RegMinigame("SniperTarget", SniperTarget_OnMinigame);
-
-    // CHEATS
-    HookConVarChange(FindConVar("sv_cheats"), OnConVarChanged_SvCheats);
-    ww_allowedCommands = CreateArray(64);
-    PushArrayString(ww_allowedCommands, "host_timescale");
-    PushArrayString(ww_allowedCommands, "r_screenoverlay");
-    PushArrayString(ww_allowedCommands, "thirdperson");
-    PushArrayString(ww_allowedCommands, "firstperson");
-    PushArrayString(ww_allowedCommands, "sv_cheats");
-    UpdateClientCheatValue();
-    HookAllCheatCommands();
-    
-    DestroyAllBarrels();
-    
-    // HUD
-    hudScore = CreateHudSynchronizer();
-    ResetScores();
-    
-    // Remove Notification Flags
-    RemoveNotifyFlag("sv_tags");
-    RemoveNotifyFlag("mp_respawnwavetime");
-    RemoveNotifyFlag("mp_friendlyfire");
-    RemoveNotifyFlag("tf_tournament_hide_domination_icons");
-    SetConVarInt(FindConVar("tf_tournament_hide_domination_icons"), 0, true);
-    
-    // Include optional achievements
-    if (LibraryExists("mw_ach")) g_Achievements = true;
     
 }
 
@@ -307,102 +183,228 @@ public OnMapStart() {
     GetCurrentMap(map, 8);
     if(StrEqual(map, "tf2ware")) {
         g_enabled = true;
+        
+        // Add server tag
+        AddServerTag("TF2Ware");
+        
+        // Load game config
+        GameConf = LoadGameConfigFile("tf2ware.games");
+        
+        // Load minigames
+        decl String:imFile[PLATFORM_MAX_PATH];
+        BuildPath(Path_SM, imFile, sizeof(imFile), "configs/minigames.cfg");
+        
+        MinigameConf = CreateKeyValues("Minigames");
+        if (FileToKeyValues(MinigameConf, imFile)) {
+            PrintToServer("Loaded minigames from minigames.cfg");
+            
+            KvGotoFirstSubKey(MinigameConf);
+            new i=0;
+            do {
+                KvGetSectionName(MinigameConf, g_name[KvGetNum(MinigameConf, "id")-1], 32);
+                i++;
+              } while (KvGotoNextKey(MinigameConf)); 
+              
+            KvRewind(MinigameConf);
+        }
+        else {
+            PrintToServer("Failed to load minigames.cfg!");
+        }
+        
+        // SDK
+        StartPrepSDKCall(SDKCall_Player);
+        PrepSDKCall_SetFromConf(GameConf, SDKConf_Virtual, "GiveNamedItem");
+        PrepSDKCall_AddParameter(SDKType_String, SDKPass_Pointer);
+        PrepSDKCall_AddParameter(SDKType_PlainOldData, SDKPass_Plain);
+        PrepSDKCall_SetReturnInfo(SDKType_CBaseEntity, SDKPass_Plain);
+        hGiveNamedItem = EndPrepSDKCall();
+
+        StartPrepSDKCall(SDKCall_Player);
+        PrepSDKCall_SetFromConf(GameConf, SDKConf_Virtual, "WeaponEquip");
+        PrepSDKCall_AddParameter(SDKType_CBaseEntity, SDKPass_Pointer);
+        hWeaponEquip = EndPrepSDKCall();
+        
+        // Add logging
+        if (GetConVarBool(ww_log)) {
+        LogMessage("//////////////////////////////////////////////////////");
+        LogMessage("//                     TF2WARE LOG                  //");
+        LogMessage("//////////////////////////////////////////////////////");
+        }
+        
+        // Hooks
+        HookConVarChange(ww_enable,StartMinigame_cvar);
+        HookEvent("post_inventory_application", EventInventoryApplication,  EventHookMode_Post);
+        HookEvent("player_death", Player_Death);
+        HookEvent("player_team", Player_Team);
+        HookEvent("teamplay_round_start", Event_Roundstart, EventHookMode_PostNoCopy);
+        HookEvent("teamplay_game_over", Event_Roundend, EventHookMode_PostNoCopy);
+        HookEvent("teamplay_round_stalemate", Event_Roundend, EventHookMode_PostNoCopy);
+        HookEvent("teamplay_round_win", Event_Roundend, EventHookMode_PostNoCopy);
+        RegAdminCmd("ww_list", Command_list, ADMFLAG_GENERIC, "Lists all the registered, enabled plugins and their ids");
+        RegAdminCmd("ww_give", Command_points, ADMFLAG_GENERIC, "Gives you 20 points - You're a winner! (testing feature)");
+        
+        // Vars
+        currentSpeed = GetConVarInt(ww_speed);
+        iMinigame = 1;
+        status = 0;
+        randommini = 0;
+        Roundstarts = 0;
+        SetStateAll(false);
+        ResetWinners();
+        SetMissionAll(0);
+        
+        // FORWARDS FOR MINIGAMES
+        g_OnMapStart = CreateForward(ET_Ignore);
+        g_justEntered = CreateForward(ET_Ignore, Param_Cell);
+        g_OnAlmostEnd = CreateForward(ET_Ignore);
+        g_OnTimerMinigame = CreateForward(ET_Ignore, Param_Cell);
+        g_OnEndMinigame = CreateForward(ET_Ignore);
+        g_OnGameFrame_Minigames = CreateForward(ET_Ignore);
+        g_PlayerDeath = CreateForward(ET_Ignore, Param_Cell);
+        
+        
+        // MINIGAME REGISTRATION
+        RegMinigame("HitEnemy", HitEnemy_OnMinigame);
+        RegMinigame("Spycrab", Spycrab_OnMinigame);
+        RegMinigame("Kamikaze", Kamikaze_OnMinigame);
+        RegMinigame("Math", Math_OnMinigame);
+        RegMinigame("SawRun", SawRun_OnMinigame);
+        RegMinigame("Barrel", Barrel_OnMinigame);
+        RegMinigame("Needlejump", Needlejump_OnMinigame);
+        RegMinigame("Hopscotch", Hopscotch_OnMinigame);
+        RegMinigame("Airblast", Airblast_OnMinigame);
+        RegMinigame("Movement", Movement_OnMinigame);
+        RegMinigame("Flood", Flood_OnMinigame);
+        RegMinigame("SimonSays", SimonSays_OnMinigame);
+        RegMinigame("BBall", BBall_OnMinigame);
+        RegMinigame("Hugging", Hugging_OnMinigame, Hugging_Init);
+        RegMinigame("RedFloor", RedFloor_OnMinigame);
+        RegMinigame("SniperTarget", SniperTarget_OnMinigame);
+
+        // CHEATS
+        HookConVarChange(FindConVar("sv_cheats"), OnConVarChanged_SvCheats);
+        ww_allowedCommands = CreateArray(64);
+        PushArrayString(ww_allowedCommands, "host_timescale");
+        PushArrayString(ww_allowedCommands, "r_screenoverlay");
+        PushArrayString(ww_allowedCommands, "thirdperson");
+        PushArrayString(ww_allowedCommands, "firstperson");
+        PushArrayString(ww_allowedCommands, "sv_cheats");
+        UpdateClientCheatValue();
+        HookAllCheatCommands();
+        
+        DestroyAllBarrels();
+        
+        // HUD
+        hudScore = CreateHudSynchronizer();
+        ResetScores();
+        
+        // Remove Notification Flags
+        RemoveNotifyFlag("sv_tags");
+        RemoveNotifyFlag("mp_respawnwavetime");
+        RemoveNotifyFlag("mp_friendlyfire");
+        RemoveNotifyFlag("tf_tournament_hide_domination_icons");
+        SetConVarInt(FindConVar("tf_tournament_hide_domination_icons"), 0, true);
+        
+        // Include optional achievements
+        if (LibraryExists("mw_ach")) g_Achievements = true;
+        
+        if (GetConVarBool(ww_log)) LogMessage("Calling OnMapStart Forward");
+            
+        Call_StartForward(g_OnMapStart);
+        Call_Finish();
+        
+        precacheSound(MUSIC_START);
+        precacheSound(MUSIC_WIN);
+        precacheSound(MUSIC_FAIL);
+        precacheSound(SOUND_COMPLETE);
+        precacheSound(SOUND_COMPLETE_YOU);
+        precacheSound(MUSIC_SPEEDUP);
+        precacheSound(MUSIC_BOSS);
+        precacheSound(MUSIC_GAMEOVER);
+        precacheSound(SOUND_MINISCORE);
+        precacheSound(MUSIC_WAITING);
+        PrecacheModel("models/props_farm/wooden_barrel.mdl", true);
+        PrecacheModel("models/props_farm/gibs/wooden_barrel_break02.mdl", true);
+        PrecacheModel("models/props_farm/gibs/wooden_barrel_chunk02.mdl", true);
+        PrecacheModel("models/props_farm/gibs/wooden_barrel_chunk04.mdl", true);
+        PrecacheModel("models/props_farm/gibs/wooden_barrel_chunk03.mdl", true);
+        PrecacheModel("models/props_farm/gibs/wooden_barrel_chunk01.mdl", true);
+        
+        decl String:input[512];
+        
+        /*
+        new String:materials[5][20] = { "minigame_win", "minigame_fail", "minigame_speed", "minigame_boss", "welcome" };
+        for (new i = 0; i < sizeof(var_lang); i++) {
+            for (new j = 0; j < sizeof(materials); j++) {
+                Format(input, sizeof(input), "materials/%s%stf2ware_%s.vmt", materialpath, var_lang[i], materials[j]);
+                AddFileToDownloadsTable(input);
+                Format(input, sizeof(input), "materials/%s%stf2ware_%s.vtf", materialpath, var_lang[i], materials[j]);
+                AddFileToDownloadsTable(input);
+            }
+        }
+        
+        for (new i = 1; i <= 19; i++) {
+            Format(input, sizeof(input), "materials/tf2ware/tf2ware_points%d.vmt", i);
+            AddFileToDownloadsTable(input);
+            PrecacheGeneric(input, true);
+            Format(input, sizeof(input), "materials/tf2ware/tf2ware_points%d.vtf", i);
+            AddFileToDownloadsTable(input);
+            PrecacheGeneric(input, true);
+        }
+        
+        Format(input, sizeof(input), "materials/tf2ware/tf2ware_points99.vmt");
+        AddFileToDownloadsTable(input);
+        Format(input, sizeof(input), "materials/tf2ware/tf2ware_points99.vtf");
+        AddFileToDownloadsTable(input);*/
+        
+        KvGotoFirstSubKey(MinigameConf);
+        decl id;
+        decl enable;
+        new i=1;
+        if (GetConVarBool(ww_log)) LogMessage("--Adding the following to downloads table from information in minigames.cfg:", input);
+        do {
+            id = KvGetNum(MinigameConf, "id");
+            enable = KvGetNum(MinigameConf, "enable", 1);
+            if (enable >= 1) {
+                Format(input, sizeof(input), "imgay/tf2ware/minigame_%d.mp3", id);
+                if (GetConVarBool(ww_log)) LogMessage("%s", input);
+                precacheSound(input);
+                
+                /*new j=1, String:overlays[12];
+                Format(overlays, sizeof(overlays), "overlay%d", j);
+                while (KvJumpToKey(MinigameConf, overlays)) {
+                    for (new k = 0; k < sizeof(var_lang); k++) {
+                        Format(input, sizeof(input), "materials/%s%stf2ware_minigame_%d_%d.vmt", materialpath, var_lang[k], id, j);
+                        AddFileToDownloadsTable(input);
+                        Format(input, sizeof(input), "materials/%s%stf2ware_minigame_%d_%d.vtf", materialpath, var_lang[k], id, j);
+                        AddFileToDownloadsTable(input);
+                        if (GetConVarBool(ww_log)) LogMessage("%s / .vmt", input);
+                    }
+                    j++;
+                    Format(overlays, sizeof(overlays), "overlay%d", j);
+                    KvGoBack(MinigameConf);
+                }*/
+            }
+            i++;
+        } while (KvGotoNextKey(MinigameConf)); 
+        KvRewind(MinigameConf);
+        
+        white = PrecacheModel("materials/sprites/white.vmt");
+        g_HaloSprite = PrecacheModel("materials/sprites/halo01.vmt");
+        g_ExplosionSprite = PrecacheModel("sprites/sprite_fire01.vmt");
+
+        PrecacheSound( "ambient/explosions/explode_8.wav", true);
+        SetConVarInt(ww_speed, 1);
+        ResetScores();
+        bossBattle = false;
+        Roundstarts = 0;
+        
+        if (GetConVarBool(ww_log)) LogMessage("Map started");
+        
     }
     else {
         g_enabled = false;
     }
-
-    if (GetConVarBool(ww_log)) LogMessage("Calling OnMapStart Forward");
-    Call_StartForward(g_OnMapStart);
-    Call_Finish();
-    
-    precacheSound(MUSIC_START);
-    precacheSound(MUSIC_WIN);
-    precacheSound(MUSIC_FAIL);
-    precacheSound(SOUND_COMPLETE);
-    precacheSound(SOUND_COMPLETE_YOU);
-    precacheSound(MUSIC_SPEEDUP);
-    precacheSound(MUSIC_BOSS);
-    precacheSound(MUSIC_GAMEOVER);
-    precacheSound(SOUND_MINISCORE);
-    precacheSound(MUSIC_WAITING);
-    PrecacheModel("models/props_farm/wooden_barrel.mdl", true);
-    PrecacheModel("models/props_farm/gibs/wooden_barrel_break02.mdl", true);
-    PrecacheModel("models/props_farm/gibs/wooden_barrel_chunk02.mdl", true);
-    PrecacheModel("models/props_farm/gibs/wooden_barrel_chunk04.mdl", true);
-    PrecacheModel("models/props_farm/gibs/wooden_barrel_chunk03.mdl", true);
-    PrecacheModel("models/props_farm/gibs/wooden_barrel_chunk01.mdl", true);
-    
-    decl String:input[512];
-    
-    /*
-    new String:materials[5][20] = { "minigame_win", "minigame_fail", "minigame_speed", "minigame_boss", "welcome" };
-    for (new i = 0; i < sizeof(var_lang); i++) {
-        for (new j = 0; j < sizeof(materials); j++) {
-            Format(input, sizeof(input), "materials/%s%stf2ware_%s.vmt", materialpath, var_lang[i], materials[j]);
-            AddFileToDownloadsTable(input);
-            Format(input, sizeof(input), "materials/%s%stf2ware_%s.vtf", materialpath, var_lang[i], materials[j]);
-            AddFileToDownloadsTable(input);
-        }
-    }
-    
-    for (new i = 1; i <= 19; i++) {
-        Format(input, sizeof(input), "materials/tf2ware/tf2ware_points%d.vmt", i);
-        AddFileToDownloadsTable(input);
-        PrecacheGeneric(input, true);
-        Format(input, sizeof(input), "materials/tf2ware/tf2ware_points%d.vtf", i);
-        AddFileToDownloadsTable(input);
-        PrecacheGeneric(input, true);
-    }
-    
-    Format(input, sizeof(input), "materials/tf2ware/tf2ware_points99.vmt");
-    AddFileToDownloadsTable(input);
-    Format(input, sizeof(input), "materials/tf2ware/tf2ware_points99.vtf");
-    AddFileToDownloadsTable(input);*/
-    
-    KvGotoFirstSubKey(MinigameConf);
-    decl id;
-    decl enable;
-    new i=1;
-    if (GetConVarBool(ww_log)) LogMessage("--Adding the following to downloads table from information in minigames.cfg:", input);
-    do {
-        id = KvGetNum(MinigameConf, "id");
-        enable = KvGetNum(MinigameConf, "enable", 1);
-        if (enable >= 1) {
-            Format(input, sizeof(input), "imgay/tf2ware/minigame_%d.mp3", id);
-            if (GetConVarBool(ww_log)) LogMessage("%s", input);
-            precacheSound(input);
-            
-            /*new j=1, String:overlays[12];
-            Format(overlays, sizeof(overlays), "overlay%d", j);
-            while (KvJumpToKey(MinigameConf, overlays)) {
-                for (new k = 0; k < sizeof(var_lang); k++) {
-                    Format(input, sizeof(input), "materials/%s%stf2ware_minigame_%d_%d.vmt", materialpath, var_lang[k], id, j);
-                    AddFileToDownloadsTable(input);
-                    Format(input, sizeof(input), "materials/%s%stf2ware_minigame_%d_%d.vtf", materialpath, var_lang[k], id, j);
-                    AddFileToDownloadsTable(input);
-                    if (GetConVarBool(ww_log)) LogMessage("%s / .vmt", input);
-                }
-                j++;
-                Format(overlays, sizeof(overlays), "overlay%d", j);
-                KvGoBack(MinigameConf);
-            }*/
-        }
-        i++;
-    } while (KvGotoNextKey(MinigameConf)); 
-    KvRewind(MinigameConf);
-    
-    white = PrecacheModel("materials/sprites/white.vmt");
-    g_HaloSprite = PrecacheModel("materials/sprites/halo01.vmt");
-    g_ExplosionSprite = PrecacheModel("sprites/sprite_fire01.vmt");
-
-    PrecacheSound( "ambient/explosions/explode_8.wav", true);
-    SetConVarInt(ww_speed, 1);
-    ResetScores();
-    bossBattle = false;
-    Roundstarts = 0;
-    
-    if (GetConVarBool(ww_log)) LogMessage("Map started");
 }
 
 public Action:OnGetGameDescription(String:gameDesc[64]) {
@@ -457,6 +459,7 @@ public Action:Event_Roundend(Handle:event,const String:name[],bool:dontBroadcast
 }
 
 public OnClientPostAdminCheck(client) {
+    if (!g_enabled) return;
     UpdateClientCheatValue();
     g_Points[client] = GetAverageScore();
     
@@ -472,9 +475,10 @@ public OnClientPostAdminCheck(client) {
 }
 
 public OnClientPutInServer(client) {
-   if (GetConVarBool(ww_log)) LogMessage("Client put in server and hooked");
-   SDKHook(client, SDKHook_PreThink, OnPreThink);
-   SDKHook(client, SDKHook_OnTakeDamage, OnTakeDamageClient);
+    if (!g_enabled) return;
+    if (GetConVarBool(ww_log)) LogMessage("Client put in server and hooked");
+    SDKHook(client, SDKHook_PreThink, OnPreThink);
+    SDKHook(client, SDKHook_OnTakeDamage, OnTakeDamageClient);
     
 }
 
