@@ -37,13 +37,15 @@ public Action:Timer_Vocalize(Handle:hTimer, any:pack) {
         }
         KvRewind(MinigameConf);
         
-        GetArrayString(sounds, GetRandomInt(0, GetArraySize(sounds)-1), buffer, sizeof(buffer));
-        CloseHandle(sounds);
-        
-        new client = RollFromValid(clients);
-        EmitSoundToAll(buffer, client);
-        
-        AddRandVocalization(id, clients, mindelay, maxdelay);
+        if (GetArraySize(sounds) > 0) {
+            GetArrayString(sounds, GetRandomInt(0, GetArraySize(sounds)-1), buffer, sizeof(buffer));
+            CloseHandle(sounds);
+            
+            new client = RollFromValid(clients);
+            EmitSoundToAll(buffer, client);
+            
+            AddRandVocalization(id, clients, mindelay, maxdelay);
+        }
     }
     return Plugin_Stop;
 }

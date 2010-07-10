@@ -43,6 +43,12 @@ public Math_justEntered(client) {
     }
 }
 
+stock bool:Math_IsStringANumber(String:Arg[64]) {
+    if (StringToInt(Arg) != 0) return true;
+    if (StrEqual(Arg, "0")) return true;
+    return false;
+}
+
 public Action:Math_Player_Say(iClient, iArgs) {
     // Check to make sure this is happening during the math minigame
     if (!StrEqual(minigame, "Math")) return Plugin_Continue;
@@ -52,18 +58,12 @@ public Action:Math_Player_Say(iClient, iArgs) {
     if ((IsPlayerAlive(iClient)) && (status == 2) && (g_Complete[iClient] == false)) {
         // Retrieve the first argument and check it's a valid trigger
         decl String:strArgument[64]; GetCmdArg(1, strArgument, sizeof(strArgument));
-        new String:strZero[2];
-        new bool:isAnswerZero = false;
-        strZero = "0";
-
-        if(strcmp(strArgument,strZero) == 0)
-        {
-            isAnswerZero = true;
-        }
+        
+        if (Math_IsStringANumber(strArgument) == false) return Plugin_Continue;
         
         new guess = StringToInt(strArgument);
         
-        if ((guess == g_result) || (g_result == 0 && isAnswerZero == true)) {
+        if (guess == g_result) {
             SetHudTextParams(-1.0, 0.4, 3.0, 0,255,0, 255, 0, 6.0, 0.2, 0.5);
             // Replace the current display to include the guess instead of a question mark
             ShowHudText(iClient, 5, "%s = %d", g_mathquestion, guess);            
@@ -77,14 +77,14 @@ public Action:Math_Player_Say(iClient, iArgs) {
                 }
                 g_first = true;
             }
+            return Plugin_Handled;
         }
-        if (guess != g_result) {
+        else {
             SetHudTextParams(-1.0, 0.4, 3.0, 255,0,0, 255, 0, 6.0, 0.2, 0.5);
             // Use a notequals sign!
             ShowHudText(iClient, 5, "%s = %d", g_mathquestion, guess);
             ForcePlayerSuicide(iClient);
         }        
-        return Plugin_Handled;
     }
     
     // If no valid argument found, pass
