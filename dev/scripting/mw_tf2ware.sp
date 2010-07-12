@@ -611,7 +611,7 @@ RollMinigame() {
         if (StrEqual(g_name[i-1], "")) continue;
         accept = true;
         new gameisboss = GetMinigameConfNum(g_name[i-1], "boss", 0);
-        if (iplayers < GetMinigameConfNum(g_name[i-1], "minplayers", 2)) accept = false;
+        if (iplayers < GetMinigameConfNum(g_name[i-1], "minplayers", 1)) accept = false;
         if ((bossBattle) && (!gameisboss)) accept = false;
         if ((!bossBattle) && (gameisboss)) accept = false;
         if (i == g_lastminigame) accept = false;
@@ -657,7 +657,7 @@ HandOutPoints() {
 }
 
 StartMinigame() {
-    if (GetConVarBool(ww_enable) && g_enabled && (status == 0) && (GetTeamClientCount(2) >= 1) && (GetTeamClientCount(3) >= 1) && g_waiting == false) {
+    if (GetConVarBool(ww_enable) && g_enabled && (status == 0) && g_waiting == false) {
         if (GetConVarBool(ww_log)) LogMessage("Starting microgame %s! Status = 0", minigame);
         RespawnAll();
         RemoveAllWeapons();

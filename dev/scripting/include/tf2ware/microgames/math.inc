@@ -84,9 +84,8 @@ public Action:Math_Player_Say(iClient, iArgs) {
             // Use a notequals sign!
             ShowHudText(iClient, 5, "%s = %d", g_mathquestion, guess);
             ForcePlayerSuicide(iClient);
+            return Plugin_Continue;
         }        
     }
-    
-    // If no valid argument found, pass
     return Plugin_Continue;
 }
