@@ -17,7 +17,7 @@
 
 #define MAX_MINIGAMES 20
 
-#define PLUGIN_VERSION "0.8.3-15"
+#define PLUGIN_VERSION "0.8.4-15 BETA"
 #define MUSIC_START "imgay/tf2ware/tf2ware_intro.mp3"
 #define MUSIC_START_LEN 2.18
 #define MUSIC_WIN "imgay/tf2ware/tf2ware_win.mp3"
@@ -71,7 +71,6 @@ new bool:g_Complete[MAXPLAYERS+1];
 new bool:g_Spawned[MAXPLAYERS+1];
 new bool:g_ModifiedOverlay[MAXPLAYERS+1];
 new bool:g_attack = false;
-new bool:bossBattle = false;
 new bool:g_enabled = false;
 new bool:g_first = false;
 new bool:g_waiting = true;
@@ -102,6 +101,8 @@ new g_bomb = 0;
 new Roundstarts = 0;
 new g_lastminigame = 0;
 new g_lastboss = 0;
+new g_minigamestotal = 0;
+new bossBattle = 0;
 
 
 // Strings
@@ -398,7 +399,7 @@ public OnMapStart() {
         PrecacheSound( "ambient/explosions/explode_8.wav", true);
         SetConVarInt(ww_speed, 1);
         ResetScores();
-        bossBattle = false;
+        bossBattle = 0;
         Roundstarts = 0;
         
         if (GetConVarBool(ww_log)) LogMessage("Map started");
@@ -550,6 +551,8 @@ public EventInventoryApplication(Handle:event, const String:name[], bool:dontBro
         if (status == 5 && g_Winner[client] > 0) CreateSprite(client);
         if ((status == 2 && g_attack) || (g_Winner[client] > 0)) SetWeaponState(client, true);
         else SetWeaponState(client, false);
+        
+        HandlePlayerItems(client);
     }
 }
 
@@ -598,8 +601,8 @@ public Action:StartMinigame_timer2(Handle:hTimer) {
 }
 
 RollMinigame() {
-    if (GetConVarBool(ww_log) && bossBattle == false) LogMessage("Rolling normal microgame...");
-    if (GetConVarBool(ww_log) && bossBattle) LogMessage("Rolling boss microgame...");
+    if (GetConVarBool(ww_log) && bossBattle != 1) LogMessage("Rolling normal microgame...");
+    if (GetConVarBool(ww_log) && bossBattle == 1) LogMessage("Rolling boss microgame...");
     new Handle:roll = CreateArray();
     new bool:accept = false;
     new out = 1;
@@ -609,8 +612,8 @@ RollMinigame() {
         accept = true;
         new gameisboss = GetMinigameConfNum(g_name[i-1], "boss", 0);
         if (iplayers < GetMinigameConfNum(g_name[i-1], "minplayers", 1)) accept = false;
-        if ((bossBattle) && (!gameisboss)) accept = false;
-        if ((!bossBattle) && (gameisboss)) accept = false;
+        if ((bossBattle == 1) && (!gameisboss)) accept = false;
+        if ((bossBattle != 1) && (gameisboss)) accept = false;
         if (i == g_lastminigame) accept = false;
         if (i == g_lastboss) accept = false;
         if (!GetMinigameConfNum(g_name[i-1], "enable", 1)) accept = false;
@@ -647,7 +650,7 @@ HandOutPoints() {
     if (GetConVarBool(ww_log)) LogMessage("Handing out points");
     for (new i = 1; i <= MaxClients; i++) {
         new points = 1;
-        if (bossBattle) points = 5;
+        if (bossBattle == 1) points = 5;
         if ((IsValidClient(i)) && (g_Complete[i]) && (GetClientTeam(i) >= 2) && (g_Spawned[i])) g_Points[i] += points;
         g_Complete[i] = false;
     }
@@ -678,7 +681,7 @@ StartMinigame() {
         status = 1;
         iMinigame = RollMinigame();
         minigame = g_name[iMinigame-1];
-        if (bossBattle) g_lastboss = iMinigame;
+        if (bossBattle == 1) g_lastboss = iMinigame;
         else g_lastminigame = iMinigame;
         CreateTimer(GetSpeedMultiplier(MUSIC_START_LEN), Game_Start);
         g_attack = false;
@@ -725,7 +728,7 @@ public Action:Game_Start(Handle:hTimer) {
         
         // timeleft counter. Let it stay longer on boss battles.
         timeleft = 8;
-        if (bossBattle) CreateTimer(GetSpeedMultiplier(3.0), CountDown_Timer);
+        if (bossBattle == 1) CreateTimer(GetSpeedMultiplier(3.0), CountDown_Timer);
         else CreateTimer(GetSpeedMultiplier(1.0), CountDown_Timer);
         
         // get the lasting time from the cfg
@@ -753,7 +756,7 @@ public Action:CountDown_Timer(Handle:hTimer) {
     if ((status == 2) && (timeleft > 0)) {
         timeleft = timeleft - 1;
         CreateTimer(GetSpeedMultiplier(0.4), CountDown_Timer);
-        if (bossBattle == false) {
+        if (bossBattle != 1) {
             Call_StartForward(g_OnTimerMinigame);
             Call_PushCell(timeleft);
             Call_Finish();
@@ -796,6 +799,7 @@ public Action:EndGame(Handle:hTimer) {
                     
                     // Kill their weapons
                     DisableClientWeapons(i);
+                    HealClient(i);
                 
                     // achievement event
                     decl String:event[128];
@@ -849,11 +853,17 @@ public Action:EndGame(Handle:hTimer) {
         HandOutPoints();
 
         new bool:speedup = false;
+        g_minigamestotal += 1;
         
-        if ((GetHighestScore() >= 5) && (GetConVarInt(ww_speed) < 2) && (bossBattle == false)) speedup = true;
-        if ((GetHighestScore() >= 10) && (GetConVarInt(ww_speed) < 3) && (bossBattle == false)) speedup = true;
-        if ((GetHighestScore() >= 14) && (GetConVarInt(ww_speed) < 4) && (bossBattle == false)) speedup = true;
-        if ((GetHighestScore() >= 18) && (GetConVarInt(ww_speed) >= 4) && (bossBattle == false)) speedup = true;
+        if (bossBattle == 1) bossBattle = 2;
+        if ((g_minigamestotal == 4) && (bossBattle == 0)) speedup = true;
+        if ((g_minigamestotal == 8) && (bossBattle == 0)) speedup = true;
+        if ((g_minigamestotal == 12) && (bossBattle == 0)) speedup = true;
+        if ((g_minigamestotal == 16) && (bossBattle == 0)) speedup = true;
+        if ((g_minigamestotal == 19) && (bossBattle == 0)) {
+            speedup = true;
+            bossBattle = 1;
+        }
         
         if (speedup == false) {
             status = 10;
@@ -863,7 +873,7 @@ public Action:EndGame(Handle:hTimer) {
             status = 3;
             CreateTimer(GetSpeedMultiplier(MUSIC_END_LEN), Speedup_timer);
         }
-        if (bossBattle) {
+        if (bossBattle == 2) {
             status = 4;
             CreateTimer(GetSpeedMultiplier(MUSIC_END_LEN), Victory_timer);
         }
@@ -874,8 +884,7 @@ public Action:EndGame(Handle:hTimer) {
 public Action:Speedup_timer(Handle:hTimer) {
     if (status == 3) {
     //    DrawScoresheet();
-        if ((GetConVarInt(ww_speed) >= 4)  && (bossBattle == false)) {
-            bossBattle = true;
+        if (bossBattle == 1) {
             SetConVarInt(ww_speed, 1);
             currentSpeed = GetConVarInt(ww_speed);
             ServerCommand("host_timescale %f", GetHostMultiplier(1.0));
@@ -892,7 +901,7 @@ public Action:Speedup_timer(Handle:hTimer) {
             UpdateHud(GetSpeedMultiplier(MUSIC_BOSS_LEN));
         }
     
-        if ((GetConVarInt(ww_speed) < 4) && (bossBattle == false)) {
+        if (bossBattle != 1) {
             if (GetConVarBool(ww_music)) EmitSoundToClient(1, MUSIC_SPEEDUP, SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, SNDVOL_NORMAL,GetSoundMultiplier());
             else EmitSoundToAll(MUSIC_SPEEDUP, SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, SNDVOL_NORMAL,GetSoundMultiplier());
             for (new i = 1; i <= MaxClients; i++) {
@@ -911,8 +920,8 @@ public Action:Speedup_timer(Handle:hTimer) {
 }
 
 public Action:Victory_timer(Handle:hTimer) {
-    if ((status == 4) && (bossBattle)) {
-        bossBattle = false;
+    if ((status == 4) && (bossBattle > 0)) {
+        bossBattle = 0;
         SetConVarInt(ww_speed, 1);
         currentSpeed = GetConVarInt(ww_speed);
         CreateTimer(GetSpeedMultiplier(8.17), Restartall_timer);
@@ -937,8 +946,8 @@ public Action:Victory_timer(Handle:hTimer) {
                 if (g_Points[i] >= top) {
                     g_Winner[i] = 1;
                     CreateSprite(i);
+                    RespawnClient(i, true, true);
                     SetWeaponState(i, true);
-                    SetWeaponAmmo(i, 100, 0);
                     winnernumber += 1;
                     PushArrayCell(ArrayWinners, i);
                     if (g_Achievements) mw_AchievementEvent("tf2ware_win", i, 0, 0, 1);
@@ -970,7 +979,7 @@ public Action:Victory_timer(Handle:hTimer) {
 
 public Action:Restartall_timer(Handle:hTimer) {
     if (status == 5) {
-        bossBattle = false;
+        bossBattle = 0;
         SetConVarInt(ww_speed, 1);
         currentSpeed = GetConVarInt(ww_speed);
         ResetScores();
@@ -979,6 +988,11 @@ public Action:Restartall_timer(Handle:hTimer) {
         ResetConVar(FindConVar("mp_friendlyfire"));
         ResetWinners();
         StartMinigame();
+        g_minigamestotal = 0;
+        
+        for (new i = 1; i <= MaxClients; i++) {
+            if (IsValidClient(i) && IsPlayerAlive(i)) DisableClientWeapons(i);
+        }
     }
     return Plugin_Stop;
 }
@@ -1181,8 +1195,8 @@ UpdateHud(Float:time) {
     for(new i = 1; i <= MaxClients; i++) {
         if (IsValidClient(i)) {
             Format(add, sizeof(add), "");
-            if (g_Complete[i] && bossBattle) Format(add, sizeof(add), "+5");
-            if (g_Complete[i] && !bossBattle) Format(add, sizeof(add), "+1");
+            if (g_Complete[i] && bossBattle == 1) Format(add, sizeof(add), "+5");
+            if (g_Complete[i] && bossBattle != 1) Format(add, sizeof(add), "+1");
             Format(output, sizeof(output), "Points: %i %s", g_Points[i], add);
             SetHudTextParams(0.3, 0.70, time, 255, 255, 0, 0);
             ShowSyncHudText(i, hudScore, output);

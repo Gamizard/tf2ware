@@ -10,6 +10,7 @@ public Hopscotch_OnMinigame() {
 public Hopscotch_justEntered(client) {
     if (IsValidClient(client)) {
         SetClientClass(client, "heavy");
+        DisableClientWeapons(client);
         
         decl Float:vel[3];
         vel[0] = 0.0;

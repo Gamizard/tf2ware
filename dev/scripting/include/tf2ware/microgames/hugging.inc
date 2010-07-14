@@ -77,51 +77,53 @@ public Hugging_End() {
 }
 
 public Hugging_justEntered(client) {
-    decl Float:pos[3];
-    decl Float:ang[3];
-    decl Float:vel[3];
-    vel[0] = 0.0;
-    vel[1] = 0.0;
-    vel[2] = 0.0;
-    new column = client;
-    new row = 0;
-    while (column > 10) {
-        column = column - 10;
-        row = row + 1;
-    }
-    if (g_Mission[client] == 0) {
-        SetClientClass(client, "scout");
-        if (GetClientTeam(client) == 2) {
-            ChangeClientTeam(client, 3);
-            RespawnClient(client, true, false);
-            return;
+    if (IsValidClient(client)) {
+        decl Float:pos[3];
+        decl Float:ang[3];
+        decl Float:vel[3];
+        vel[0] = 0.0;
+        vel[1] = 0.0;
+        vel[2] = 0.0;
+        new column = client;
+        new row = 0;
+        while (column > 10) {
+            column = column - 10;
+            row = row + 1;
         }
-    
-        RemoveClientWeapons(client);
-        pos[0] = 142.0 - float(column*80);
-        pos[1] = -2040.0 + float(row*80);
-        pos[2] = -700.0;
-        ang[0] = 0.0;
-        ang[1] = -90.0;
-        ang[2] = 0.0;
-    }
-    if (g_Mission[client] == 1) {
-        SetClientClass(client, "heavy");
-        if (GetClientTeam(client) == 3) {
-            ChangeClientTeam(client, 2);
-            RespawnClient(client, true, false);
-            return;
+        if (g_Mission[client] == 0) {
+            if (GetClientTeam(client) == 2) {
+                ChangeClientTeam(client, 3);
+                RespawnClient(client, true, false);
+                return;
+            }
+            SetClientClass(client, "scout");
+            DisableClientWeapons(client);
+        
+            pos[0] = 142.0 - float(column*80);
+            pos[1] = -2040.0 + float(row*80);
+            pos[2] = -700.0;
+            ang[0] = 0.0;
+            ang[1] = -90.0;
+            ang[2] = 0.0;
         }
-        RemoveClientWeapons(client);
-        pos[0] = 142.0 - float(column*80);
-        pos[1] = -2965.0 - float(row*80);
-        pos[2] = -700.0;
-        ang[0] = 0.0;
-        ang[1] = 90.0;
-        ang[2] = 0.0;
+        if (g_Mission[client] == 1) {
+            if (GetClientTeam(client) == 3) {
+                ChangeClientTeam(client, 2);
+                RespawnClient(client, true, false);
+                return;
+            }
+            SetClientClass(client, "heavy");
+            DisableClientWeapons(client);
+            pos[0] = 142.0 - float(column*80);
+            pos[1] = -2965.0 - float(row*80);
+            pos[2] = -700.0;
+            ang[0] = 0.0;
+            ang[1] = 90.0;
+            ang[2] = 0.0;
+        }
+        TeleportEntity(client, pos, ang, vel);
+        //if (heavy_love[client] == INVALID_HANDLE) heavy_love[client] = CreateTimer(5.0, HeavyLoveTaunt, client);
     }
-    TeleportEntity(client, pos, ang, vel);
-    //if (heavy_love[client] == INVALID_HANDLE) heavy_love[client] = CreateTimer(5.0, HeavyLoveTaunt, client);
 }
 
 public Hugging_OnPlayerTouch(entity, other) {

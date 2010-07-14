@@ -53,30 +53,32 @@ public Action:Hook_StartTouch_Pipe(entity, other) {
 }
 
 public BBall_justEntered(client) {
-    SetClientClass(client, "demoman");
-    GiveClientWeapon(client, "tf_weapon_grenadelauncher", 0, true);
-    
-    decl Float:vel[3];
-    vel[0] = 0.0;
-    vel[1] = 0.0;
-    vel[2] = 0.0;
-    
-    new column = client;
-    new row = 0;
-    while (column > 17) {
-        column = column - 17;
-        row = row + 1;
-    }
-    
-    decl Float:pos[3];
-    pos[0] = 3076.0  + float(column*55);
-    pos[1] = -1930.0 + float(row*55);
-    pos[2] = -260.0;
+    if (IsValidClient(client)) {
+        SetClientClass(client, "demoman");
+        GiveClientWeapon(client, "tf_weapon_grenadelauncher", 0, true);
+        
+        decl Float:vel[3];
+        vel[0] = 0.0;
+        vel[1] = 0.0;
+        vel[2] = 0.0;
+        
+        new column = client;
+        new row = 0;
+        while (column > 17) {
+            column = column - 17;
+            row = row + 1;
+        }
+        
+        decl Float:pos[3];
+        pos[0] = 3076.0  + float(column*55);
+        pos[1] = -1930.0 + float(row*55);
+        pos[2] = -260.0;
 
-    decl Float:ang[3];
-    ang[0] = 0.0;
-    ang[1] = 90.0;
-    ang[2] = 0.0;
-    
-    TeleportEntity(client, pos, ang, vel);
+        decl Float:ang[3];
+        ang[0] = 0.0;
+        ang[1] = 90.0;
+        ang[2] = 0.0;
+        
+        TeleportEntity(client, pos, ang, vel);
+    }
 }

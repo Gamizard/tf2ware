@@ -35,7 +35,6 @@ public SimonSays_OnMinigame() {
 public SimonSays_justEntered(client) {
     if (IsValidClient(client)) {
         SetClientSlot(client, 0);
-        RemoveClientWeapons(client);
     }
 }
 

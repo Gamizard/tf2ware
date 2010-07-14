@@ -89,7 +89,20 @@ SetClientClass(i, String:tfclass[128]) {
 
     if (IsValidClient(i)) {
         TF2_SetPlayerClass(i, input);
+        HealClient(i);
     }
+}
+
+HealClient(i) {
+    new TFClassType:class = TF2_GetPlayerClass(i);
+    new health = 125;
+    if (class == TFClass_Soldier) health = 200;
+    if (class == TFClass_Pyro) health = 175;
+    if (class == TFClass_DemoMan) health = 175;
+    if (class == TFClass_Heavy) health = 300;
+    if (class == TFClass_Medic) health = 150;
+    
+    SetEntityHealth(i, health);
 }
 
 stock CreateAllSprites() {
@@ -285,7 +298,7 @@ public Action:GiveClientWeapon(client, String:weapon[128], slot, bool:input) {
         if (input == true) {
             if (StrEqual(weapon, "tf_weapon_revolver")) SetWeaponAmmo(client, 6, 24);
             if (StrEqual(weapon, "tf_weapon_shotgun_primary")) SetWeaponAmmo(client, 6, 32);
-            if (StrEqual(weapon, "tf_weapon_flamethrower")) SetWeaponAmmo(client, 200, 0);
+            if (StrEqual(weapon, "tf_weapon_flamethrower")) SetWeaponAmmo(client, 200, 200);
             if (StrEqual(weapon, "tf_weapon_grenadelauncher")) SetWeaponAmmo(client, 4, 16);
             if (StrEqual(weapon, "tf_weapon_syringegun_medic")) SetWeaponAmmo(client, 40, 150);
             if (StrEqual(weapon, "tf_weapon_sniperrifle")) SetWeaponAmmo(client, 25, 0);
@@ -357,6 +370,8 @@ public Action:RemoveAllWeapons() {
 
 DisableClientWeapons(client) {
     if (IsValidClient(client) && (IsPlayerAlive(client))) {
+        RemoveClientWeapons(client);
+    
         new TFClassType:class = TF2_GetPlayerClass(client);
         if (class == TFClass_Scout) GiveClientWeapon(client, "tf_weapon_scattergun", 0, false);
         if (class == TFClass_Soldier) GiveClientWeapon(client, "tf_weapon_rocketlauncher", 0, false);
@@ -388,3 +403,32 @@ DisableClientWeapons(client) {
         SetWeaponState(client, false);
     }
 }*/
+
+// This function is meant to handle player wearables.
+// Ideally it would call some kind of way to re-add a player's wearables, but until we find a way to do that, removing them will do.
+public Action:HandlePlayerItems(client)
+{
+    new entity;
+    new prev = 0;
+    if(IsValidClient(client)) {
+        while((entity = FindEntityByClassname(entity, "tf_wearable_item")) != -1 && IsValidEntity(entity)) {
+            if (IsValidEntity(entity) && GetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity") == client) {
+                SetEntityRenderMode(entity, RENDER_TRANSCOLOR);
+                SetEntityRenderColor(entity, 255, 255, 255, 0);
+                if (prev && IsValidEdict(prev)) 
+                    RemoveEdict(prev);
+                prev = entity;
+            }
+            else
+            if(IsValidEdict(entity) && GetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity") == client)
+            {
+                SetEntityRenderMode(entity, RENDER_TRANSCOLOR);
+                SetEntityRenderColor(entity, 255, 255, 255, 255);
+                SetVariantString("");
+                AcceptEntityInput(client, "EnableShadow");
+            }
+        }
+        if (prev && IsValidEdict(prev)) 
+            RemoveEdict(prev);
+    }
+}

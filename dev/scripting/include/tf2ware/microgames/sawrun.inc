@@ -19,6 +19,7 @@ public SawRun_OnGameFrame() {
 public SawRun_justEntered(client) {
     if (IsValidClient(client)) {
         SetClientClass(client, "scout");
+        DisableClientWeapons(client);
         
         decl Float:vel[3];
         vel[0] = 0.0;

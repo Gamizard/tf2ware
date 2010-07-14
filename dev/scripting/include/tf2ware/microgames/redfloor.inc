@@ -20,9 +20,9 @@ public Action:RedFloor_OnTakeDamageClient(victim, &attacker, &inflictor, &Float:
         decl Float:vel[3];
         GetClientEyeAngles(attacker, ang);
         GetEntPropVector(victim, Prop_Data, "m_vecVelocity", vel);
-        vel[0] -= 120.0 * Cosine(DegToRad(ang[1])) * -1.0 * damage*0.05;
-        vel[1] -= 120.0 * Sine(DegToRad(ang[1])) * -1.0 * damage*0.05;
-        vel[2] += 220.0 * damage*0.01;
+        vel[0] -= 150.0 * Cosine(DegToRad(ang[1])) * -1.0 * damage*0.01;
+        vel[1] -= 150.0 * Sine(DegToRad(ang[1])) * -1.0 * damage*0.01;
+        vel[2] += 500.0 * damage*0.01;
         TeleportEntity(victim, NULL_VECTOR, NULL_VECTOR, vel);
         damage = 0.0;
     }
@@ -30,29 +30,31 @@ public Action:RedFloor_OnTakeDamageClient(victim, &attacker, &inflictor, &Float:
 }
 
 public RedFloor_justEntered(client) {
-    SDKHook(client, SDKHook_OnTakeDamage, RedFloor_OnTakeDamageClient);
-    
-    SetClientClass(client, "spy");
-    GiveClientWeapon(client, "tf_weapon_knife", 2, true);
-    
-    decl Float:vel[3];
-    vel[0] = 0.0;
-    vel[1] = 0.0;
-    vel[2] = 0.0;
-    
-    new total = GetClientCount(true);
-    new posa = 360 / total * (g_Id[client]-1);
-    
-    decl Float:pos[3];
-    pos[0] = -4639.0   + (Cosine(DegToRad(float(posa)))*220.0);
-    pos[1] = -1311.0  - (Sine(DegToRad(float(posa)))*220.0);
-    pos[2] = -31.49;
+    if (IsValidClient(client)) {
+        SDKHook(client, SDKHook_OnTakeDamage, RedFloor_OnTakeDamageClient);
+        
+        SetClientClass(client, "spy");
+        GiveClientWeapon(client, "tf_weapon_knife", 2, true);
+        
+        decl Float:vel[3];
+        vel[0] = 0.0;
+        vel[1] = 0.0;
+        vel[2] = 0.0;
+        
+        new total = GetClientCount(true);
+        new posa = 360 / total * (g_Id[client]-1);
+        
+        decl Float:pos[3];
+        pos[0] = -4639.0   + (Cosine(DegToRad(float(posa)))*220.0);
+        pos[1] = -1311.0  - (Sine(DegToRad(float(posa)))*220.0);
+        pos[2] = -31.49;
 
-    decl Float:ang[3];
-    ang[0] = 0.0;
-    ang[1] = float(180-posa);
-    ang[2] = 0.0;
-    TeleportEntity(client, pos, ang, vel);
+        decl Float:ang[3];
+        ang[0] = 0.0;
+        ang[1] = float(180-posa);
+        ang[2] = 0.0;
+        TeleportEntity(client, pos, ang, vel);
+    }
 }
 
 public RedFloor_End() {

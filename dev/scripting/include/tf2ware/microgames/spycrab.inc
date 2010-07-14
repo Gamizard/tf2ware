@@ -79,6 +79,8 @@ public Spycrab_TimerMinigame(timer) {
 }
 
 public Spycrab_justEntered(client) {
-    SetClientClass(client, "spy");
-    GiveClientWeapon(client, "tf_weapon_pda_spy", 3, true);
+    if (IsValidClient(client)) {
+        SetClientClass(client, "spy");
+        GiveClientWeapon(client, "tf_weapon_pda_spy", 3, true);
+    }
 }

@@ -11,6 +11,7 @@ public Flood_OnMinigame() {
             new TFClassType:class = TF2_GetPlayerClass(i);
             if (class == TFClass_Scout) {
                 SetClientClass(i, "demoman");
+                DisableClientWeapons(i);
             }
         }
     }

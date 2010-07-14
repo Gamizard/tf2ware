@@ -99,25 +99,29 @@ public Kamikaze_TimerMinigame(timer) {
 }
 
 public Kamikaze_justEntered(client) {
-    if (g_Mission[client] == 0) {
-        SetClientClass(client, "heavy");
-    }
-    if (g_Mission[client] == 1) {
-        SetClientClass(client, "scout");
-        
-        if ((g_bomb > 0) && IsValidEntity(g_bomb)) {
-            AcceptEntityInput(g_bomb, "Kill" );
-            g_bomb = 0;
+    if (IsValidClient(client)) {
+        if (g_Mission[client] == 0) {
+            SetClientClass(client, "heavy");
+            DisableClientWeapons(client);
         }
-        
-        g_bomb = CreateEntityByName("prop_dynamic");
-        
-        if (IsValidEdict(g_bomb)) {                        
-            DispatchKeyValue(g_bomb, "model", WW_BOMB_MODEL);
-            DispatchSpawn(g_bomb);
-            SetVariantString("!activator");
-            CAttach(g_bomb, client, "flag");
-            ActivateEntity(g_bomb);
-        }    
+        if (g_Mission[client] == 1) {
+            SetClientClass(client, "scout");
+            DisableClientWeapons(client);
+            
+            if ((g_bomb > 0) && IsValidEntity(g_bomb)) {
+                AcceptEntityInput(g_bomb, "Kill" );
+                g_bomb = 0;
+            }
+            
+            g_bomb = CreateEntityByName("prop_dynamic");
+            
+            if (IsValidEdict(g_bomb)) {                        
+                DispatchKeyValue(g_bomb, "model", WW_BOMB_MODEL);
+                DispatchSpawn(g_bomb);
+                SetVariantString("!activator");
+                CAttach(g_bomb, client, "flag");
+                ActivateEntity(g_bomb);
+            }    
+        }
     }
 }

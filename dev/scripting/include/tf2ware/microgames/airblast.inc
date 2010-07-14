@@ -21,6 +21,7 @@ public Airblast_justEntered(client) {
     if (IsValidClient(client)) {
         SetClientClass(client, "pyro");
         GiveClientWeapon(client, "tf_weapon_flamethrower", 0, true);
+        SetClientClass(client, "pyro");
         
         decl Float:vel[3];
         vel[0] = 0.0;
