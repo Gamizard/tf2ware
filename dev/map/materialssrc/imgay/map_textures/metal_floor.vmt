@@ -1,0 +1,6 @@
+"LightmappedGeneric"
+{
+	"$basetexture" "imgay/map_textures/metal_floor"
+	"$bumpmap" "imgay/map_textures/metal_floor_normal"
+	"$surfaceprop" "Metal"
+}
