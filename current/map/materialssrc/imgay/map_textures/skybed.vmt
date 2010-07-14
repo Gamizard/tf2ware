@@ -1,6 +1,0 @@
-"LightmappedGeneric"
-{
-	"$baseTexture" "imgay/map_textures/skybed"
-	"$bumpmap" "imgay/map_textures/skybed_normal"
-	"%keywords" "tf"
-}
