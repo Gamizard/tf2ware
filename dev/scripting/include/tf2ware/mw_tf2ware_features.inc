@@ -301,7 +301,7 @@ public Action:GiveClientWeapon(client, String:weapon[128], slot, bool:input) {
             if (StrEqual(weapon, "tf_weapon_flamethrower")) SetWeaponAmmo(client, 200, 200);
             if (StrEqual(weapon, "tf_weapon_grenadelauncher")) SetWeaponAmmo(client, 4, 16);
             if (StrEqual(weapon, "tf_weapon_syringegun_medic")) SetWeaponAmmo(client, 40, 150);
-            if (StrEqual(weapon, "tf_weapon_sniperrifle")) SetWeaponAmmo(client, 25, 0);
+            if (StrEqual(weapon, "tf_weapon_sniperrifle")) SetWeaponAmmo(client, 25, 25);
         }
         
         SetWeaponState(client, input);
