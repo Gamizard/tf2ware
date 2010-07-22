@@ -17,7 +17,7 @@
 
 #define MAX_MINIGAMES 20
 
-#define PLUGIN_VERSION "0.8.4-15 BETA"
+#define PLUGIN_VERSION "0.8.5-16"
 #define MUSIC_START "imgay/tf2ware/tf2ware_intro.mp3"
 #define MUSIC_START_LEN 2.18
 #define MUSIC_WIN "imgay/tf2ware/tf2ware_win.mp3"
@@ -281,7 +281,7 @@ public OnMapStart() {
         RegMinigame("BBall", BBall_OnMinigame);
         RegMinigame("Hugging", Hugging_OnMinigame, Hugging_Init);
         RegMinigame("RedFloor", RedFloor_OnMinigame);
-        RegMinigame("SniperTarget", SniperTarget_OnMinigame);
+        RegMinigame("SniperTarget", SniperTarget_OnMinigame, SniperTarget_Init);
         RegMinigame("Airraid", Airraid_OnMinigame);
 
         // CHEATS

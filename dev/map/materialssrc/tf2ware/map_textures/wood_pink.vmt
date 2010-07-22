@@ -1,0 +1,10 @@
+"LightmappedGeneric"
+{
+	"$baseTexture" "tf2ware/map_textures/wood_pink"
+	"$surfaceprop" "wood"
+	"%keywords" "tf"
+	"$detail" "overlays/detail001"
+	"$detailscale" "1"
+	"$detailblendmode" "0"
+	"$detailblendfactor" "1"
+}

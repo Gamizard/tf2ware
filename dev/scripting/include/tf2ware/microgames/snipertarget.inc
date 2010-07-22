@@ -1,11 +1,12 @@
-//new String:var_target_models[][] = {"models/props_training/target_sniper.mdl"};
-
-//setpos 3224.501465 2305.397461 339.531616;setang -19.439056 -0.855116 0.000000
-
 new var_sniper_target = -1;
 
 public SniperTarget_Init() {
+    AddToForward(g_OnMapStart, INVALID_HANDLE, SniperTarget_OnMapStart);
 }   
+
+public SniperTarget_OnMapStart() {
+
+}
 
 public SniperTarget_OnMinigame() {
     AddToForward(g_justEntered, INVALID_HANDLE, SniperTarget_justEntered);
@@ -39,19 +40,8 @@ public SniperTarget_TimerMinigame(timer) {
             TeleportEntity(var_sniper_target, pos, NULL_VECTOR, NULL_VECTOR);
             DispatchSpawn(var_sniper_target);
             TeleportEntity(var_sniper_target, pos, NULL_VECTOR, vel);
-            SDKHook(var_sniper_target, SDKHook_OnTakeDamage, Target_OnTakeDamage);
         }
     }
-}
-
-public Action:Target_OnTakeDamage(victim, &attacker, &inflictor, &Float:damage, &damagetype)
-{
-    if (!StrEqual(minigame, "SniperTarget")) return Plugin_Continue;
-    if (IsValidClient(attacker)) SetStateClient(attacker, true, true);
-    
-    damage = 0.0;
-    
-    return Plugin_Changed;
 }
 
 public SniperTarget_End() {
@@ -59,6 +49,54 @@ public SniperTarget_End() {
         AcceptEntityInput(var_sniper_target, "Kill" );
         var_sniper_target = -1;
     }
+}
+
+public Action:TF2_CalcIsAttackCritical(client, weapon, String:weaponname[], &bool:result) {
+    if (!StrEqual(minigame, "SniperTarget")) return Plugin_Continue;
+    if (IsValidClient(client) && var_sniper_target > -1 && IsValidEntity(var_sniper_target)) {
+        new iButtons = GetClientButtons(client);
+        if ((iButtons & IN_ATTACK)) {
+            decl Float:vecClientEyePos[3];
+            decl Float:vecClientEyeAng[3];
+            decl Float:vecEnd[3];
+            decl Float:vecEnd2[3];
+            decl Float:vecBarrel[3];
+            decl Float:distance;
+            GetClientEyePosition(client, vecClientEyePos); // Get the position of the player's eyes
+            GetClientEyeAngles(client, vecClientEyeAng); // Get the angle the player is looking
+
+            //Check for colliding entities
+            TR_TraceRayFilter(vecClientEyePos, vecClientEyeAng, MASK_SOLID, RayType_Infinite, SniperTarget_Trace, client);
+
+            if (TR_DidHit(INVALID_HANDLE)) {
+                new TRIndex = TR_GetEntityIndex(INVALID_HANDLE);
+                TR_GetEndPosition(vecEnd, INVALID_HANDLE);
+                TR_GetEndPosition(vecEnd2, INVALID_HANDLE);
+                if (IsValidEntity(TRIndex)) {
+                    new bool:accept = false;
+                    // if you hit it, bravo
+                    if (TRIndex == var_sniper_target) accept = true;
+                    
+                    // if not, let's see if you got close enough
+                    GetEntPropVector(var_sniper_target, Prop_Send, "m_vecOrigin", vecBarrel);
+                    vecEnd2[1] = 0.0;
+                    vecBarrel[1] = 0.0;
+                    distance = GetVectorDistance(vecEnd2, vecBarrel, true) / 1000.0;
+                    if (vecEnd[1] >= 2337.0 && distance < 6.0) accept = true;
+                    //PrintToChatAll("End: %f, Distance: %f", vecEnd[1], distance);
+                    
+                    if (accept == true) {
+                        SetStateClient(client, true, true);
+                        //new color[4]={188,220,255,200};
+                        //TE_SetupBeamPoints(vecClientEyePos, vecEnd, g_HaloSprite, 0, 0, 0, 20.0, 3.0, 3.0, 10, 0.0, color, 0);
+                        //TE_SendToAll();
+                    }
+                }
+            }
+            
+        }
+    }
+    return Plugin_Continue;
 }
 
 public SniperTarget_justEntered(client) {
@@ -78,7 +116,7 @@ public SniperTarget_justEntered(client) {
         decl Float:pos[3];
         pos[0] = 3239.0  + float(column*55);
         pos[1] = 755.0 - float(row*55);
-        pos[2] = 324.0;
+        pos[2] = 270.0;
 
         decl Float:ang[3];
         ang[0] = 0.0;
@@ -86,4 +124,10 @@ public SniperTarget_justEntered(client) {
         ang[2] = 0.0;
         TeleportEntity(client, pos, ang, vel);
     }
+}
+
+public bool:SniperTarget_Trace(entity, mask, any:data) {
+    if(entity == data)   // Check if the TraceRay hit the itself.
+        return false;    // Don't let the entity be hit
+    return true;     // It didn't hit itself
 }

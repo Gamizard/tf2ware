@@ -1,0 +1,13 @@
+"LightmappedGeneric"
+{
+    "$basetexture" "tf2ware/map_textures/platform_transparent"
+    "$surfaceprop" "Default"
+    "$translucent" 1
+      "$nocull" 1
+      "$additive" "1"
+    "$glowcolor" "1"
+    "$alpha" "1"
+    "$vertexalpha" "1"
+    "$vertexcolor" 1
+    "$ignorez" 1
+}

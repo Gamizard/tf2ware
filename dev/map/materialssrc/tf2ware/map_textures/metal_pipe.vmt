@@ -1,0 +1,5 @@
+"LightmappedGeneric"
+{
+	"$basetexture" "tf2ware/map_textures/metal_pipe"
+	"$surfaceprop" "Metal"
+}

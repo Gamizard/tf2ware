@@ -1,6 +1,0 @@
-"LightmappedGeneric"
-{
-	"$basetexture" "imgay/map_textures/tile_block"
-	"$bumpmap" "imgay/map_textures/tile_block_normal"
-	"$surfaceprop" "Tile"
-}

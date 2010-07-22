@@ -1,0 +1,6 @@
+"LightmappedGeneric"
+{
+	"$baseTexture" "tf2ware/map_textures/skybed"
+	"$bumpmap" "tf2ware/map_textures/skybed_normal"
+	"%keywords" "tf"
+}
