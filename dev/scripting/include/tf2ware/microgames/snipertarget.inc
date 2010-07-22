@@ -82,7 +82,7 @@ public Action:TF2_CalcIsAttackCritical(client, weapon, String:weaponname[], &boo
                     vecEnd2[1] = 0.0;
                     vecBarrel[1] = 0.0;
                     distance = GetVectorDistance(vecEnd2, vecBarrel, true) / 1000.0;
-                    if (vecEnd[1] >= 2337.0 && distance < 6.0) accept = true;
+                    if (vecEnd[1] >= 2337.0 && distance <= 10.0) accept = true;
                     //PrintToChatAll("End: %f, Distance: %f", vecEnd[1], distance);
                     
                     if (accept == true) {

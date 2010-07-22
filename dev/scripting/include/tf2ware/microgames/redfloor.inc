@@ -20,9 +20,9 @@ public Action:RedFloor_OnTakeDamageClient(victim, &attacker, &inflictor, &Float:
         decl Float:vel[3];
         GetClientEyeAngles(attacker, ang);
         GetEntPropVector(victim, Prop_Data, "m_vecVelocity", vel);
-        vel[0] -= 150.0 * Cosine(DegToRad(ang[1])) * -1.0 * damage*0.01;
-        vel[1] -= 150.0 * Sine(DegToRad(ang[1])) * -1.0 * damage*0.01;
-        vel[2] += 500.0;
+        vel[0] -= 300.0 * Cosine(DegToRad(ang[1])) * -1.0 * damage*0.01;
+        vel[1] -= 300.0 * Sine(DegToRad(ang[1])) * -1.0 * damage*0.01;
+        vel[2] += 450.0;
         TeleportEntity(victim, NULL_VECTOR, NULL_VECTOR, vel);
         damage = 0.0;
     }
