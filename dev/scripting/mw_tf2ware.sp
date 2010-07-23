@@ -51,8 +51,8 @@ new Function:g_initFuncs[MAX_MINIGAMES];
 // Language strings
 new String:var_lang[][] = {"", "it/"};
 
-new String:var_special_name[][] = {"SUPER SPEED", "NO TOUCHING", "x2 BOSS BATTLE", "SINGLEPLAYER"};
-new String:var_special_desc[][] = {"The Game is Faster Than Usual!!", "Don't Touch Any Enemy Players or You'll Lose!!", "Two Boss Battles!!", "You're Playing Alone...?"};
+new String:var_special_name[][] = {"SUPER SPEED", "NO TOUCHING", "x2 BOSS BATTLE", "SINGLEPLAYER", "LEAST IS BEST", "BONK"};
+new String:var_special_desc[][] = {"The Game is Faster Than Usual!!", "Don't Touch Any Enemy Players or You'll Lose!!", "Two Boss Battles!!", "You're Playing Alone...?", "The Player With The Least Points Win!!", "Push Players With Your Bat!!"};
 
 // Handles
 new Handle:ww_enable;
@@ -524,7 +524,7 @@ public Action:OnTakeDamageClient(victim, &attacker, &inflictor, &Float:damage, &
 
 public OnPreThink(client) {
     new iButtons = GetClientButtons(client);
-    if ((status != 2) && GetConVarBool(ww_enable) && g_enabled && (g_Winner[client] == 0)) {
+    if ((status != 2) && GetConVarBool(ww_enable) && g_enabled && (g_Winner[client] == 0) && !(SpecialRound == 6 && status != 5)) {
         if ((iButtons & IN_ATTACK2) || (iButtons & IN_ATTACK)) {
         iButtons &= ~IN_ATTACK;
         iButtons &= ~IN_ATTACK2;
@@ -563,7 +563,7 @@ public EventInventoryApplication(Handle:event, const String:name[], bool:dontBro
             CreateSprite(client);
         }
         if (status == 5 && g_Winner[client] > 0) CreateSprite(client);
-        if ((status == 2 && g_attack) || (g_Winner[client] > 0)) SetWeaponState(client, true);
+        if ((status == 2 && g_attack) || (g_Winner[client] > 0) || (SpecialRound == 6)) SetWeaponState(client, true);
         else SetWeaponState(client, false);
         
         HandlePlayerItems(client);
@@ -573,6 +573,7 @@ public EventInventoryApplication(Handle:event, const String:name[], bool:dontBro
             SetEntityRenderColor(client, 255, 255, 255, 0);
             SetEntityRenderMode(client, RENDER_NONE);
         }
+        if (SpecialRound == 6) SDKHook(client, SDKHook_OnTakeDamage, Special_DamagePush);
     }
 }
 
@@ -710,7 +711,8 @@ StartMinigame() {
         if (bossBattle == 1) g_lastboss = iMinigame;
         else g_lastminigame = iMinigame;
         CreateTimer(GetSpeedMultiplier(MUSIC_START_LEN), Game_Start);
-        g_attack = false;
+        if (SpecialRound == 6) g_attack = true;
+        else g_attack = false;
         CreateAllSprites();
         UpdateHud(GetSpeedMultiplier(MUSIC_START_LEN));
     }
@@ -745,7 +747,8 @@ public Action:Game_Start(Handle:hTimer) {
         SetMissionAll(0);
         
         // noone can attack
-        g_attack = false;
+        if (SpecialRound == 6) g_attack = true;
+        else g_attack = false;
         
         // initiate mission
         InitMinigame(iMinigame);
@@ -805,7 +808,8 @@ public Action:EndGame(Handle:hTimer) {
         Call_StartForward(g_OnAlmostEnd);
         Call_Finish();
 
-        g_attack = false;
+        if (SpecialRound == 6) g_attack = true;
+        else g_attack = false;
         status = 0;
         
         if (SpecialRound == 4) NoCollision(true);
@@ -846,7 +850,6 @@ public Action:EndGame(Handle:hTimer) {
                         Format(event, sizeof(event), "tf2ware_fail_%d", iMinigame);
                         if (g_Achievements) mw_AchievementEvent(event, i, 0, 0, 1);
                     }
-                    SetEntProp(i, Prop_Send, "m_bDrawViewmodel", 0);
                 }
                 else {
                     Format(sound, sizeof(sound), MUSIC_WIN);
@@ -963,9 +966,6 @@ public Action:Victory_timer(Handle:hTimer) {
         
         CreateTimer(GetSpeedMultiplier(8.17), Restartall_timer);
         status = 5;
-        if (SpecialRound > 0) CPrintToChatAll("The {lightgreen}Special Round{default} is over!");
-        ResetSpecialRoundEffect();
-        SpecialRound = 0;
         
         
         if (GetConVarBool(ww_music)) EmitSoundToClient(1, MUSIC_GAMEOVER, SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, SNDVOL_NORMAL,GetSoundMultiplier());
@@ -974,16 +974,17 @@ public Action:Victory_timer(Handle:hTimer) {
         DestroyAllSprites();
         ResetWinners();
         
-        new top = GetHighestScore();
+        new targetscore = GetHighestScore();
+        if (SpecialRound == 5) targetscore = GetLowestScore();
         new winnernumber = 0;
         new Handle:ArrayWinners = CreateArray();
         decl String:winnerstring_prefix[128];
-        decl String:winnerstring_names[128];
+        decl String:winnerstring_names[512];
         
         for (new i = 1; i <= MaxClients; i++) {
             SetOverlay(i, "");
             if (IsValidClient(i)) {
-                if (g_Points[i] >= top) {
+                if ((SpecialRound != 5 && g_Points[i] >= targetscore) || (SpecialRound == 5 && g_Points[i] <= targetscore)) {
                     g_Winner[i] = 1;
                     CreateSprite(i);
                     RespawnClient(i, true, true);
@@ -1008,8 +1009,15 @@ public Action:Victory_timer(Handle:hTimer) {
         if (winnernumber == 1) Format(winnerstring_prefix, sizeof(winnerstring_prefix), "{green}The winner is");
         else Format(winnerstring_prefix, sizeof(winnerstring_prefix), "{green}The winners are");
         
-        CPrintToChatAll("%s %s (%i points)!", winnerstring_prefix, winnerstring_names, top);
+        CPrintToChatAll("%s %s (%i points)!", winnerstring_prefix, winnerstring_names, targetscore);
         CloseHandle(ArrayWinners);
+        
+        if (SpecialRound > 0) {
+            CPrintToChatAll("The {lightgreen}Special Round{default} is over!");
+            ResetSpecialRoundEffect();
+            SpecialRound = 0;
+            ShowGameText("Special Round is over!");
+        }
         
         UpdateHud(GetSpeedMultiplier(MUSIC_GAMEOVER_LEN));
         SetConVarInt(FindConVar("mp_friendlyfire"), 1);
@@ -1088,11 +1096,11 @@ public Action:SpecialRound_timer(Handle:hTimer) {
         
         var_SpecialRoundCount -= 1;
         var_SpecialRoundRoll += 1;
-        if (var_SpecialRoundRoll > sizeof(var_special_name)) var_SpecialRoundRoll = 0;
+        if (var_SpecialRoundRoll > sizeof(var_special_name)+1) var_SpecialRoundRoll = 0;
         decl String:Name[128];
         if (var_SpecialRoundRoll < sizeof(var_special_name)) Format(Name, sizeof(Name), var_special_name[var_SpecialRoundRoll]);
         else {
-            decl String:var_funny_names[][] = {"PIZZA PLAZA", "FAT LARD RUN", "MOUSTACHIO", "HEAVY LOVE STORY"};
+            decl String:var_funny_names[][] = {"PIZZA PLAZA", "FAT LARD RUN", "MOUSTACHIO", "LOVE STORY", "SIZE MATTERS", "ENGINERD", "IDLE FOR HATS", "TF2 BROS: BRAWL"};
             Format(Name, sizeof(Name), var_funny_names[GetRandomInt(0, sizeof(var_funny_names)-1)]);
         }
         
@@ -1357,6 +1365,16 @@ GetHighestScore() {
     
     for(new i = 1; i <= MaxClients; i++) {
         if (IsValidClient(i) && GetClientTeam(i) >= 2 && g_Points[i] > out) out = g_Points[i];
+    }
+    
+    return out;
+}
+
+GetLowestScore() {
+    new out = 99;
+    
+    for(new i = 1; i <= MaxClients; i++) {
+        if (IsValidClient(i) && GetClientTeam(i) >= 2 && g_Points[i] < out) out = g_Points[i];
     }
     
     return out;

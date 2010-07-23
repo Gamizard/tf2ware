@@ -122,8 +122,8 @@ public SniperTarget_justEntered(client) {
         
         new column = client;
         new row = 0;
-        while (column > 8) {
-            column = column - 8;
+        while (column > 9) {
+            column = column - 9;
             row = row + 1;
         }
         

@@ -238,27 +238,9 @@ public RemoveClientWeapons(i) {
         for (new j=0; j<=5; j++) {
             TF2_RemoveWeaponSlot(i, j);
         }
-        //PrintToChatAll("Removing %N's weapons", i);
         SetWeaponState(i, false);
     }
 }
-
-/*RemoveClientWeapons(i) {
-    if (GetConVarBool(ww_log)) LogMessage("Removing all client weapons");
-    if (IsValidClient(i) && (IsPlayerAlive(i)) && (g_Winner[i] == 0)) {
-        CreateTimer(0.0, RemoveClientWeapons_timer, i, TIMER_FLAG_NO_MAPCHANGE);
-    }
-}
-
-public Action:RemoveClientWeapons_timer(Handle:hTimer, any:i) {
-    if (IsValidClient(i) && (IsPlayerAlive(i)) && (g_Winner[i] == 0)) {
-        SetClientSlot(i, 0);
-        for (new j=1; j<=5; j++) {
-            TF2_RemoveWeaponSlot(i, j);
-        }
-        SetWeaponState(i, false);
-    }
-}*/
 
 public SetWeaponAmmo(client, slot1, slot2) {
     new ActiveWeapon = GetEntDataEnt2(client,FindSendPropOffs("CTFPlayer", "m_hActiveWeapon"));
@@ -326,19 +308,26 @@ public Action:RemoveAllWeapons() {
 DisableClientWeapons(client) {
     if (IsValidClient(client) && (IsPlayerAlive(client))) {
         RemoveClientWeapons(client);
+        
+        if (SpecialRound == 6 && (!(StrEqual(minigame, "SimonSays") && simon_action == 0))) {
+            GiveClientWeapon(client, "tf_weapon_bat", 2, true);
+            SetClientSlot(client, 2);
+        }
     
-        new TFClassType:class = TF2_GetPlayerClass(client);
-        if (class == TFClass_Scout) GiveClientWeapon(client, "tf_weapon_scattergun", 0, false);
-        if (class == TFClass_Soldier) GiveClientWeapon(client, "tf_weapon_rocketlauncher", 0, false);
-        if (class == TFClass_Pyro) GiveClientWeapon(client, "tf_weapon_flamethrower", 0, false);
-        if (class == TFClass_DemoMan) GiveClientWeapon(client, "tf_weapon_grenadelauncher", 0, false);
-        if (class == TFClass_Heavy) GiveClientWeapon(client, "tf_weapon_minigun", 0, false);
-        if (class == TFClass_Engineer) GiveClientWeapon(client, "tf_weapon_shotgun_primary", 0, false);
-        if (class == TFClass_Medic) GiveClientWeapon(client, "tf_weapon_syringegun_medic", 0, false);
-        if (class == TFClass_Sniper) GiveClientWeapon(client, "tf_weapon_sniperrifle", 0, false);
-        if (class == TFClass_Spy) GiveClientWeapon(client, "tf_weapon_revolver", 0, false);
+        else {
+            new TFClassType:class = TF2_GetPlayerClass(client);
+            if (class == TFClass_Scout) GiveClientWeapon(client, "tf_weapon_scattergun", 0, false);
+            if (class == TFClass_Soldier) GiveClientWeapon(client, "tf_weapon_rocketlauncher", 0, false);
+            if (class == TFClass_Pyro) GiveClientWeapon(client, "tf_weapon_flamethrower", 0, false);
+            if (class == TFClass_DemoMan) GiveClientWeapon(client, "tf_weapon_grenadelauncher", 0, false);
+            if (class == TFClass_Heavy) GiveClientWeapon(client, "tf_weapon_minigun", 0, false);
+            if (class == TFClass_Engineer) GiveClientWeapon(client, "tf_weapon_shotgun_primary", 0, false);
+            if (class == TFClass_Medic) GiveClientWeapon(client, "tf_weapon_syringegun_medic", 0, false);
+            if (class == TFClass_Sniper) GiveClientWeapon(client, "tf_weapon_sniperrifle", 0, false);
+            if (class == TFClass_Spy) GiveClientWeapon(client, "tf_weapon_revolver", 0, false);
 
-        SetWeaponState(client, false);
+            SetWeaponState(client, false);
+        }
     }
 }
 
@@ -400,7 +389,7 @@ RemoveEquipMisc(client) {
 
 new Handle:GameTextHandle = INVALID_HANDLE;
 
-ShowGameText(const String:strMessage[], const String:strIcon[] = "leaderboard_dominated", Float:life = 13.0) {
+ShowGameText(const String:strMessage[], const String:strIcon[] = "leaderboard_dominated", Float:life = 35.0) {
     if (GameTextHandle != INVALID_HANDLE) TriggerTimer(GameTextHandle);
 
     new iEntity = CreateEntityByName("game_text_tf");

@@ -1,3 +1,13 @@
+/*
+    1:      Speed Up        Everything is faster
+    2:      Don't Touch     Touch other players and fail
+    3:      x2 Bosses       Two bosses
+    4:      Singleplayer    Everyone is invisible
+    5:      Worst is Best   The person with the least points win
+    6:      Bonk            Everyone gets a bat to push people with    
+
+*/
+
 new bool:Special_TwoBosses = false;
 
 public Special_NoTouch(entity, other) {
@@ -20,10 +30,34 @@ public Special_NoTouch(entity, other) {
     }
 }
 
+
+public Action:Special_DamagePush(victim, &attacker, &inflictor, &Float:damage, &damagetype) {
+    if (IsValidClient(attacker) && IsValidClient(victim)) {
+        decl String:Weapon[128];
+        GetClientWeapon(attacker, Weapon, sizeof(Weapon));
+        if (StrEqual(Weapon, "tf_weapon_bat")) {
+            decl Float:ang[3];
+            decl Float:vel[3];
+            GetClientEyeAngles(attacker, ang);
+            vel[0] -= 300.0 * Cosine(DegToRad(ang[1])) * -1.0;
+            vel[1] -= 300.0 * Sine(DegToRad(ang[1])) * -1.0;
+            vel[2] += 300.0;
+            TeleportEntity(victim, NULL_VECTOR, NULL_VECTOR, vel);
+            damage = 0.0;
+        }
+    }
+    return Plugin_Changed;
+}
+
 ResetSpecialRoundEffect() {
     if (SpecialRound == 2) {
         for (new i = 1; i <= MaxClients; i++) {
-            SDKUnhook(i, SDKHook_Touch, Special_NoTouch);
+            if (IsValidClient(i)) SDKUnhook(i, SDKHook_Touch, Special_NoTouch);
+        }
+    }
+    if (SpecialRound == 6) {
+        for (new i = 1; i <= MaxClients; i++) {
+            if (IsValidClient(i)) SDKUnhook(i, SDKHook_OnTakeDamage, Special_DamagePush);
         }
     }
     if (SpecialRound == 4) {
@@ -51,6 +85,11 @@ AddSpecialRoundEffect() {
                 SetEntityRenderColor(i, 255, 255, 255, 0);
                 SetEntityRenderMode(i, RENDER_NONE);
             }
+        }
+    }
+    if (SpecialRound == 6) {
+        for (new i = 1; i <= MaxClients; i++) {
+            if (IsValidClient(i)) SDKHook(i, SDKHook_OnTakeDamage, Special_DamagePush);
         }
     }
 }
