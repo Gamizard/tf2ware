@@ -32,8 +32,8 @@ public Airblast_justEntered(client) {
         new posa = 360 / total * (g_Id[client]-1);
         
         decl Float:pos[3];
-        pos[0] = 3544.661133   + (Cosine(DegToRad(float(posa)))*200.0);
-        pos[1] = -160.203690  - (Sine(DegToRad(float(posa)))*200.0);
+        pos[0] = 3544.661133   + (Cosine(DegToRad(float(posa)))*220.0);
+        pos[1] = -160.203690  - (Sine(DegToRad(float(posa)))*220.0);
         pos[2] = -91.027405;
 
         decl Float:ang[3];

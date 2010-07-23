@@ -40,15 +40,25 @@ public SniperTarget_TimerMinigame(timer) {
             TeleportEntity(var_sniper_target, pos, NULL_VECTOR, NULL_VECTOR);
             DispatchSpawn(var_sniper_target);
             TeleportEntity(var_sniper_target, pos, NULL_VECTOR, vel);
+            SDKHook(var_sniper_target, SDKHook_OnTakeDamage, SniperTarget_Hurt);
         }
     }
 }
 
 public SniperTarget_End() {
     if (var_sniper_target >= 0 && IsValidEntity(var_sniper_target)) {
+        SDKUnhook(var_sniper_target, SDKHook_OnTakeDamage, SniperTarget_Hurt);
         AcceptEntityInput(var_sniper_target, "Kill" );
         var_sniper_target = -1;
     }
+    for (new i = 1; i <= MaxClients; i++) {
+        SDKUnhook(i, SDKHook_OnTakeDamage, SniperTarget_Hurt);
+    }
+}
+
+public Action:SniperTarget_Hurt(victim, &attacker, &inflictor, &Float:damage, &damagetype) {
+    damage = 0.0;
+    return Plugin_Changed;
 }
 
 public Action:TF2_CalcIsAttackCritical(client, weapon, String:weaponname[], &bool:result) {
@@ -112,6 +122,10 @@ public SniperTarget_justEntered(client) {
         
         new column = client;
         new row = 0;
+        while (column > 8) {
+            column = column - 8;
+            row = row + 1;
+        }
         
         decl Float:pos[3];
         pos[0] = 3239.0  + float(column*55);
@@ -123,6 +137,9 @@ public SniperTarget_justEntered(client) {
         ang[1] = 90.0;
         ang[2] = 0.0;
         TeleportEntity(client, pos, ang, vel);
+        
+        // No damage
+        SDKHook(client, SDKHook_OnTakeDamage, SniperTarget_Hurt);
     }
 }
 

@@ -114,13 +114,13 @@ stock CreateAllSprites() {
 }
 
 stock CreateSprite(client) {
-    if (IsValidClient(client)) {
+    if (IsValidClient(client) && (SpecialRound != 4)) {
         DestroySprite(client);
         if (IsPlayerAlive(client) && g_Points[client] > 0) {
             
             // Sprite name
             new points = g_Points[client];
-            if (points > 19) points = 19;
+            if (points > 20) points = 20;
             if (g_Winner[client] > 0) points = 99;
             decl String:sprite[256];
             Format(sprite, sizeof(sprite), "materials/tf2ware/tf2ware_points%d.vmt", points);
@@ -308,51 +308,6 @@ public Action:GiveClientWeapon(client, String:weapon[128], slot, bool:input) {
     }
 }
 
-/*public Action:GiveClientWeapon(client, String:weapon[128], slot, bool:input) {
-    if (IsValidClient(client)) {
-        //PrintToChatAll("%N is being gifted %s...", client, weapon);
-        new Handle:pack = CreateDataPack();
-        CreateDataTimer(0.1, GiveClientWeapon_timer, pack);
-        WritePackCell(pack, client);
-        WritePackString(pack, weapon);
-        WritePackCell(pack, slot);
-        
-        new input2 = 0;
-        if (input == true) input2 = 1;
-        WritePackCell(pack, input2);
-    }
-}
-
-public Action:GiveClientWeapon_timer(Handle:hTimer, any:pack) {
-    ResetPack(pack);
-    new client = ReadPackCell(pack);
-    new String:weapon[128];
-    ReadPackString(pack, weapon, sizeof(weapon));
-    new slot = ReadPackCell(pack);
-    new input2 = ReadPackCell(pack);
-    
-    if (IsValidClient(client) && IsPlayerAlive(client)) {
-        //PrintToChatAll("%N was gifted %s", client, weapon);
-        
-        TF2_RemoveWeaponSlot(client, slot);
-        
-        new wpn = SDKCall(hGiveNamedItem, client, weapon, 0, 0);
-        SDKCall(hWeaponEquip, client, wpn);
-        
-        SetClientSlot(client, slot);
-        
-        new bool:input = false;
-        if (input2 == 1) input = true;
-        
-        if (input == true) {
-            if (StrEqual(weapon, "tf_weapon_revolver")) SetWeaponAmmo(client, 6, 24);
-            if (StrEqual(weapon, "tf_weapon_shotgun_primary")) SetWeaponAmmo(client, 6, 32);
-        }
-        
-        SetWeaponState(client, input);
-    }
-}*/
-
 public Action:RemoveClientSlot(i, slot) {
     if (IsValidClient(i) && (IsPlayerAlive(i))) {
         TF2_RemoveWeaponSlot(i, slot);
@@ -387,23 +342,6 @@ DisableClientWeapons(client) {
     }
 }
 
-/*public Action:DisableClientWeapons(Handle:hTimer, any:client) {
-    if (IsValidClient(client) && (IsPlayerAlive(client))) {
-        new TFClassType:class = TF2_GetPlayerClass(client);
-        if (class == TFClass_Scout) GiveClientWeapon(client, "tf_weapon_scattergun", 0, false);
-        if (class == TFClass_Soldier) GiveClientWeapon(client, "tf_weapon_rocketlauncher", 0, false);
-        if (class == TFClass_Pyro) GiveClientWeapon(client, "tf_weapon_flamethrower", 0, false);
-        if (class == TFClass_DemoMan) GiveClientWeapon(client, "tf_weapon_grenadelauncher", 0, false);
-        if (class == TFClass_Heavy) GiveClientWeapon(client, "tf_weapon_minigun", 0, false);
-        if (class == TFClass_Engineer) GiveClientWeapon(client, "tf_weapon_shotgun_primary", 0, false);
-        if (class == TFClass_Medic) GiveClientWeapon(client, "tf_weapon_syringegun_medic", 0, false);
-        if (class == TFClass_Sniper) GiveClientWeapon(client, "tf_weapon_sniperrifle", 0, false);
-        if (class == TFClass_Spy) GiveClientWeapon(client, "tf_weapon_revolver", 0, false);
-
-        SetWeaponState(client, false);
-    }
-}*/
-
 // This function is meant to handle player wearables.
 // Ideally it would call some kind of way to re-add a player's wearables, but until we find a way to do that, removing them will do.
 public Action:HandlePlayerItems(client)
@@ -430,5 +368,58 @@ public Action:HandlePlayerItems(client)
         }
         if (prev && IsValidEdict(prev)) 
             RemoveEdict(prev);
+            
+        RemoveEquipMisc(client);
     }
+}
+
+RemoveEquipMisc(client) {
+    new edict;
+    
+    if (IsValidClient(client) && IsPlayerAlive(client)) {
+        for (new x=0; x<11; x++) {
+            if((edict = GetPlayerWeaponSlot(client, x)) != -1) {
+                new defIdx = GetEntProp(edict, Prop_Send, "m_iItemDefinitionIndex");
+                if (defIdx == 131 || defIdx == 57) {
+                        RemovePlayerItem(client, edict);
+                        RemoveEdict(edict);
+                }
+            }
+        }
+    }
+    
+    edict = MaxClients+1;
+    
+    while((edict = FindEntityByClassname(edict, "tf_wearable_item")) != -1) {
+        if (GetEntProp(edict, Prop_Send, "m_iItemDefinitionIndex") == 57 || GetEntProp(edict, Prop_Send, "m_iItemDefinitionIndex") == 131) {
+            new owner = GetEntPropEnt(edict, Prop_Send, "m_hOwnerEntity");
+            if (owner == client) RemoveEdict(edict);
+        }
+    }
+}
+
+new Handle:GameTextHandle = INVALID_HANDLE;
+
+ShowGameText(const String:strMessage[], const String:strIcon[] = "leaderboard_dominated", Float:life = 13.0) {
+    if (GameTextHandle != INVALID_HANDLE) TriggerTimer(GameTextHandle);
+
+    new iEntity = CreateEntityByName("game_text_tf");
+    DispatchKeyValue(iEntity,"message", strMessage);
+    DispatchKeyValue(iEntity,"display_to_team", "0");
+    DispatchKeyValue(iEntity,"icon", strIcon);
+    DispatchKeyValue(iEntity,"targetname", "game_text1");
+    DispatchKeyValue(iEntity,"background", "0");
+    DispatchSpawn(iEntity);
+    AcceptEntityInput(iEntity, "Display", iEntity, iEntity);
+    GameTextHandle = CreateTimer(life, KillGameText, EntIndexToEntRef(iEntity));
+}
+
+public Action:KillGameText(Handle:hTimer, any:iEntityRef)
+{
+    new iEntity = _:EntRefToEntIndex(iEntityRef);
+    if ((iEntity > 0) && IsValidEntity(iEntity)) AcceptEntityInput(iEntity, "kill");
+    
+    GameTextHandle = INVALID_HANDLE;
+    
+    return Plugin_Stop;
 }

@@ -60,6 +60,8 @@ public Hugging_OnMinigame() {
     AddRandVocalization("heaviestaunt", heavyclients, 4.0, 8.0);
     AddRandVocalization("scoutdisgust", scoutclients, 1.5, 5.0);
     
+    NoCollision(false);
+    
 }
 
 public Action:Hugging_OnTakeDamageClient(victim, &attacker, &inflictor, &Float:damage, &damagetype) {

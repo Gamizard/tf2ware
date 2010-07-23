@@ -34,6 +34,9 @@
 #define SOUND_MINISCORE "items/pumpkin_drop.wav"
 #define SOUND_HEAVY_KISS "vo/heavy_generic01.wav"
 #define MUSIC_WAITING "imgay/tf2ware/waitingforplayers.mp3"
+#define MUSIC_SPECIAL "imgay/tf2ware/specialround.mp3"
+#define MUSIC_SPECIAL_LEN 13.5
+#define SOUND_SELECT "imgay/tf2ware/select.mp3"
 
 #define SND_CHANNEL_SPECIFIC 32
 
@@ -48,13 +51,17 @@ new Function:g_initFuncs[MAX_MINIGAMES];
 // Language strings
 new String:var_lang[][] = {"", "it/"};
 
+new String:var_special_name[][] = {"SUPER SPEED", "NO TOUCHING", "x2 BOSS BATTLE", "SINGLEPLAYER"};
+new String:var_special_desc[][] = {"The Game is Faster Than Usual!!", "Don't Touch Any Enemy Players or You'll Lose!!", "Two Boss Battles!!", "You're Playing Alone...?"};
+
 // Handles
 new Handle:ww_enable;
 new Handle:ww_speed;
 new Handle:ww_music;
 new Handle:ww_force;
 new Handle:ww_log;
-//new Handle:heavy_love[MAXPLAYERS+1] = INVALID_HANDLE;
+new Handle:ww_special;
+new Handle:ww_force_special;
 new Handle:ww_allowedCommands;
 new Handle:hudScore;
 // REPLACE WEAPON
@@ -103,6 +110,7 @@ new g_lastminigame = 0;
 new g_lastboss = 0;
 new g_minigamestotal = 0;
 new bossBattle = 0;
+new SpecialRound = 0;
 
 
 // Strings
@@ -139,6 +147,7 @@ new Handle:g_PlayerDeath;
 #include tf2ware\microgames\airraid.inc
 
 #include tf2ware\mw_tf2ware_features.inc
+#include tf2ware\special.inc
 #include tf2ware\vocalize.inc
 
 
@@ -175,6 +184,8 @@ public OnPluginStart() {
     ww_speed = CreateConVar("ww_speed", "1", "Speed level.", FCVAR_PLUGIN);
     ww_music = CreateConVar("ww_music_fix", "0", "Apply music fix? Should only be on for localhosts during testing", FCVAR_PLUGIN);
     ww_log = CreateConVar("ww_log", "0", "Log server events?", FCVAR_PLUGIN);
+    ww_special = CreateConVar("ww_special", "0", "Next round is Special Round?", FCVAR_PLUGIN);
+    ww_force_special = CreateConVar("ww_force_special", "0", "Forces a specific Special Round on Special Round", FCVAR_PLUGIN);
     
 }
 
@@ -244,6 +255,7 @@ public OnMapStart() {
         HookEvent("teamplay_round_win", Event_Roundend, EventHookMode_PostNoCopy);
         RegAdminCmd("ww_list", Command_list, ADMFLAG_GENERIC, "Lists all the registered, enabled plugins and their ids");
         RegAdminCmd("ww_give", Command_points, ADMFLAG_GENERIC, "Gives you 20 points - You're a winner! (testing feature)");
+        RegAdminCmd("ww_event", Command_event, ADMFLAG_GENERIC, "Starts a debugging event");
         
         // Vars
         currentSpeed = GetConVarInt(ww_speed);
@@ -326,6 +338,8 @@ public OnMapStart() {
         precacheSound(MUSIC_GAMEOVER);
         precacheSound(SOUND_MINISCORE);
         precacheSound(MUSIC_WAITING);
+        precacheSound(MUSIC_SPECIAL);
+        precacheSound(SOUND_SELECT);
         PrecacheModel("models/props_farm/wooden_barrel.mdl", true);
         PrecacheModel("models/props_farm/gibs/wooden_barrel_break02.mdl", true);
         PrecacheModel("models/props_farm/gibs/wooden_barrel_chunk02.mdl", true);
@@ -553,6 +567,12 @@ public EventInventoryApplication(Handle:event, const String:name[], bool:dontBro
         else SetWeaponState(client, false);
         
         HandlePlayerItems(client);
+        
+        if (SpecialRound == 2) SDKHook(client, SDKHook_Touch, Special_NoTouch);
+        if (SpecialRound == 4) {
+            SetEntityRenderColor(client, 255, 255, 255, 0);
+            SetEntityRenderMode(client, RENDER_NONE);
+        }
     }
 }
 
@@ -640,9 +660,14 @@ RollMinigame() {
 }
 
 public Player_Team(Handle:event, const String:name[], bool:dontBroadcast) {
-    if (GetConVarBool(ww_log)) LogMessage("Player changed team");
+    new client = GetClientOfUserId(GetEventInt(event, "userid"));
+    new oldteam = GetEventInt(event, "oldteam");
+    new newteam = GetEventInt(event, "team");
+
+    if (GetConVarBool(ww_log)) LogMessage("%N changed team", client);
     if (GetConVarBool(ww_enable) && g_enabled) {
         CreateTimer(0.1, StartMinigame_timer);
+        if (oldteam < 2 && newteam >= 2) GiveSpecialRoundInfo();
     }
 }
 
@@ -663,6 +688,7 @@ StartMinigame() {
         
         HandOutPoints();
         RespawnAll();
+        if (SpecialRound == 4) NoCollision(true);
 
         currentSpeed = GetConVarInt(ww_speed);
         ServerCommand("host_timescale %f", GetHostMultiplier(1.0));
@@ -696,6 +722,7 @@ public Action:Game_Start(Handle:hTimer) {
         
         // Spawn everyone so they can participate
         RespawnAll();
+        if (SpecialRound == 4) NoCollision(true);
         
         // Play the microgame's music
         new String:sound[512];
@@ -780,7 +807,9 @@ public Action:EndGame(Handle:hTimer) {
 
         g_attack = false;
         status = 0;
-        NoCollision(false);
+        
+        if (SpecialRound == 4) NoCollision(true);
+        else NoCollision(false);
         
         if (GetMinigameConfNum(minigame, "endrespawn", 0) > 0) RespawnAll(true, false);
         
@@ -864,6 +893,11 @@ public Action:EndGame(Handle:hTimer) {
             speedup = true;
             bossBattle = 1;
         }
+        if ((g_minigamestotal >= 19) && bossBattle == 2 && SpecialRound == 3 && Special_TwoBosses == false) {
+            speedup = true;
+            bossBattle = 1;
+            Special_TwoBosses = true;
+        }
         
         if (speedup == false) {
             status = 10;
@@ -873,7 +907,7 @@ public Action:EndGame(Handle:hTimer) {
             status = 3;
             CreateTimer(GetSpeedMultiplier(MUSIC_END_LEN), Speedup_timer);
         }
-        if (bossBattle == 2) {
+        if (bossBattle == 2 && speedup == false) {
             status = 4;
             CreateTimer(GetSpeedMultiplier(MUSIC_END_LEN), Victory_timer);
         }
@@ -883,9 +917,11 @@ public Action:EndGame(Handle:hTimer) {
 
 public Action:Speedup_timer(Handle:hTimer) {
     if (status == 3) {
-    //    DrawScoresheet();
         if (bossBattle == 1) {
-            SetConVarInt(ww_speed, 1);
+        
+            // Set the Speed. If special round, we want it to be a tad faster ;)
+            if (SpecialRound == 1) SetConVarInt(ww_speed, 3);
+            else SetConVarInt(ww_speed, 1);
             currentSpeed = GetConVarInt(ww_speed);
             ServerCommand("host_timescale %f", GetHostMultiplier(1.0));
             ServerCommand("phys_timescale %f", GetHostMultiplier(1.0));
@@ -924,12 +960,16 @@ public Action:Victory_timer(Handle:hTimer) {
         bossBattle = 0;
         SetConVarInt(ww_speed, 1);
         currentSpeed = GetConVarInt(ww_speed);
+        
         CreateTimer(GetSpeedMultiplier(8.17), Restartall_timer);
+        status = 5;
+        if (SpecialRound > 0) CPrintToChatAll("The {lightgreen}Special Round{default} is over!");
+        ResetSpecialRoundEffect();
+        SpecialRound = 0;
+        
         
         if (GetConVarBool(ww_music)) EmitSoundToClient(1, MUSIC_GAMEOVER, SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, SNDVOL_NORMAL,GetSoundMultiplier());
         else EmitSoundToAll(MUSIC_GAMEOVER, SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, SNDVOL_NORMAL,GetSoundMultiplier());
-        
-        status = 5;
         
         DestroyAllSprites();
         ResetWinners();
@@ -980,21 +1020,112 @@ public Action:Victory_timer(Handle:hTimer) {
 public Action:Restartall_timer(Handle:hTimer) {
     if (status == 5) {
         bossBattle = 0;
-        SetConVarInt(ww_speed, 1);
+        
+        DestroyAllSprites();
+        
+        // Set the game speed
+        if (SpecialRound == 1) SetConVarInt(ww_speed, 3);
+        else SetConVarInt(ww_speed, 1);
+        
+        if (SpecialRound > 0) AddSpecialRoundEffect();
+        
         currentSpeed = GetConVarInt(ww_speed);
         ResetScores();
         SetStateAll(false);
-        status = 0;
         ResetConVar(FindConVar("mp_friendlyfire"));
         ResetWinners();
-        StartMinigame();
         g_minigamestotal = 0;
         
         for (new i = 1; i <= MaxClients; i++) {
             if (IsValidClient(i) && IsPlayerAlive(i)) DisableClientWeapons(i);
         }
+        
+        // Roll special round
+        if ((GetRandomInt(0,9) == 5 || GetConVarBool(ww_special)) && SpecialRound == 0) {
+            status = 6;
+            StartSpecialRound();
+        }
+        else {
+            status = 0;
+            StartMinigame();
+        }
+        
     }
     return Plugin_Stop;
+}
+
+new var_SpecialRoundRoll = 0;
+new var_SpecialRoundCount = 0;
+
+public StartSpecialRound() {
+    if (status == 6) {
+        RespawnAll();
+        SetConVarBool(ww_special, false);
+        if (GetConVarInt(ww_force_special) <= 0) SpecialRound = GetRandomInt(1,3);
+        else SpecialRound = GetConVarInt(ww_force_special);
+    
+        if (GetConVarBool(ww_music)) EmitSoundToClient(1, MUSIC_SPECIAL);
+        else EmitSoundToAll(MUSIC_SPECIAL);
+        
+        status = 5;
+        CreateTimer(0.1, SpecialRound_timer);
+        
+        var_SpecialRoundCount = 130;
+        
+        CreateTimer(GetSpeedMultiplier(MUSIC_SPECIAL_LEN), Restartall_timer);
+        
+        for (new i = 1; i <= MaxClients; i++) {
+            if (IsValidClient(i) && (!(IsFakeClient(i)))) {
+                SetOverlay(i,"");
+            }
+        }
+    }
+}
+
+public Action:SpecialRound_timer(Handle:hTimer) {
+    if (status == 5 && var_SpecialRoundCount > 0) {
+        CreateTimer(0.0, SpecialRound_timer);
+        
+        var_SpecialRoundCount -= 1;
+        var_SpecialRoundRoll += 1;
+        if (var_SpecialRoundRoll > sizeof(var_special_name)) var_SpecialRoundRoll = 0;
+        decl String:Name[128];
+        if (var_SpecialRoundRoll < sizeof(var_special_name)) Format(Name, sizeof(Name), var_special_name[var_SpecialRoundRoll]);
+        else {
+            decl String:var_funny_names[][] = {"PIZZA PLAZA", "FAT LARD RUN", "MOUSTACHIO", "HEAVY LOVE STORY"};
+            Format(Name, sizeof(Name), var_funny_names[GetRandomInt(0, sizeof(var_funny_names)-1)]);
+        }
+        
+        if (var_SpecialRoundCount > 0) {
+            decl String:Text[128];
+            Format(Text, sizeof(Text), "SPECIAL ROUND: %s?\nSpecial Round adds a new condition to the next round!", Name);
+            ShowGameText(Text, "leaderboard_dominated", 1.0);
+        }
+        
+        if (var_SpecialRoundCount == 0) {
+            if (GetConVarBool(ww_music)) EmitSoundToClient(1, SOUND_SELECT);
+            else EmitSoundToAll(SOUND_SELECT);
+            GiveSpecialRoundInfo();
+        }
+        
+        
+    }
+}
+
+GiveSpecialRoundInfo() {
+    if (SpecialRound > 0) {
+        decl String:Text[128];
+        Format(Text, sizeof(Text), "SPECIAL ROUND: %s!\n%s", var_special_name[SpecialRound-1], var_special_desc[SpecialRound-1]);
+        ShowGameText(Text, "leaderboard_dominated");
+    }
+}
+
+public Action:Command_event(client, args) {
+    status = 6;
+    StartSpecialRound();
+    SetConVarBool(ww_enable, true);
+    
+    return Plugin_Handled;
 }
 
 SetStateAll(bool:value) {
@@ -1225,7 +1356,7 @@ GetHighestScore() {
     new out = 0;
     
     for(new i = 1; i <= MaxClients; i++) {
-        if (g_Points[i] > out) out = g_Points[i];
+        if (IsValidClient(i) && GetClientTeam(i) >= 2 && g_Points[i] > out) out = g_Points[i];
     }
     
     return out;
@@ -1236,7 +1367,7 @@ GetAverageScore() {
     new total = 0;
     
     for (new i = 1; i <= MaxClients; i++) {
-        if (IsValidClient(i) && (g_Points[i] > 0)) {
+        if (IsValidClient(i) && GetClientTeam(i) >= 2 && (g_Points[i] > 0)) {
             out += g_Points[i];
             total += 1;
         }
