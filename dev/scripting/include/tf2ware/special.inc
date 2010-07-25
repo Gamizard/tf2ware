@@ -8,6 +8,8 @@
 
 */
 
+#define SPECIAL_TOTAL 6
+
 new bool:Special_TwoBosses = false;
 
 public Special_NoTouch(entity, other) {

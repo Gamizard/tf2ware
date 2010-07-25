@@ -1075,7 +1075,7 @@ public StartSpecialRound() {
     if (status == 6) {
         RespawnAll();
         SetConVarBool(ww_special, false);
-        if (GetConVarInt(ww_force_special) <= 0) SpecialRound = GetRandomInt(1,3);
+        if (GetConVarInt(ww_force_special) <= 0) SpecialRound = GetRandomInt(1,SPECIAL_TOTAL);
         else SpecialRound = GetConVarInt(ww_force_special);
     
         if (GetConVarBool(ww_music)) EmitSoundToClient(1, MUSIC_SPECIAL);
