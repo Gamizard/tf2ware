@@ -26,7 +26,7 @@ public SniperTarget_TimerMinigame(timer) {
             decl Float:pos[3];
             decl Float:vel[3];
             
-            pos[0] = 3224.0;
+            pos[0] = 3406.0;
             pos[1] = 2305.0;
             pos[2] = 339.0;
             
@@ -122,14 +122,14 @@ public SniperTarget_justEntered(client) {
         
         new column = client;
         new row = 0;
-        while (column > 9) {
-            column = column - 9;
+        while (column > 24) {
+            column = column - 24;
             row = row + 1;
         }
         
         decl Float:pos[3];
-        pos[0] = 3239.0  + float(column*55);
-        pos[1] = 755.0 - float(row*55);
+        pos[0] = 2958.0  + float(column*55);
+        pos[1] = 806.0 - float(row*55);
         pos[2] = 270.0;
 
         decl Float:ang[3];

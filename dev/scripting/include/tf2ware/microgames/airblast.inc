@@ -28,7 +28,7 @@ public Airblast_justEntered(client) {
         vel[1] = 0.0;
         vel[2] = 0.0;
         
-        new total = GetClientCount(true);
+        new total = GetActivePlayers();
         new posa = 360 / total * (g_Id[client]-1);
         
         decl Float:pos[3];

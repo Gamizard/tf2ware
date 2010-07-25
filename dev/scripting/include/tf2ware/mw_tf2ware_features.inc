@@ -22,10 +22,10 @@ RegMinigame(String:game_name[], Function:initFunc, Function:onMinigameLoad = INV
     PrintToServer("Warning: Attempted to register minigame %s and failed--configuration not found", game_name);
 }
 
-GiveId() {
+GiveId(bool:mustbealive = false) {
     new id = 0;
     for (new client = 1; client <= MaxClients; client++) {
-        if (IsValidClient(client)) {
+        if (IsValidClient(client) && (mustbealive == false || IsPlayerAlive(client))) {
             id += 1;
             g_Id[client] = id;
         }
@@ -210,11 +210,11 @@ public Action:killprop_timer(Handle:hTimer, any:prop) {
     return Plugin_Stop;
 }
 
-stock GetActivePlayers(team = 0) {
+stock GetActivePlayers(team = 0, bool:mustbealive = false) {
     new output = 0;
     for (new client = 1; client <= MaxClients; client++) {
         if (IsValidClient(client) && g_Spawned[client]) {
-            if ((team == 0 && GetClientTeam(client) >= 2) || (team > 0 && GetClientTeam(client) == team)) output += 1;
+            if ((team == 0 && GetClientTeam(client) >= 2) || (team > 0 && GetClientTeam(client) == team) && (mustbealive == false || IsPlayerAlive(client))) output += 1;
         }
     }
     return output;

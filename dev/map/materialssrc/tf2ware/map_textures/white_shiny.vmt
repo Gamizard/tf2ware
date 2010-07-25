@@ -1,0 +1,7 @@
+"VertexLitGeneric"
+{
+	"$basetexture"			"tf2ware/map_textures/white_shiny"
+	"$surfaceprop" 			"metal"
+	"$envmap" 			"env_cubemap"
+	"$envmaptint" 			"[5 5 5]"
+}

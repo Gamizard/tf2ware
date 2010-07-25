@@ -17,7 +17,7 @@
 
 #define MAX_MINIGAMES 20
 
-#define PLUGIN_VERSION "0.8.5-16"
+#define PLUGIN_VERSION "0.8.6-17"
 #define MUSIC_START "imgay/tf2ware/tf2ware_intro.mp3"
 #define MUSIC_START_LEN 2.18
 #define MUSIC_WIN "imgay/tf2ware/tf2ware_win.mp3"
@@ -145,6 +145,7 @@ new Handle:g_PlayerDeath;
 #include tf2ware\microgames\redfloor.inc
 #include tf2ware\microgames\snipertarget.inc
 #include tf2ware\microgames\airraid.inc
+#include tf2ware\microgames\jumprope.inc
 
 #include tf2ware\mw_tf2ware_features.inc
 #include tf2ware\special.inc
@@ -295,6 +296,7 @@ public OnMapStart() {
         RegMinigame("RedFloor", RedFloor_OnMinigame);
         RegMinigame("SniperTarget", SniperTarget_OnMinigame, SniperTarget_Init);
         RegMinigame("Airraid", Airraid_OnMinigame);
+        RegMinigame("JumpRope", JumpRope_OnMinigame);
 
         // CHEATS
         HookConVarChange(FindConVar("sv_cheats"), OnConVarChanged_SvCheats);
@@ -822,6 +824,10 @@ public Action:EndGame(Handle:hTimer) {
         
         CleanupAllVocalizations();
         RespawnAll();
+        
+        currentSpeed = GetConVarInt(ww_speed);
+        ServerCommand("host_timescale %f", GetHostMultiplier(1.0));
+        ServerCommand("phys_timescale %f", GetHostMultiplier(1.0));
         
         new String:sound[512];
         for (new i = 1; i <= MaxClients; i++) {
