@@ -1,5 +1,4 @@
 // ColorText module
-
 // Thanks to gNatFreak for the idea
 
 // gNatFreak: Microgame where:
