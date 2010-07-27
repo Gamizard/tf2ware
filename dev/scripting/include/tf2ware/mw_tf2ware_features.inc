@@ -284,6 +284,7 @@ public Action:GiveClientWeapon(client, String:weapon[128], slot, bool:input) {
             if (StrEqual(weapon, "tf_weapon_grenadelauncher")) SetWeaponAmmo(client, 4, 16);
             if (StrEqual(weapon, "tf_weapon_syringegun_medic")) SetWeaponAmmo(client, 40, 150);
             if (StrEqual(weapon, "tf_weapon_sniperrifle")) SetWeaponAmmo(client, 25, 25);
+            if (StrEqual(weapon, "tf_weapon_rocketlauncher")) SetWeaponAmmo(client, 4, 20);
         }
         
         SetWeaponState(client, input);
@@ -411,4 +412,10 @@ public Action:KillGameText(Handle:hTimer, any:iEntityRef)
     GameTextHandle = INVALID_HANDLE;
     
     return Plugin_Stop;
+}
+
+stock ChangeClientTeamAlive(client, team){
+    SetEntProp(client, Prop_Send, "m_lifeState", 2);
+    ChangeClientTeam(client, team);
+    SetEntProp(client, Prop_Send, "m_lifeState", 0);
 }

@@ -1,5 +1,7 @@
 // Barrel module
 
+new g_Barrels[MAXPLAYERS+1] = -1;
+
 public Barrel_OnMinigame() {
     AddToForward(g_justEntered, INVALID_HANDLE, Barrel_justEntered);
     AddToForward(g_OnEndMinigame, INVALID_HANDLE, Barrel_End);

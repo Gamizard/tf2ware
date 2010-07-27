@@ -51,9 +51,6 @@ new Function:g_initFuncs[MAX_MINIGAMES];
 // Language strings
 new String:var_lang[][] = {"", "it/"};
 
-new String:var_special_name[][] = {"SUPER SPEED", "NO TOUCHING", "x2 BOSS BATTLE", "SINGLEPLAYER", "LEAST IS BEST", "BONK"};
-new String:var_special_desc[][] = {"The Game is Faster Than Usual!!", "Don't Touch Any Enemy Players or You'll Lose!!", "Two Boss Battles!!", "You're Playing Alone...?", "The Player With The Least Points Win!!", "Push Players With Your Bat!!"};
-
 // Handles
 new Handle:ww_enable;
 new Handle:ww_speed;
@@ -85,7 +82,6 @@ new bool:g_Achievements = false;
 
 // Ints
 new g_Mission[MAXPLAYERS+1];
-new g_Barrels[MAXPLAYERS+1];
 new g_NeedleDelay[MAXPLAYERS+1];
 new g_Points[MAXPLAYERS+1];
 new g_Id[MAXPLAYERS+1];
@@ -418,6 +414,8 @@ public OnMapStart() {
         bossBattle = 0;
         Roundstarts = 0;
         
+        SpecialPrecache();
+        
         if (GetConVarBool(ww_log)) LogMessage("Map started");
         
     }
@@ -679,7 +677,7 @@ HandOutPoints() {
     for (new i = 1; i <= MaxClients; i++) {
         new points = 1;
         if (bossBattle == 1) points = 5;
-        if ((IsValidClient(i)) && (g_Complete[i]) && (GetClientTeam(i) >= 2) && (g_Spawned[i])) g_Points[i] += points;
+        if ((IsValidClient(i)) && (g_Complete[i]) && (GetClientTeam(i) >= 2) && (g_Spawned[i]) && SpecialRound != 7) g_Points[i] += points;
         g_Complete[i] = false;
     }
 }
@@ -704,6 +702,7 @@ StartMinigame() {
             if (IsValidClient(i) && (!(IsFakeClient(i)))) {
                 SetOverlay(i,"");
                 g_Minipoints[i] = 0;
+                g_Special_Pizza_d[i] = false;
             }
         }
         
@@ -854,6 +853,7 @@ public Action:EndGame(Handle:hTimer) {
                     if (g_Complete[i] == false) {
                         Format(sound, sizeof(sound), MUSIC_FAIL);
                         Format(event, sizeof(event), "tf2ware_fail_%d", iMinigame);
+                        if (SpecialRound == 7) DropPizza(i);
                         if (g_Achievements) mw_AchievementEvent(event, i, 0, 0, 1);
                     }
                 }
@@ -1106,7 +1106,7 @@ public Action:SpecialRound_timer(Handle:hTimer) {
         decl String:Name[128];
         if (var_SpecialRoundRoll < sizeof(var_special_name)) Format(Name, sizeof(Name), var_special_name[var_SpecialRoundRoll]);
         else {
-            decl String:var_funny_names[][] = {"PIZZA PLAZA", "FAT LARD RUN", "MOUSTACHIO", "LOVE STORY", "SIZE MATTERS", "ENGINERD", "IDLE FOR HATS", "TF2 BROS: BRAWL"};
+            decl String:var_funny_names[][] = {"FAT LARD RUN", "MOUSTACHIO", "LOVE STORY", "SIZE MATTERS", "ENGINERD", "IDLE FOR HATS", "TF2 BROS: BRAWL", "HOT SPY ON ICE"};
             Format(Name, sizeof(Name), var_funny_names[GetRandomInt(0, sizeof(var_funny_names)-1)]);
         }
         
@@ -1231,6 +1231,9 @@ SetStateClient(client, bool:value, bool:complete=false) {
                 if (GetClientTeam(client) == 2) effect = PARTICLE_WIN_RED;
                 ClientParticle(client, effect, 8.0);
             }
+            else {
+                if (SpecialRound == 7) DropPizza(client);
+            }
         }
         g_Complete[client] = value;
     }
@@ -1337,12 +1340,15 @@ SetOverlay(i, String:overlay[512]) {
 UpdateHud(Float:time) {
     decl String:output[512];
     decl String:add[5];
+    decl String:scorename[26];
+    if (SpecialRound == 7) Format(scorename, sizeof(scorename), "Pizza:");
+    else Format(scorename, sizeof(scorename), "Points:");
     for(new i = 1; i <= MaxClients; i++) {
         if (IsValidClient(i)) {
             Format(add, sizeof(add), "");
-            if (g_Complete[i] && bossBattle == 1) Format(add, sizeof(add), "+5");
-            if (g_Complete[i] && bossBattle != 1) Format(add, sizeof(add), "+1");
-            Format(output, sizeof(output), "Points: %i %s", g_Points[i], add);
+            if (g_Complete[i] && bossBattle == 1 && SpecialRound != 7) Format(add, sizeof(add), "+5");
+            if (g_Complete[i] && bossBattle != 1 && SpecialRound != 7) Format(add, sizeof(add), "+1");
+            Format(output, sizeof(output), "%s %i %s", scorename, g_Points[i], add);
             SetHudTextParams(0.3, 0.70, time, 255, 255, 0, 0);
             ShowSyncHudText(i, hudScore, output);
         }
@@ -1462,6 +1468,8 @@ public Player_Death(Handle:event, const String:name[], bool:dontBroadcast) {
             Call_Finish();
         }
     }
+    
+    if (SpecialRound == 7) DropPizza(client);
 }
 
 /* public ScoreGreaterThan(left, right, playerids[], Handle:data) {

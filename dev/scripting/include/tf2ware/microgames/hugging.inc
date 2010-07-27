@@ -93,11 +93,7 @@ public Hugging_justEntered(client) {
             row = row + 1;
         }
         if (g_Mission[client] == 0) {
-            if (GetClientTeam(client) == 2) {
-                ChangeClientTeam(client, 3);
-                RespawnClient(client, true, false);
-                return;
-            }
+            if (GetClientTeam(client) == 2) ChangeClientTeamAlive(client, 3);
             SetClientClass(client, "scout");
             DisableClientWeapons(client);
         
@@ -107,13 +103,9 @@ public Hugging_justEntered(client) {
             ang[0] = 0.0;
             ang[1] = -90.0;
             ang[2] = 0.0;
-        }
+        }//m_iTotalScore
         if (g_Mission[client] == 1) {
-            if (GetClientTeam(client) == 3) {
-                ChangeClientTeam(client, 2);
-                RespawnClient(client, true, false);
-                return;
-            }
+            if (GetClientTeam(client) == 3) ChangeClientTeamAlive(client, 2);
             SetClientClass(client, "heavy");
             DisableClientWeapons(client);
             pos[0] = 142.0 - float(column*80);
@@ -124,7 +116,6 @@ public Hugging_justEntered(client) {
             ang[2] = 0.0;
         }
         TeleportEntity(client, pos, ang, vel);
-        //if (heavy_love[client] == INVALID_HANDLE) heavy_love[client] = CreateTimer(5.0, HeavyLoveTaunt, client);
     }
 }
 

@@ -5,12 +5,21 @@
     4:      Singleplayer    Everyone is invisible
     5:      Worst is Best   The person with the least points win
     6:      Bonk            Everyone gets a bat to push people with    
+    7:      Pizza Plague    Collect pizza from losers for points    
 
 */
 
-#define SPECIAL_TOTAL 6
+#define SPECIAL_TOTAL 7
+
+#define SPECIAL_PIZZA "models/tf2ware/collectable.mdl"
 
 new bool:Special_TwoBosses = false;
+new g_Special_Pizza[MAXPLAYERS+1] = -1;
+new bool:g_Special_Pizza_d[MAXPLAYERS+1] = false;
+
+new String:var_special_name[][] = {"SUPER SPEED", "NO TOUCHING", "x2 BOSS BATTLE", "SINGLEPLAYER", "LEAST IS BEST", "BONK", "PIZZA PLAGUE"};
+new String:var_special_desc[][] = {"The Game is Faster Than Usual!!", "Don't Touch Any Enemy Players or You'll Lose!!", "Two Boss Battles!!", "You're Playing Alone...?", "The Player With The Least Points Win!!", "Push Players With Your Bat!!", "Only dropped Pizza from Losers give Points!!"};
+
 
 public Special_NoTouch(entity, other) {
     if (SpecialRound != 2) return;
@@ -71,6 +80,17 @@ ResetSpecialRoundEffect() {
             }
         }
     }
+    
+    if (SpecialRound == 7) {
+        for (new i = 1; i <= MaxClients; i++) {
+            new ent = g_Special_Pizza[i];
+            if (ent > 0 && IsValidEntity(ent)) {
+                SDKUnhook(ent, SDKHook_Touch, Pizza_OnTouch);
+                AcceptEntityInput(ent, "Kill" );
+            }
+            g_Special_Pizza[i] = -1;
+        }
+    }
 }
 
 AddSpecialRoundEffect() {
@@ -94,4 +114,79 @@ AddSpecialRoundEffect() {
             if (IsValidClient(i)) SDKHook(i, SDKHook_OnTakeDamage, Special_DamagePush);
         }
     }
+    if (SpecialRound == 7) {
+        for (new i = 1; i <= MaxClients; i++) {
+            g_Special_Pizza[i] = -1;
+        }
+    }
+}
+
+DropPizza(i) {
+    if (SpecialRound == 7 && g_Special_Pizza_d[i] == false && (g_Special_Pizza[i] <= 0 || (!IsValidEntity(g_Special_Pizza[i])))) {
+        decl Float:pos[3];
+        decl Float:vel[3];
+        GetClientAbsOrigin(i, pos);
+        pos[2] += 100;
+        
+        vel[0]=GetRandomFloat(-300.0, 300.0);
+        vel[1]= GetRandomFloat(-300.0, 300.0);
+        vel[2] = GetRandomFloat(100.0, 300.0);
+        
+        g_Special_Pizza[i] = CreateEntityByName("prop_physics");
+        new ent = g_Special_Pizza[i];
+        
+        if (IsValidEdict(ent)) {
+            DispatchKeyValue(ent, "model", SPECIAL_PIZZA);
+            DispatchSpawn(ent);
+            
+            TeleportEntity(ent, pos, NULL_VECTOR, vel);
+            SDKHook(ent, SDKHook_Touch, Pizza_OnTouch);
+            
+            CreateTimer(6.0, killprop_timer, ent);
+            
+            CPrintToChat(i, "{red}You lost a pizza slice!");
+            if (g_Points[i] > 0) g_Points[i] -= 1;
+            g_Special_Pizza_d[i] = true;
+        }    
+    }
+}
+
+public Pizza_OnTouch(entity, client) {
+    new String:classname[64];
+    GetEdictClassname(client, classname, sizeof(classname));
+    
+    // Get the Owner
+    new owner = 0;
+    for (new i = 1; i <= MaxClients; i++) {
+        if(g_Special_Pizza[i] > 0 && g_Special_Pizza[i] == entity) {
+            owner = i;
+        }
+    } 
+    
+    if (StrEqual(classname, "player") && IsValidEdict(entity) && IsValidClient(client) && IsPlayerAlive(client) && owner != client) {
+        SDKUnhook(entity, SDKHook_Touch, Pizza_OnTouch);
+        AcceptEntityInput(entity, "Kill" );
+        g_Special_Pizza[owner] = -1;
+        
+        if (SpecialRound == 7) {
+            g_Points[client] += 1;
+            EmitSoundToClient(client, SOUND_MINISCORE);
+            CPrintToChatEx(client, owner, "You stole {teamcolor}%N{default}'s pizza!", owner);
+            CPrintToChatEx(owner, client, "{teamcolor}%N{default} stole your pizza!", client);
+        }
+    }
+}
+
+SpecialPrecache() {
+    AddFileToDownloadsTable(SPECIAL_PIZZA);
+    AddFileToDownloadsTable("models/tf2ware/collectable.dx80.vtx");
+    AddFileToDownloadsTable("models/tf2ware/collectable.dx90.vtx");
+    AddFileToDownloadsTable("models/tf2ware/collectable.phy");
+    AddFileToDownloadsTable("models/tf2ware/collectable.sw.vtx");
+    AddFileToDownloadsTable("models/tf2ware/collectable.vvd");
+    AddFileToDownloadsTable("materials/tf2ware/models/collectable_crust.vmt");
+    AddFileToDownloadsTable("materials/tf2ware/models/collectable_crust.vtf");
+    AddFileToDownloadsTable("materials/tf2ware/models/collectable_slice.vmt");
+    AddFileToDownloadsTable("materials/tf2ware/models/collectable_slice.vtf");
+    PrecacheModel(SPECIAL_PIZZA);
 }
