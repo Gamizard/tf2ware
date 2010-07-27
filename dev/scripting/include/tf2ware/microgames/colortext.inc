@@ -17,8 +17,9 @@
 static g_iColors[8][3] = {{255, 255, 255}, {255, 0, 0}, {0, 255, 0}, {0, 0, 255}, {255, 255, 0}, {255, 0, 255}, {255, 128, 0}, {255, 0, 128}};
 static String:g_sColors[8][12] = {"WHITE", "RED", "GREEN", "BLUE", "YELLOW", "PURPLE", "ORANGE", "PINK"};
 
-new text_color;
-new actual_color;
+new written_color;
+new shown_color;
+new color_target; // either written or shown
 
 new Handle:Colortext_sync = INVALID_HANDLE;
 
@@ -26,8 +27,16 @@ public ColorText_OnMinigame() {
     AddToForward(g_justEntered, INVALID_HANDLE, ColorText_justEntered);
     AddToForward(g_OnEndMinigame, INVALID_HANDLE, ColorText_End);
 
-    text_color = GetRandomInt(0,sizeof(g_sColors)-1);
-    actual_color = GetRandomInt(0,sizeof(g_sColors)-1);
+    written_color = GetRandomInt(0,sizeof(g_sColors)-1);
+    shown_color = GetRandomInt(0,sizeof(g_sColors)-1);
+    if (GetRandomInt(0, 1) == 1) {
+        color_target = written_color;
+        SetMissionAll(0);
+    }
+    else {
+        color_target = shown_color;
+        SetMissionAll(1);
+    }
     
     RegConsoleCmd("say", ColorText_Player_Say);
     RegConsoleCmd("say_team", ColorText_Player_Say);
@@ -36,10 +45,10 @@ public ColorText_OnMinigame() {
 }
 
 public ColorText_justEntered(client) {
-    SetHudTextParams(-1.0, 0.45, 5.0, g_iColors[actual_color][0], g_iColors[actual_color][1], g_iColors[actual_color][2], 255);
+    SetHudTextParams(-1.0, 0.45, 5.0, g_iColors[shown_color][0], g_iColors[shown_color][1], g_iColors[shown_color][2], 255);
     if (IsValidClient(client)) {
         DisableClientWeapons(client);
-        ShowSyncHudText(client, Colortext_sync, g_sColors[text_color]);
+        ShowSyncHudText(client, Colortext_sync, g_sColors[written_color]);
     }
 }
 
@@ -56,13 +65,13 @@ public Action:ColorText_Player_Say(iClient, iArgs) {
         // Retrieve the first argument and check it's the correct color
         decl String:strArgument[64]; GetCmdArg(1, strArgument, sizeof(strArgument));
         
-        if (StrEqual(g_sColors[actual_color], strArgument, false)) {
+        if (StrEqual(g_sColors[color_target], strArgument, false)) {
             SetStateClient(iClient, true, true);
             return Plugin_Handled;
         }
         else {
             ForcePlayerSuicide(iClient);
-        }        
+        }
     }
     return Plugin_Continue;
 }
