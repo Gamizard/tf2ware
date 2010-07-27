@@ -16,11 +16,6 @@ public Hugging_OnMapStart() {
 }
 
 public Hugging_OnMinigame() {
-    for (new i = 1; i <= MaxClients; i++) {
-        if (IsValidClient(i)) {
-            SDKHook(i, SDKHook_Touch, Hugging_OnPlayerTouch);
-        }
-    }
 
     AddToForward(g_justEntered, INVALID_HANDLE, Hugging_justEntered);
     AddToForward(g_OnEndMinigame, INVALID_HANDLE, Hugging_End);
@@ -80,6 +75,8 @@ public Hugging_End() {
 
 public Hugging_justEntered(client) {
     if (IsValidClient(client)) {
+        SDKHook(client, SDKHook_Touch, Hugging_OnPlayerTouch);
+    
         decl Float:pos[3];
         decl Float:ang[3];
         decl Float:vel[3];

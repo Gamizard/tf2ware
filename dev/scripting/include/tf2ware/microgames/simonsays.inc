@@ -12,6 +12,8 @@
 // simon_action == 3 | Look Up
 // simon_action == 4 | Look Down
 
+// NEED TO ALLOW BUILDINGS
+
 new simon_action;
 new simon_or_someone;
 

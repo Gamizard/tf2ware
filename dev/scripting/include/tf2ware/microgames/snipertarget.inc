@@ -1,5 +1,7 @@
 new var_sniper_target = -1;
 
+// NEED TO MODIFY SO THAT IT IS A SHOOTING RANGE
+
 public SniperTarget_Init() {
     AddToForward(g_OnMapStart, INVALID_HANDLE, SniperTarget_OnMapStart);
 }   

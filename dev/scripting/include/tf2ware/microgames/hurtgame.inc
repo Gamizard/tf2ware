@@ -1,10 +1,11 @@
-// TEMPLATE module
+// hurtgame module
+// You constantly get hurt and need to grab medkits. There's less and less medkits as time goes on.
 
-public TEMPLATE_OnMinigame() {
+public hurtgame_OnMinigame() {
     // These are forwards if you need a specific function!
-    //AddToForward(g_justEntered, INVALID_HANDLE, TEMPLATE_justEntered);
-    //AddToForward(g_OnEndMinigame, INVALID_HANDLE, TEMPLATE_End);
-    //AddToForward(g_OnGameFrame_Minigames, INVALID_HANDLE, TEMPLATE_OnGameFrame);
+    AddToForward(g_justEntered, INVALID_HANDLE, hurtgame_justEntered);
+    //AddToForward(g_OnEndMinigame, INVALID_HANDLE, hurtgame_End);
+    AddToForward(g_OnGameFrame_Minigames, INVALID_HANDLE, hurtgame_OnGameFrame);
 
     // Should the person be able to attack?
     //g_attack = true;
@@ -14,7 +15,7 @@ public TEMPLATE_OnMinigame() {
 }
 
 /*
-public TEMPLATE_End() {
+public hurtgame_End() {
     for (new i = 1; i <= MaxClients; i++) {
         if (IsValidClient(i)) {
             // do something?
@@ -23,24 +24,24 @@ public TEMPLATE_End() {
 }
 */
 
-/*
-public TEMPLATE_justEntered(client) {
+
+public hurtgame_justEntered(client) {
     if (IsValidClient(client)) {
 
         // Change the client's class?
-        //SetClientClass(client, "spy");
+        SetClientClass(client, "heavy");
         
         // Give the client a weapon? GiveClientWeapon(client, weapon name, slot, visible);
         //GiveClientWeapon(client, "tf_weapon_revolver", 0, true);
     }
 }
-*/
 
-/*
-public TEMPLATE_OnGameFrame() {
+
+
+public hurtgame_OnGameFrame() {
     for (new i = 1; i <= MaxClients; i++) {
         if (IsValidClient(i) && IsPlayerAlive(i)) {
+            SetEntityHealth(i, GetClientHealth(i)-1);
         }
     }
 }
-*/
