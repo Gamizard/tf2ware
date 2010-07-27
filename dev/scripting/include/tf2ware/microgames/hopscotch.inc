@@ -1,4 +1,5 @@
 // Hopscotch module
+// I've been trying to add a second arena for Soldier but it's not going well.
 
 new g_Hopscotch_arena = 0;
 
@@ -6,11 +7,14 @@ public Hopscotch_OnMinigame() {
     AddToForward(g_justEntered, INVALID_HANDLE, Hopscotch_justEntered);
     AddToForward(g_OnGameFrame_Minigames, INVALID_HANDLE, Hopscotch_OnGameFrame);
     
-    g_Hopscotch_arena = GetRandomInt(1,1);
+    //g_Hopscotch_arena = GetRandomInt(0,1);
+    g_Hopscotch_arena = 0;
 }
 
 public Hopscotch_justEntered(client) {
     if (IsValidClient(client)) {
+        SDKHook(client, SDKHook_OnTakeDamage, Hopscotch_OnTakeDamageClient);
+    
         if (g_Hopscotch_arena == 1) SetClientClass(client, "soldier");
         else SetClientClass(client, "heavy");
         DisableClientWeapons(client);
@@ -59,4 +63,11 @@ public Hopscotch_OnGameFrame() {
             if (g_Hopscotch_arena == 1) SetEntityHealth(i, 200);
         }
     }
+}
+
+public Action:Hopscotch_OnTakeDamageClient(victim, &attacker, &inflictor, &Float:damage, &damagetype) {
+    if (IsValidClient(victim) && status == 2) {
+        damage = 0.0;
+    }
+    return Plugin_Changed;
 }

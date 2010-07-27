@@ -3,12 +3,6 @@
 new g_Needle_Type = 0;
 
 public Needlejump_OnMinigame() {
-    for (new i = 1; i <= MaxClients; i++) {
-        if (IsValidClient(i)) {
-            SDKHook(i, SDKHook_OnTakeDamage, Needlejump_OnTakeDamageClient);
-        }
-    }
-
     AddToForward(g_justEntered, INVALID_HANDLE, Needlejump_justEntered);
     AddToForward(g_OnEndMinigame, INVALID_HANDLE, Needlejump_End);
     AddToForward(g_OnGameFrame_Minigames, INVALID_HANDLE, Needlejump_OnGameFrame);
@@ -38,8 +32,9 @@ public Action:Needlejump_OnTakeDamageClient(victim, &attacker, &inflictor, &Floa
             fVelocity[2] -= 200.0;
             TeleportEntity(victim, NULL_VECTOR, NULL_VECTOR, fVelocity);
         }
+        damage = 0.0;
     }
-    return Plugin_Continue;
+    return Plugin_Changed;
 }
 
 public Needlejump_TimerMinigame(timer) {
@@ -66,6 +61,8 @@ public Needlejump_TimerMinigame(timer) {
 
 public Needlejump_justEntered(client) {
     if (IsValidClient(client)) {
+        SDKHook(client, SDKHook_OnTakeDamage, Needlejump_OnTakeDamageClient);
+    
         g_Mission[client] = g_Needle_Type;
         if (g_Mission[client] == 0) {
             SetClientClass(client, "medic");
@@ -92,7 +89,7 @@ public Needlejump_End() {
 
 
 PerformNeedleJump(i) {
-    if (g_Mission[client] == 0) {
+    if (g_Mission[i] == 0) {
         decl Float:fEyeAngle[3];
         decl Float:fVelocity[3];
         if (g_NeedleDelay[i] > 0) g_NeedleDelay[i] -= 1;
