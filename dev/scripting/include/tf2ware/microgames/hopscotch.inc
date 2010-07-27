@@ -59,7 +59,7 @@ public Hopscotch_OnGameFrame() {
         if (IsValidClient(i) && IsPlayerAlive(i)) {
             decl Float:pos[3];
             GetClientAbsOrigin(i, pos);
-            if (g_Hopscotch_arena == 0 && pos[1] > 2235.0 ) SetStateClient(i, true, true);
+            if (g_Hopscotch_arena == 0 && pos[1] > 2235.0  && g_Complete[i] == false ) SetStateClient(i, true, true);
             if (g_Hopscotch_arena == 1) SetEntityHealth(i, 200);
         }
     }

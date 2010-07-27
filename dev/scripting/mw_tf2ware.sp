@@ -143,6 +143,8 @@ new Handle:g_PlayerDeath;
 #include tf2ware\microgames\airraid.inc
 #include tf2ware\microgames\jumprope.inc
 #include tf2ware\microgames\colortext.inc
+#include tf2ware\microgames\frogger.inc
+#include tf2ware\microgames\goomba.inc
 
 #include tf2ware\mw_tf2ware_features.inc
 #include tf2ware\special.inc
@@ -295,6 +297,8 @@ public OnMapStart() {
         RegMinigame("Airraid", Airraid_OnMinigame);
         RegMinigame("JumpRope", JumpRope_OnMinigame);
         RegMinigame("ColorText", ColorText_OnMinigame);
+        RegMinigame("Frogger", Frogger_OnMinigame, Frogger_Init);
+        RegMinigame("Goomba", Goomba_OnMinigame);
 
         // CHEATS
         HookConVarChange(FindConVar("sv_cheats"), OnConVarChanged_SvCheats);
