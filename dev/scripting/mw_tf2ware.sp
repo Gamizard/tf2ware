@@ -15,7 +15,7 @@
 #include <mw_achievements_natives>
 #define REQUIRE_PLUGIN
 
-#define MAX_MINIGAMES 20
+#define MAX_MINIGAMES 40
 
 #define PLUGIN_VERSION "0.8.6-17"
 #define MUSIC_START "imgay/tf2ware/tf2ware_intro.mp3"
@@ -142,6 +142,7 @@ new Handle:g_PlayerDeath;
 #include tf2ware\microgames\snipertarget.inc
 #include tf2ware\microgames\airraid.inc
 #include tf2ware\microgames\jumprope.inc
+#include tf2ware\microgames\colortext.inc
 
 #include tf2ware\mw_tf2ware_features.inc
 #include tf2ware\special.inc
@@ -293,6 +294,7 @@ public OnMapStart() {
         RegMinigame("SniperTarget", SniperTarget_OnMinigame, SniperTarget_Init);
         RegMinigame("Airraid", Airraid_OnMinigame);
         RegMinigame("JumpRope", JumpRope_OnMinigame);
+        RegMinigame("ColorText", ColorText_OnMinigame);
 
         // CHEATS
         HookConVarChange(FindConVar("sv_cheats"), OnConVarChanged_SvCheats);
