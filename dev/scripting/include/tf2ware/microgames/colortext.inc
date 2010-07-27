@@ -14,8 +14,8 @@
 // time you have to type that letter is around 2 seconds). So:
 // Word: Grey (colored black), type “b” into chat. Care would have to be taken to prevent duplicate colors starting with the same letter.
 
-static g_iColors[13][3] = {{255, 255, 255}, {255, 0, 0}, {0, 255, 0}, {0, 0, 255}, {255, 255, 0}, {255, 0, 255}, {255, 128, 0}, {255, 0, 128}};
-static String:g_sColors[13][12] = {"WHITE", "RED", "GREEN", "BLUE", "YELLOW", "PURPLE", "ORANGE", "PINK"};
+static g_iColors[8][3] = {{255, 255, 255}, {255, 0, 0}, {0, 255, 0}, {0, 0, 255}, {255, 255, 0}, {255, 0, 255}, {255, 128, 0}, {255, 0, 128}};
+static String:g_sColors[8][12] = {"WHITE", "RED", "GREEN", "BLUE", "YELLOW", "PURPLE", "ORANGE", "PINK"};
 
 new text_color;
 new actual_color;
@@ -56,7 +56,7 @@ public Action:ColorText_Player_Say(iClient, iArgs) {
         // Retrieve the first argument and check it's the correct color
         decl String:strArgument[64]; GetCmdArg(1, strArgument, sizeof(strArgument));
         
-        if (StrEqual(g_sColors[actual_color], Arg, false)) {
+        if (StrEqual(g_sColors[actual_color], strArgument, false)) {
             SetStateClient(iClient, true, true);
             return Plugin_Handled;
         }
