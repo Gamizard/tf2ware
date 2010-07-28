@@ -31,10 +31,11 @@ public Action:Needlejump_OnTakeDamageClient(victim, &attacker, &inflictor, &Floa
             GetEntPropVector(victim, Prop_Data, "m_vecVelocity", fVelocity);
             fVelocity[2] -= 200.0;
             TeleportEntity(victim, NULL_VECTOR, NULL_VECTOR, fVelocity);
+            damage = 0.0;
+            return Plugin_Changed;
         }
-        damage = 0.0;
     }
-    return Plugin_Changed;
+    return Plugin_Continue;
 }
 
 public Needlejump_TimerMinigame(timer) {
@@ -97,9 +98,10 @@ PerformNeedleJump(i) {
             if(GetEntData(GetPlayerWeaponSlot(i, 0), FindSendPropInfo("CTFWeaponBase", "m_iClip1")) != 0){
                 GetClientEyeAngles(i, fEyeAngle);
                 GetEntPropVector(i, Prop_Data, "m_vecVelocity", fVelocity);
-                fVelocity[0] += 10.0 * Cosine(DegToRad(fEyeAngle[1])) * -1.0;
-                fVelocity[1] += 10.0 * Sine(DegToRad(fEyeAngle[1])) * -1.0;
-                fVelocity[2] -= 40.0 * Sine(DegToRad(fEyeAngle[0])) * -1.0;
+                new Float:multi = GetSpeedMultiplier(1.0);
+                fVelocity[0] += (10.0 * Cosine(DegToRad(fEyeAngle[1])) * -1.0) / multi;
+                fVelocity[1] += (10.0 * Sine(DegToRad(fEyeAngle[1])) * -1.0) / multi;
+                fVelocity[2] -= (40.0 * Sine(DegToRad(fEyeAngle[0])) * -1.0) / multi;
                 if(FloatAbs(fVelocity[0]) > 400.0){
                     if(fVelocity[0] > 0.0)
                         fVelocity[0] = 400.0;

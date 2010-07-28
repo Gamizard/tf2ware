@@ -1,12 +1,6 @@
 // Airblast module
 
 public Airblast_OnMinigame() {
-    for (new i = 1; i <= MaxClients; i++) {
-        if (IsValidClient(i)) {
-            SDKHook(i, SDKHook_PreThink, Airblast_RemoveLeftClick);
-        }
-    }
-
     AddToForward(g_justEntered, INVALID_HANDLE, Airblast_justEntered);
     AddToForward(g_OnEndMinigame, INVALID_HANDLE, Airblast_End);
     // Hopscotch game has the same exact check
@@ -19,6 +13,8 @@ public Airblast_OnMinigame() {
 
 public Airblast_justEntered(client) {
     if (IsValidClient(client)) {
+        SDKHook(client, SDKHook_PreThink, Airblast_RemoveLeftClick);
+    
         SetClientClass(client, "pyro");
         GiveClientWeapon(client, "tf_weapon_flamethrower", 0, true);
         SetClientClass(client, "pyro");

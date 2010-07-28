@@ -149,6 +149,7 @@ new Handle:g_PlayerDeath;
 #include tf2ware\mw_tf2ware_features.inc
 #include tf2ware\special.inc
 #include tf2ware\vocalize.inc
+#include tf2ware\camera.inc
 
 
 public Plugin:myinfo = {
@@ -257,6 +258,9 @@ public OnMapStart() {
         RegAdminCmd("ww_give", Command_points, ADMFLAG_GENERIC, "Gives you 20 points - You're a winner! (testing feature)");
         RegAdminCmd("ww_event", Command_event, ADMFLAG_GENERIC, "Starts a debugging event");
         
+        HookEvent("player_spawn", Camera_PlayerSpawn); 
+        HookEvent("player_death", Camera_PlayerDeath);    
+        
         // Vars
         currentSpeed = GetConVarInt(ww_speed);
         iMinigame = 1;
@@ -353,31 +357,6 @@ public OnMapStart() {
         
         decl String:input[512];
         
-        /*
-        new String:materials[5][20] = { "minigame_win", "minigame_fail", "minigame_speed", "minigame_boss", "welcome" };
-        for (new i = 0; i < sizeof(var_lang); i++) {
-            for (new j = 0; j < sizeof(materials); j++) {
-                Format(input, sizeof(input), "materials/%s%stf2ware_%s.vmt", materialpath, var_lang[i], materials[j]);
-                AddFileToDownloadsTable(input);
-                Format(input, sizeof(input), "materials/%s%stf2ware_%s.vtf", materialpath, var_lang[i], materials[j]);
-                AddFileToDownloadsTable(input);
-            }
-        }
-        
-        for (new i = 1; i <= 19; i++) {
-            Format(input, sizeof(input), "materials/tf2ware/tf2ware_points%d.vmt", i);
-            AddFileToDownloadsTable(input);
-            PrecacheGeneric(input, true);
-            Format(input, sizeof(input), "materials/tf2ware/tf2ware_points%d.vtf", i);
-            AddFileToDownloadsTable(input);
-            PrecacheGeneric(input, true);
-        }
-        
-        Format(input, sizeof(input), "materials/tf2ware/tf2ware_points99.vmt");
-        AddFileToDownloadsTable(input);
-        Format(input, sizeof(input), "materials/tf2ware/tf2ware_points99.vtf");
-        AddFileToDownloadsTable(input);*/
-        
         KvGotoFirstSubKey(MinigameConf);
         decl id;
         decl enable;
@@ -390,21 +369,6 @@ public OnMapStart() {
                 Format(input, sizeof(input), "imgay/tf2ware/minigame_%d.mp3", id);
                 if (GetConVarBool(ww_log)) LogMessage("%s", input);
                 precacheSound(input);
-                
-                /*new j=1, String:overlays[12];
-                Format(overlays, sizeof(overlays), "overlay%d", j);
-                while (KvJumpToKey(MinigameConf, overlays)) {
-                    for (new k = 0; k < sizeof(var_lang); k++) {
-                        Format(input, sizeof(input), "materials/%s%stf2ware_minigame_%d_%d.vmt", materialpath, var_lang[k], id, j);
-                        AddFileToDownloadsTable(input);
-                        Format(input, sizeof(input), "materials/%s%stf2ware_minigame_%d_%d.vtf", materialpath, var_lang[k], id, j);
-                        AddFileToDownloadsTable(input);
-                        if (GetConVarBool(ww_log)) LogMessage("%s / .vmt", input);
-                    }
-                    j++;
-                    Format(overlays, sizeof(overlays), "overlay%d", j);
-                    KvGoBack(MinigameConf);
-                }*/
             }
             i++;
         } while (KvGotoNextKey(MinigameConf)); 
@@ -509,6 +473,8 @@ public OnClientDisconnect(client) {
     if (GetConVarBool(ww_log)) LogMessage("Client disconnected");
     SDKUnhook(client, SDKHook_PreThink, OnPreThink);
     SDKUnhook(client, SDKHook_OnTakeDamage, OnTakeDamageClient);
+    
+    if(ClientCamera[client] != 0) DestroyCamera(client);
 
     g_Spawned[client] = false;
 }
@@ -823,6 +789,8 @@ public Action:EndGame(Handle:hTimer) {
         else NoCollision(false);
         
         if (GetMinigameConfNum(minigame, "endrespawn", 0) > 0) RespawnAll(true, false);
+        
+        SetCameraState(false);
         
         Call_StartForward(g_OnEndMinigame);
         Call_Finish();

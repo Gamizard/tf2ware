@@ -1,9 +1,0 @@
-"UnlitGeneric"
-{
-	"$baseTexture" "tf2ware/it/tf2ware_minigame_15_3"
-    "$alphatest" 1
-	"$ignorez"     "1"
-	"$no_fullbright" "1"	
-	"$vertextcolor" "1"
-	"%keywords" "tf"
-}

@@ -9,24 +9,28 @@ public Frogger_Init() {
 public Frogger_OnMinigame() {
     // These are forwards if you need a specific function!
     AddToForward(g_justEntered, INVALID_HANDLE, Frogger_justEntered);
-    //AddToForward(g_OnEndMinigame, INVALID_HANDLE, Frogger_End);
+    AddToForward(g_OnEndMinigame, INVALID_HANDLE, Frogger_End);
     AddToForward(g_OnGameFrame_Minigames, INVALID_HANDLE, Frogger_OnGameFrame);
-
+    
+    SetCameraState(true);
 }
 
 public Frogger_OnMapStart() {
     PrecacheModel(FROGGER_MODEL, true);
 }
 
-/*
-public Frogger_End() {
+
+public Frogger_End() { 
+    // Let's turn them back
     for (new i = 1; i <= MaxClients; i++) {
         if (IsValidClient(i)) {
-        
+            SetVariantString("");
+            AcceptEntityInput(i, "SetCustomModel");
+            SetVariantInt(0);
+            AcceptEntityInput(i, "SetCustomModelRotates");
         }
     }
 }
-*/
 
 public Frogger_justEntered(client) {
     if (IsValidClient(client)) {
