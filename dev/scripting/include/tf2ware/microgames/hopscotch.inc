@@ -7,7 +7,6 @@ public Hopscotch_OnMinigame() {
     AddToForward(g_justEntered, INVALID_HANDLE, Hopscotch_justEntered);
     AddToForward(g_OnGameFrame_Minigames, INVALID_HANDLE, Hopscotch_OnGameFrame);
     
-    //g_Hopscotch_arena = 1;
     g_Hopscotch_arena = GetRandomInt(0,1);
     g_Hopscotch_weapon = false;
     

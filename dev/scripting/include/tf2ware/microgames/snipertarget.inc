@@ -26,8 +26,7 @@ public SniperTarget_OnMinigame() {
     g_attack = true;
     RemoveAllWeapons();
     
-    //g_Target_Random = GetRandomInt(0,3);
-    g_Target_Random = 0;
+    g_Target_Random = GetRandomInt(0,4);
     g_Target_Pos = 0;
     g_Target_Ready = false;
 }

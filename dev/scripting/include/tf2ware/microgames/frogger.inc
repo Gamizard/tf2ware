@@ -30,11 +30,11 @@ public Frogger_OnMinigame() {
 
 public Frogger_OnMapStart() {
     PrecacheModel(FROGGER_MODEL, true);
-    precacheSound("vo\announcer_ends_5sec.wav");
-    precacheSound("vo\announcer_ends_4sec.wav");
-    precacheSound("vo\announcer_ends_3sec.wav");
-    precacheSound("vo\announcer_ends_2sec.wav");
-    precacheSound("vo\announcer_ends_1sec.wav");
+    precacheSound("vo/announcer_ends_5sec.wav");
+    precacheSound("vo/announcer_ends_4sec.wav");
+    precacheSound("vo/announcer_ends_3sec.wav");
+    precacheSound("vo/announcer_ends_2sec.wav");
+    precacheSound("vo/announcer_ends_1sec.wav");
 }
 
 public Action:Frogger_Timer(Handle:hTimer) {
@@ -64,7 +64,7 @@ public Frogger_End() {
             AcceptEntityInput(i, "SetCustomModel");
             SetVariantInt(0);
             AcceptEntityInput(i, "SetCustomModelRotates");
-            SetEntProp(i, Prop_Send, "m_iObserverMode", 0);
+            //SetEntProp(i, Prop_Send, "m_iObserverMode", 0);
         }
     }
 }
@@ -81,7 +81,7 @@ public Frogger_justEntered(client) {
         AcceptEntityInput(client, "SetCustomModel");
         SetVariantInt(1);
         AcceptEntityInput(client, "SetCustomModelRotates");
-        SetEntProp(client, Prop_Send, "m_iObserverMode", 1);
+        //SetEntProp(client, Prop_Send, "m_iObserverMode", 1);
         
         Frogger_Position(client);
         NoCollision(true);

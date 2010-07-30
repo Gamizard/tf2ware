@@ -23,6 +23,7 @@ public Goomba_justEntered(client) {
             SetClientClass(client, "heavy");
             g_Mission[client] = 1;
             SDKHook(client, SDKHook_PreThink, Goomba_RemoveJump);
+            SetStateClient(client, true);
         }
         
         DisableClientWeapons(client);
@@ -47,6 +48,7 @@ public Goomba_Touch(client, other) {
                 GetEntPropVector(client, Prop_Data, "m_vecAbsVelocity", vec);
 
                 if(vec[2] < -10.0) {
+                    SetStateClient(other, false, true);
                     ForcePlayerSuicide(other);
                     SetStateClient(client, true, true);
                     
