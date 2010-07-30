@@ -1,7 +1,15 @@
+// The angle at which the camera is looking
 new Float:g_CameraAngle[3] = {90.0, 90.0, 0.0};  
+
+// the distance the camera is from the player.
 new Float:g_CameraDistance = 400.0;
+
 new ClientCamera[MAXPLAYERS+1]; 
+
+// are custom cameras enabled?
 new bool:g_CameraState = false;
+
+// if the camera is strict, it won't rotate with the player.
 new bool:g_CameraStrict = true;
 
 public Action:Camera_PlayerSpawn(Handle:event, const String:name[], bool:dontBroadcast) { 

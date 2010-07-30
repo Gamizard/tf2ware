@@ -17,20 +17,32 @@
 
 #define MAX_MINIGAMES 40
 
-#define PLUGIN_VERSION "0.8.6-17"
+#define PLUGIN_VERSION "0.9.0-17"
+
+/* "New" Music
 #define MUSIC_START "imgay/tf2ware/tf2ware_intro.mp3"
 #define MUSIC_START_LEN 2.18
 #define MUSIC_WIN "imgay/tf2ware/tf2ware_win.mp3"
 #define MUSIC_FAIL "imgay/tf2ware/tf2ware_fail.mp3"
 #define MUSIC_END_LEN 2.2
-#define SOUND_COMPLETE "imgay/tf2ware/complete_me.mp3"
-#define SOUND_COMPLETE_YOU "imgay/tf2ware/complete_you.mp3"
 #define MUSIC_SPEEDUP "imgay/tf2ware/tf2ware_speedup.mp3"
 #define MUSIC_SPEEDUP_LEN 3.29
 #define MUSIC_BOSS "imgay/tf2ware/boss.mp3"
 #define MUSIC_BOSS_LEN 3.9
+*/
+#define MUSIC_START "imgay/tf2ware/warioman_intro.mp3"
+#define MUSIC_START_LEN 2.17
+#define MUSIC_WIN "imgay/tf2ware/warioman_win.mp3"
+#define MUSIC_FAIL "imgay/tf2ware/warioman_fail.mp3"
+#define MUSIC_END_LEN 2.19
+#define MUSIC_SPEEDUP "imgay/tf2ware/warioman_speedup.mp3"
+#define MUSIC_SPEEDUP_LEN 3.9
+#define MUSIC_BOSS "imgay/tf2ware/warioman_boss.mp3"
+#define MUSIC_BOSS_LEN 4.2
 #define MUSIC_GAMEOVER "imgay/tf2ware/warioman_gameover.mp3"
 #define MUSIC_GAMEOVER_LEN 8.17
+#define SOUND_COMPLETE "imgay/tf2ware/complete_me.mp3"
+#define SOUND_COMPLETE_YOU "imgay/tf2ware/complete_you.mp3"
 #define SOUND_MINISCORE "items/pumpkin_drop.wav"
 #define SOUND_HEAVY_KISS "vo/heavy_generic01.wav"
 #define MUSIC_WAITING "imgay/tf2ware/waitingforplayers.mp3"

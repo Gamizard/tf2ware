@@ -1,14 +1,32 @@
 // Hopscotch module
-// I've been trying to add a second arena for Soldier but it's not going well.
 
 new g_Hopscotch_arena = 0;
+new g_Hopscotch_weapon = false;
 
 public Hopscotch_OnMinigame() {
     AddToForward(g_justEntered, INVALID_HANDLE, Hopscotch_justEntered);
     AddToForward(g_OnGameFrame_Minigames, INVALID_HANDLE, Hopscotch_OnGameFrame);
     
-    //g_Hopscotch_arena = GetRandomInt(0,1);
-    g_Hopscotch_arena = 0;
+    //g_Hopscotch_arena = 1;
+    g_Hopscotch_arena = GetRandomInt(0,1);
+    g_Hopscotch_weapon = false;
+    
+    if (g_Hopscotch_arena == 1) {
+        g_attack = true;
+        CreateTimer(4.9, Hopscotch_Weapon);
+    }
+}
+
+public Action:Hopscotch_Weapon(Handle:hTimer) {
+    if (status == 2 && g_Hopscotch_arena == 1) {
+        g_Hopscotch_weapon = true;
+        for (new i = 1; i <= MaxClients; i++) {
+            if (IsValidClient(i)) {
+                DisableClientWeapons(i);
+                GiveClientWeapon(i, "tf_weapon_rocketlauncher", 0, true);
+            }
+        }
+    }
 }
 
 public Hopscotch_justEntered(client) {
@@ -18,7 +36,7 @@ public Hopscotch_justEntered(client) {
         if (g_Hopscotch_arena == 1) SetClientClass(client, "soldier");
         else SetClientClass(client, "heavy");
         DisableClientWeapons(client);
-        if (g_Hopscotch_arena == 1) GiveClientWeapon(client, "tf_weapon_rocketlauncher", 0, true);
+        if (g_Hopscotch_weapon && g_Hopscotch_arena == 1) GiveClientWeapon(client, "tf_weapon_rocketlauncher", 0, true);
         
         decl Float:vel[3];
         vel[0] = 0.0;
@@ -60,13 +78,14 @@ public Hopscotch_OnGameFrame() {
             decl Float:pos[3];
             GetClientAbsOrigin(i, pos);
             if (g_Hopscotch_arena == 0 && pos[1] > 2235.0  && g_Complete[i] == false ) SetStateClient(i, true, true);
+            if (g_Hopscotch_arena == 1 && pos[2] > -80.0 && pos[1] > 4270.0 && g_Complete[i] == false ) SetStateClient(i, true, true);
             if (g_Hopscotch_arena == 1) SetEntityHealth(i, 200);
         }
     }
 }
 
 public Action:Hopscotch_OnTakeDamageClient(victim, &attacker, &inflictor, &Float:damage, &damagetype) {
-    if (IsValidClient(victim) && status == 2) {
+    if (IsValidClient(attacker) && IsValidClient(victim) && victim != attacker && status == 2) {
         damage = 0.0;
     }
     return Plugin_Changed;

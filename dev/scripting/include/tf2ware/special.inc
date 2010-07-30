@@ -178,15 +178,5 @@ public Pizza_OnTouch(entity, client) {
 }
 
 SpecialPrecache() {
-    AddFileToDownloadsTable(SPECIAL_PIZZA);
-    AddFileToDownloadsTable("models/tf2ware/collectable.dx80.vtx");
-    AddFileToDownloadsTable("models/tf2ware/collectable.dx90.vtx");
-    AddFileToDownloadsTable("models/tf2ware/collectable.phy");
-    AddFileToDownloadsTable("models/tf2ware/collectable.sw.vtx");
-    AddFileToDownloadsTable("models/tf2ware/collectable.vvd");
-    AddFileToDownloadsTable("materials/tf2ware/models/collectable_crust.vmt");
-    AddFileToDownloadsTable("materials/tf2ware/models/collectable_crust.vtf");
-    AddFileToDownloadsTable("materials/tf2ware/models/collectable_slice.vmt");
-    AddFileToDownloadsTable("materials/tf2ware/models/collectable_slice.vtf");
     PrecacheModel(SPECIAL_PIZZA);
 }
