@@ -85,6 +85,8 @@ public Frogger_justEntered(client) {
         
         Frogger_Position(client);
         NoCollision(true);
+        
+        CreateTimer(0.1, Frogger_Ragdoll, client);
     }
 }
 
@@ -149,11 +151,11 @@ public Frogger_PlayerDeath(client) {
         SetEntProp(client, Prop_Send, "m_iObserverMode", 0);
         CreateTimer(3.0, Frogger_Respawn, client);
         
-        CreateTimer(0.1, Timer_Ragdoll, client);
+        CreateTimer(0.1, Frogger_Ragdoll, client);
     }
 }
 
-public Action:Timer_Ragdoll(Handle:timer, any:client) {
+public Action:Frogger_Ragdoll(Handle:timer, any:client) {
     if(IsValidClient(client)) {
         new rag = GetEntPropEnt(client, Prop_Send, "m_hRagdoll");
         if (rag > MaxClients && IsValidEntity(rag))
