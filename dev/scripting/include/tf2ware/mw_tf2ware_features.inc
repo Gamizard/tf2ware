@@ -119,11 +119,24 @@ stock CreateSprite(client) {
         if (IsPlayerAlive(client) && ((g_Points[client] > 0) || g_AlwaysShowPoints)) {
             
             // Sprite name
-            new points = g_Points[client];
-            if (points > 20) points = 20;
-            if (g_Winner[client] > 0) points = 99;
             decl String:sprite[256];
-            Format(sprite, sizeof(sprite), "materials/tf2ware/tf2ware_points%d.vmt", points);
+            decl String:scale[12];   
+            Format(scale, sizeof(scale), "0.2");
+
+            
+            if (status == 2 && StrEqual(minigame, "Ghostbusters")) {
+                if (g_Mission[client] == 0) Format(sprite, sizeof(sprite), "materials/tf2ware/medicsign.vmt");
+                if (g_Mission[client] == 1) {
+                    Format(sprite, sizeof(sprite), "materials/tf2ware/ghost.vmt");
+                    Format(scale, sizeof(scale), "0.5");
+                }
+            }
+            else {
+                new points = g_Points[client];
+                if (points > 20) points = 20;
+                if (g_Winner[client] > 0) points = 99;
+                Format(sprite, sizeof(sprite), "materials/tf2ware/tf2ware_points%d.vmt", points);
+            }
 
             new Float:vOrigin[3];
             GetClientAbsOrigin(client, vOrigin);
@@ -134,7 +147,7 @@ stock CreateSprite(client) {
             if (IsValidEntity(ent)) {            
                 DispatchKeyValue(ent, "classname", "env_sprite");
                 DispatchKeyValue(ent, "spawnflags", "1");
-                DispatchKeyValue(ent, "scale", "0.2");
+                DispatchKeyValue(ent, "scale", scale);
                 DispatchKeyValue(ent, "rendermode", "1");
                 DispatchKeyValue(ent, "rendercolor", "255 255 255");
                 DispatchKeyValue(ent, "model", sprite);

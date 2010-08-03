@@ -1,5 +1,9 @@
 // Ghostbusters module
 
+#define GHOSTBUSTERS_MEDIC 0
+#define GHOSTBUSTERS_SPY 1
+#define GHOSTBUSTERS_HEAVY 2
+
 new bool:Ghostbusters_pp[MAXPLAYERS+1] = false;
 new Ghostbusters_target[MAXPLAYERS+1] = 0;
 new Ghostbusters_hurt[MAXPLAYERS+1] = 0;
@@ -10,6 +14,8 @@ public Ghostbusters_Init() {
 }   
 
 public Ghostbusters_OnMapStart() {
+    AddFileToDownloadsTable("materials/tf2ware/ghost.vmt");
+    AddFileToDownloadsTable("materials/tf2ware/ghost.vtf");
 }
 
 public Ghostbusters_OnMinigame() {
@@ -17,13 +23,24 @@ public Ghostbusters_OnMinigame() {
     AddToForward(g_OnEndMinigame, INVALID_HANDLE, Ghostbusters_End);
     AddToForward(g_OnGameFrame_Minigames, INVALID_HANDLE, Ghostbusters_OnGameFrame);
     AddToForward(g_PlayerDeath, INVALID_HANDLE, Ghostbusters_PlayerDeath);
+    
+    SetConVarInt(FindConVar("mp_teams_unbalance_limit"), 0);
+    SetConVarInt(FindConVar("mp_autoteambalance"), 0);
+    
+    for (new i = 1; i <= MaxClients; i++) {
+        g_Mission[i] = GHOSTBUSTERS_SPY;
+    }
 
     new AllPlayers = GetClientCount(true);
     new target = 0;
     new attempts = 0;
-    new medics = GetActivePlayers() / 3;
+    new Float:fmedics = float(GetActivePlayers()) / 3.5;
+    new medics = RoundToCeil(fmedics);
+    new heavies = GetActivePlayers() / 6;
     if (medics <= 1) medics = 2;
-    if (medics >= 5) medics = 4;
+    if (medics >= 8) medics = 7;
+    if (heavies <= 0) heavies = 1;
+    if (heavies >= 4) heavies = 3;
     new medicclients[MAXPLAYERS+1];
     new spyclients[MAXPLAYERS+1];
     new heavyclients[MAXPLAYERS+1];
@@ -32,37 +49,39 @@ public Ghostbusters_OnMinigame() {
     for (new i = 1; i <= medics; i++) {
         attempts = 0;
         target = GetRandomInt(1, AllPlayers);
-        while (((!IsValidClient(target)) || GetClientTeam(target) < 2 || g_Spawned[target] == false || IsFakeClient(target) || g_Mission[target] > 0) && attempts <= 50) {
+        while (((!IsValidClient(target)) || GetClientTeam(target) < 2 || g_Spawned[target] == false || IsFakeClient(target) || g_Mission[target] != GHOSTBUSTERS_SPY) && attempts <= 50) {
             target = GetRandomInt(1, AllPlayers);
             attempts += 1;
         }
         if (attempts <= 50) {
-            g_Mission[target] = 1;
+            g_Mission[target] = GHOSTBUSTERS_MEDIC;
         }
     }
     
-    // Get the heavy!
-    attempts = 0;
-    target = GetRandomInt(1, AllPlayers);
-    while (((!IsValidClient(target)) || GetClientTeam(target) < 2 || g_Spawned[target] == false || g_Mission[target] > 0) && attempts <= 50) {
+    // Get the heavies!
+    for (new i = 1; i <= heavies; i++) {
+        attempts = 0;
         target = GetRandomInt(1, AllPlayers);
-        attempts += 1;
-    }
-    if (attempts <= 50) {
-        g_Mission[target] = 2;
+        while (((!IsValidClient(target)) || GetClientTeam(target) < 2 || g_Spawned[target] == false || g_Mission[target] != GHOSTBUSTERS_SPY) && attempts <= 50) {
+            target = GetRandomInt(1, AllPlayers);
+            attempts += 1;
+        }
+        if (attempts <= 50) {
+            g_Mission[target] = GHOSTBUSTERS_HEAVY;
+        }
     }
     
     for (new i = 1; i <= MaxClients; i++) {
         if (IsValidClient(i)) {
-            if (g_Mission[i] == 0) {
+            if (g_Mission[i] == GHOSTBUSTERS_SPY) {
                 SetStateClient(i, true);
                 spyclients[i-1] = i;
             }
-            if (g_Mission[i] == 1) {
+            if (g_Mission[i] == GHOSTBUSTERS_MEDIC) {
                 SetStateClient(i, false);
                 medicclients[i-1] = i;
             }
-            if (g_Mission[i] == 2) {
+            if (g_Mission[i] == GHOSTBUSTERS_HEAVY) {
                 SetStateClient(i, true);
                 heavyclients[i-1] = i;
             }
@@ -78,22 +97,38 @@ public Ghostbusters_OnMinigame() {
 }
 
 public Ghostbusters_End() {
+    SetConVarInt(FindConVar("mp_teams_unbalance_limit"), 1);
+    SetConVarInt(FindConVar("mp_autoteambalance"), 1);
+    
     for (new i = 1; i <= MaxClients; i++) {
         if (IsValidClient(i)) {
-            if (IsPlayerAlive(i)) {
-                SetEntityRenderMode(i, RENDER_NORMAL);
-                SetEntityRenderColor(i, 255, 255, 255, 255);
-            }
-            Ghostbusters_FixSlap(i);
+            SetEntityRenderMode(i, RENDER_NORMAL);
+            SetEntityRenderColor(i, 255, 255, 255, 255);
+            if (IsPlayerAlive(i)) Ghostbusters_FixSlap(i);
         }
-        //SDKUnhook(i, SDKHook_Touch, Ghostbusters_OnPlayerTouch);
     }
+    
 }
 
 new Ghostbusters_Pos[][] = {
+{-3051, 8439, 10, 0},
+{-2615, 8446, 10, 90},
+{-3028, 8548, 551, 90},
+{-1654, 9570, -180, -90},
+{-72, 9141, 234, -117},
+{-2863, 8525, 427, 90},
+{-2860, 9083, 11, -90},
+{-43, 9147, 11, -90},
+{-2865, 8747, 11, 0},
+{-2911, 8078, 235, 90},
+{-1040, 8563, 427, 180},
+{-2260, 8464, 235, 0},
+{-3203, 8823, 234, 0},
+{-841, 9064, 123, -44},
+{-420, 9178, 11, -90},
+{-771, 8759, 10, -180},
 {-1924, 9034, 426, -138},
 {127, 8604, 234, -180},
-{-72, 9141, 234, -117},
 {-619, 8552, 234, 90},
 {-859, 8904, 298, 32}
 };
@@ -107,12 +142,14 @@ public Ghostbusters_justEntered(client) {
         vel[1] = 0.0;
         vel[2] = 0.0;
 
-        if (g_Mission[client] == 0) {
+        if (g_Mission[client] == GHOSTBUSTERS_SPY) {
             if (GetClientTeam(client) == 2) ChangeClientTeamAlive(client, 3);
             SetClientClass(client, "spy");
             DisableClientWeapons(client);
             
             new id = Ghostbusters_GetGroupId(client, g_Mission[client]) -1;
+            
+            if (id >= sizeof(Ghostbusters_Pos)) id = 0;
         
             pos[0] = float(Ghostbusters_Pos[id][0]);
             pos[1] = float(Ghostbusters_Pos[id][1]);
@@ -125,13 +162,13 @@ public Ghostbusters_justEntered(client) {
             SetEntityRenderColor(client, 255, 255, 255, 60);
             SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", 280.0);
         }
-        if (g_Mission[client] == 1) {
+        if (g_Mission[client] == GHOSTBUSTERS_MEDIC) {
             if (GetClientTeam(client) == 3) ChangeClientTeamAlive(client, 3);
             SetClientClass(client, "medic");
             RemoveClientWeapons(client);
             GiveClientWeapon(client, "tf_weapon_medigun", 1, true);
             SetClientClass(client, "medic");
-            pos[0] = -1787.0 + float(Ghostbusters_GetGroupId(client, g_Mission[client]));
+            pos[0] = -1787.0;
             pos[1] = 8389.0;
             pos[2] = 10.0;
             ang[0] = 0.0;
@@ -139,7 +176,7 @@ public Ghostbusters_justEntered(client) {
             ang[2] = 0.0;
             SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", 300.0);
         }
-        if (g_Mission[client] == 2) {
+        if (g_Mission[client] == GHOSTBUSTERS_HEAVY) {
             if (GetClientTeam(client) == 3) ChangeClientTeamAlive(client, 2);
             SetClientClass(client, "heavy");
             RemoveClientWeapons(client);
@@ -172,9 +209,12 @@ Ghostbusters_GetGroupId(client, id) {
 public Ghostbusters_OnGameFrame() {
     for (new i = 1; i <= MaxClients; i++) {
         if (IsValidClient(i) && IsPlayerAlive(i)) {
-            if (g_Mission[i] == 1) {
+            if (GetClientTeam(i) == 2 && g_Mission[i] != GHOSTBUSTERS_HEAVY) ChangeClientTeamAlive(i, 3);
+            if (GetClientTeam(i) == 3 && g_Mission[i] == GHOSTBUSTERS_HEAVY) ChangeClientTeamAlive(i, 2);
+        
+            if (g_Mission[i] == GHOSTBUSTERS_MEDIC) {
                 new target = GetHealtarget(i);
-                if (IsValidClient(target) && IsPlayerAlive(target)) {
+                if (IsValidClient(target) && IsPlayerAlive(target) && g_Mission[target] != GHOSTBUSTERS_MEDIC) {
                     Ghostbusters_SetPP(i, true);
                     Ghostbusters_SetPP(target, true);
                     Ghostbusters_target[i] = target;
@@ -207,6 +247,7 @@ public Ghostbusters_OnGameFrame() {
 
 public Ghostbusters_PlayerDeath(client) {
     SetStateClient(client, false, true);
+    Ghostbusters_SetPP(client, false);
     
     CreateTimer(0.1, Ghostbusters_Check);
 }
@@ -221,30 +262,30 @@ public Action:Ghostbusters_Check(Handle:timer) {
     new bool:complete_spy = true;
     new winner = 0;
     for (new i = 1; i <= MaxClients; i++) {
-        if (IsValidClient(i) && (g_Mission[i] == 0) && g_Spawned[i] && IsPlayerAlive(i)) complete_medic = false;
-        if (IsValidClient(i) && (g_Mission[i] == 1) && g_Spawned[i] && IsPlayerAlive(i)) complete_spy = false;
+        if (IsValidClient(i) && (g_Mission[i] == GHOSTBUSTERS_SPY) && g_Spawned[i] && IsPlayerAlive(i)) complete_medic = false;
+        if (IsValidClient(i) && (g_Mission[i] == GHOSTBUSTERS_MEDIC) && g_Spawned[i] && IsPlayerAlive(i)) complete_spy = false;
     }
     
-    if (complete_spy) winner == 2;
-    if (complete_medic) winner == 1;
+    if (complete_spy) winner = 2;
+    if (complete_medic) winner = 1;
     if (winner > 0) {
         for (new i = 1; i <= MaxClients; i++) {
             if (winner == 1) {
-                if (IsValidClient(i) && (g_Mission[i] == 1) && (IsPlayerAlive(i)) SetStateClient(i, true, true);
-                if (IsValidClient(i) && (g_Mission[i] != 1)) {
+                if (IsValidClient(i) && (g_Mission[i] == GHOSTBUSTERS_MEDIC) && IsPlayerAlive(i)) SetStateClient(i, true, true);
+                if (IsValidClient(i) && (g_Mission[i] != GHOSTBUSTERS_MEDIC)) {
                     SetStateClient(i, false, true);
                     if (IsPlayerAlive(i)) ForcePlayerSuicide(i);
                 }
             }
             if (winner == 2) {
-                if (IsValidClient(i) && (g_Mission[i] != 1) && (IsPlayerAlive(i)) SetStateClient(i, true, true);
-                if (IsValidClient(i) && (g_Mission[i] == 1)) {
+                if (IsValidClient(i) && (g_Mission[i] != GHOSTBUSTERS_MEDIC) && IsPlayerAlive(i)) SetStateClient(i, true, true);
+                if (IsValidClient(i) && (g_Mission[i] == GHOSTBUSTERS_MEDIC)) {
                     SetStateClient(i, false, true);
                     if (IsPlayerAlive(i)) ForcePlayerSuicide(i);
                 }
             }
         }
-        CreateTimer(2.0, Ghostbusters_TEnd);
+        CreateTimer(3.0, Ghostbusters_TEnd);
     }
 }
 
@@ -258,9 +299,9 @@ public Action:Ghostbusters_TEnd(Handle:timer) {
 Ghostbusters_Slap(client) {
     decl Float:fEye[3];
     GetClientEyeAngles(client, fEye);
-    fEye[0] += GetRandomFloat(-10.0,10.0) * 0.15;
-    fEye[1] += GetRandomFloat(-10.0,10.0) * 0.15;
-    fEye[2] += GetRandomFloat(-10.0,10.0) * 0.15;
+    fEye[0] += GetRandomFloat(-10.0,10.0) * 0.1;
+    fEye[1] += GetRandomFloat(-10.0,10.0) * 0.1;
+    fEye[2] += GetRandomFloat(-10.0,10.0) * 0.1;
     TeleportEntity(client, NULL_VECTOR, fEye, NULL_VECTOR);
 }
 
@@ -281,7 +322,7 @@ Ghostbusters_SetPP(client, bool:input) {
         if (input == false && Ghostbusters_pp[client] == true) {
             TF2_SetPlayerPowerPlay(client, false);
             Ghostbusters_pp[client] = false;
-            if (g_Mission[client] == 0) SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", 280.0);
+            if (g_Mission[client] == GHOSTBUSTERS_SPY) SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", 280.0);
             else SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", 300.0);
             Ghostbusters_FixSlap(client);
         }

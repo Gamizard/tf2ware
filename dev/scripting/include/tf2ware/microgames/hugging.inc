@@ -119,7 +119,7 @@ public Hugging_justEntered(client) {
 
 public Hugging_OnPlayerTouch(entity, other) {
     if (status != 2) return;
-    if (!StrEqual(minigame, "Ghostbusters")) return;
+    if (!StrEqual(minigame, "Hugging")) return;
 
     new String:classname[64];
     new String:classname2[64];

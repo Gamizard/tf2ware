@@ -32,7 +32,7 @@ public SniperTarget_OnMinigame() {
 }
 
 public SniperTarget_TimerMinigame(timer) {
-    if (timer == 5) {
+    if (timer == 6) {
         var_sniper_target = CreateEntityByName("prop_physics");
         
         if (IsValidEdict(var_sniper_target)) {                      
@@ -49,6 +49,9 @@ public SniperTarget_TimerMinigame(timer) {
             
             Sniper_SetPos();
         }
+    }
+    if (timer == 2) {
+        g_Target_Ready = false;
     }
 }
 
@@ -87,7 +90,11 @@ Sniper_SetPos() {
 
 public SniperTarget_OnGameFrame() {
     if (g_Target_Ready && g_Target_Pos < 100) {
-        g_Target_Pos += 2;
+        g_Target_Pos += 6;
+        Sniper_SetPos();
+    }
+    if (g_Target_Ready == false && g_Target_Pos > 0) {
+        g_Target_Pos -= 6;
         Sniper_SetPos();
     }
 }
