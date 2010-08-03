@@ -19,6 +19,7 @@ public Hugging_OnMinigame() {
 
     AddToForward(g_justEntered, INVALID_HANDLE, Hugging_justEntered);
     AddToForward(g_OnEndMinigame, INVALID_HANDLE, Hugging_End);
+    AddToForward(g_PlayerDeath, INVALID_HANDLE, Hugging_PlayerDeath);
 
     new AllPlayers = GetClientCount(true);
     new target = 0;
@@ -117,7 +118,8 @@ public Hugging_justEntered(client) {
 }
 
 public Hugging_OnPlayerTouch(entity, other) {
-    if (!StrEqual(minigame, "Hugging")) return;
+    if (status != 2) return;
+    if (!StrEqual(minigame, "Ghostbusters")) return;
 
     new String:classname[64];
     new String:classname2[64];
@@ -131,18 +133,29 @@ public Hugging_OnPlayerTouch(entity, other) {
             attacker = other;
             victim = entity;
         }
-        SetStateClient(victim, false, true);
         ForcePlayerSuicide(victim);
         EmitSoundToAll(SOUND_HEAVY_KISS, attacker);
         EmitSoundToClient(victim, SOUND_HEAVY_KISS);
-        new bool:complete = true;
+    }
+}
+
+public Hugging_PlayerDeath(client) {
+    SetStateClient(client, false, true);
+    
+    CreateTimer(0.1, Hugging_Check);
+}
+
+public Action:Hugging_Check(Handle:timer) {
+    if (status != 2) return;
+    if (!StrEqual(minigame, "Ghostbusters")) return;
+
+    new bool:complete = true;
+    for (new i = 1; i <= MaxClients; i++) {
+        if (IsValidClient(i) && (g_Mission[i] == 0) && g_Spawned[i] && IsPlayerAlive(i)) complete = false;
+    }
+    if (complete) {
         for (new i = 1; i <= MaxClients; i++) {
-            if (IsValidClient(i) && (g_Mission[i] == 0) && g_Spawned[i] && IsPlayerAlive(i)) complete = false;
-        }
-        if (complete) {
-            for (new i = 1; i <= MaxClients; i++) {
-                if (IsValidClient(i) && (g_Mission[i] == 1)) SetStateClient(i, true, true);
-            }
+            if (IsValidClient(i) && (g_Mission[i] == 1)) SetStateClient(i, true, true);
         }
     }
 }

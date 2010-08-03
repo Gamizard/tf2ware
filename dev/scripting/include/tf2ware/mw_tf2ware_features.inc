@@ -116,7 +116,7 @@ stock CreateAllSprites() {
 stock CreateSprite(client) {
     if (IsValidClient(client) && (SpecialRound != 4)) {
         DestroySprite(client);
-        if (IsPlayerAlive(client) && g_Points[client] > 0) {
+        if (IsPlayerAlive(client) && ((g_Points[client] > 0) || g_AlwaysShowPoints)) {
             
             // Sprite name
             new points = g_Points[client];
@@ -351,7 +351,7 @@ public Action:HandlePlayerItems(client)
             else
             if(IsValidEdict(entity) && GetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity") == client)
             {
-                SetEntityRenderMode(entity, RENDER_TRANSCOLOR);
+                SetEntityRenderMode(entity, RENDER_NORMAL);
                 SetEntityRenderColor(entity, 255, 255, 255, 255);
                 SetVariantString("");
                 AcceptEntityInput(client, "EnableShadow");
@@ -419,4 +419,21 @@ stock ChangeClientTeamAlive(client, team){
     SetEntProp(client, Prop_Send, "m_lifeState", 2);
     ChangeClientTeam(client, team);
     SetEntProp(client, Prop_Send, "m_lifeState", 0);
+}
+
+
+public GetHealtarget(client) {
+    if(!IsValidClient(client) || TF2_GetPlayerClass(client) != TFClass_Medic)
+        return 0;
+    
+    new weapon = GetPlayerWeaponSlot(client, 1);
+    if (weapon == -1)
+        return 0;
+        
+    new String:classname[64];
+    GetEdictClassname(weapon, classname, 64);
+    if(!StrEqual(classname, "tf_weapon_medigun"))
+        return 0;
+    
+    return GetEntDataEnt2(weapon, FindSendPropInfo("CWeaponMedigun", "m_hHealingTarget"));
 }

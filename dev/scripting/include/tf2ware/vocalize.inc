@@ -12,6 +12,7 @@ public Action:Timer_Vocalize(Handle:hTimer, any:pack) {
         ReadPackString(pack, id, sizeof(id));
         new Float:mindelay = ReadPackFloat(pack);
         new Float:maxdelay = ReadPackFloat(pack);
+        new level = ReadPackCell(pack);
         
         new clients[MAXPLAYERS+1];
         new i=0;
@@ -44,9 +45,9 @@ public Action:Timer_Vocalize(Handle:hTimer, any:pack) {
             new client = RollFromValid(clients);
             // RollFromValid returns -1 if there are no clients to choose from
             if (client != -1) {
-                EmitSoundToAll(buffer, client);
+                EmitSoundToAll(buffer, client, SNDCHAN_AUTO, level);
             }        
-            AddRandVocalization(id, clients, mindelay, maxdelay);
+            AddRandVocalization(id, clients, mindelay, maxdelay, level);
         }
     }
     return Plugin_Stop;
@@ -78,7 +79,7 @@ CleanupAllVocalizations() {
     CloseHandle(vTimers[id]);
 }*/
 
-AddRandVocalization(String:strid[], clients[MAXPLAYERS+1], Float:mindelay=4.0, Float:maxdelay=8.0) {
+AddRandVocalization(String:strid[], clients[MAXPLAYERS+1], Float:mindelay=4.0, Float:maxdelay=8.0, level = SNDLEVEL_NORMAL) {
     new Float:rand = GetRandomFloat(mindelay, maxdelay);
     new Handle:pack = CreateDataPack();
     vTimers[g_ivTimers] = CreateDataTimer(rand, Timer_Vocalize, pack);
@@ -86,6 +87,7 @@ AddRandVocalization(String:strid[], clients[MAXPLAYERS+1], Float:mindelay=4.0, F
     WritePackString(pack, strid);
     WritePackFloat(pack, mindelay);
     WritePackFloat(pack, maxdelay);
+    WritePackCell(pack, level);
     for (new i=0; i<sizeof(clients); i++) {
         if (IsValidClient(clients[i])) {
             WritePackCell(pack, clients[i]);

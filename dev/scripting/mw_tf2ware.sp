@@ -17,7 +17,7 @@
 
 #define MAX_MINIGAMES 40
 
-#define PLUGIN_VERSION "0.9.0-17"
+#define PLUGIN_VERSION "0.9.1-17"
 
 /* "New" Music
 #define MUSIC_START "imgay/tf2ware/tf2ware_intro.mp3"
@@ -91,6 +91,7 @@ new bool:g_enabled = false;
 new bool:g_first = false;
 new bool:g_waiting = true;
 new bool:g_Achievements = false;
+new bool:g_AlwaysShowPoints = false;
 
 // Ints
 new g_Mission[MAXPLAYERS+1];
@@ -157,6 +158,7 @@ new Handle:g_PlayerDeath;
 #include tf2ware\microgames\colortext.inc
 #include tf2ware\microgames\frogger.inc
 #include tf2ware\microgames\goomba.inc
+#include tf2ware\microgames\ghostbusters.inc
 
 #include tf2ware\mw_tf2ware_features.inc
 #include tf2ware\special.inc
@@ -260,8 +262,8 @@ public OnMapStart() {
         // Hooks
         HookConVarChange(ww_enable,StartMinigame_cvar);
         HookEvent("post_inventory_application", EventInventoryApplication,  EventHookMode_Post);
-        HookEvent("player_death", Player_Death);
-        HookEvent("player_team", Player_Team);
+        HookEvent("player_death", Player_Death, EventHookMode_Post);
+        HookEvent("player_team", Player_Team, EventHookMode_Post);
         HookEvent("teamplay_round_start", Event_Roundstart, EventHookMode_PostNoCopy);
         HookEvent("teamplay_game_over", Event_Roundend, EventHookMode_PostNoCopy);
         HookEvent("teamplay_round_stalemate", Event_Roundend, EventHookMode_PostNoCopy);
@@ -315,6 +317,7 @@ public OnMapStart() {
         RegMinigame("ColorText", ColorText_OnMinigame);
         RegMinigame("Frogger", Frogger_OnMinigame, Frogger_Init);
         RegMinigame("Goomba", Goomba_OnMinigame);
+        RegMinigame("Ghostbusters", Ghostbusters_OnMinigame, Ghostbusters_Init);
 
         // CHEATS
         HookConVarChange(FindConVar("sv_cheats"), OnConVarChanged_SvCheats);
@@ -722,6 +725,9 @@ public Action:Game_Start(Handle:hTimer) {
         // Set everyone's state to fail
         SetStateAll(false);
         
+        // Don't allow no points by default
+        g_AlwaysShowPoints = false;
+        
         // The 'x did y first' is untriggered
         g_first = false;
         
@@ -792,6 +798,8 @@ public Action:EndGame(Handle:hTimer) {
     if (status == 2) {
         Call_StartForward(g_OnAlmostEnd);
         Call_Finish();
+        
+        g_AlwaysShowPoints = false;
 
         if (SpecialRound == 6) g_attack = true;
         else g_attack = false;
