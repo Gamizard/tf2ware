@@ -4,6 +4,8 @@
 #define GHOSTBUSTERS_SPY 1
 #define GHOSTBUSTERS_HEAVY 2
 
+#define MUSIC_GHOSTB "imgay/tf2ware/minigame_25_alt.mp3"
+
 new bool:Ghostbusters_pp[MAXPLAYERS+1] = false;
 new Ghostbusters_target[MAXPLAYERS+1] = 0;
 new Ghostbusters_hurt[MAXPLAYERS+1] = 0;
@@ -14,8 +16,7 @@ public Ghostbusters_Init() {
 }   
 
 public Ghostbusters_OnMapStart() {
-    AddFileToDownloadsTable("materials/tf2ware/ghost.vmt");
-    AddFileToDownloadsTable("materials/tf2ware/ghost.vtf");
+    precacheSound(MUSIC_GHOSTB);
 }
 
 public Ghostbusters_OnMinigame() {
@@ -102,16 +103,19 @@ public Ghostbusters_End() {
     
     for (new i = 1; i <= MaxClients; i++) {
         if (IsValidClient(i)) {
+            StopSound(i, SND_CHANNEL_SPECIFIC, MUSIC_GHOSTB);
             SetEntityRenderMode(i, RENDER_NORMAL);
             SetEntityRenderColor(i, 255, 255, 255, 255);
+            SDKUnhook(i, SDKHook_OnTakeDamage, Ghostbusters_Hurt);
             if (IsPlayerAlive(i)) Ghostbusters_FixSlap(i);
         }
     }
     
+    RespawnAll(true, false);
 }
 
 new Ghostbusters_Pos[][] = {
-{-3051, 8439, 10, 0},
+{-3051, 8439, -20, 0},
 {-2615, 8446, 10, 90},
 {-3028, 8548, 551, 90},
 {-1654, 9570, -180, -90},
@@ -189,11 +193,12 @@ public Ghostbusters_justEntered(client) {
             ang[1] = 180.0;
             ang[2] = 0.0;
             SetEntityRenderColor(client, 0, 255, 0, 255);
-            SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", 150.0);
+            SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", 220.0);
         }
         TeleportEntity(client, pos, ang, vel);
         Ghostbusters_pp[client] = false;
         Ghostbusters_target[client] = 0;
+        SDKHook(client, SDKHook_OnTakeDamage, Ghostbusters_Hurt);
     }
 }
 
@@ -227,7 +232,10 @@ public Ghostbusters_OnGameFrame() {
                         new target_newhealth = target_health - 10;
                         
                         if (target_newhealth > 0) SetEntityHealth(target, target_newhealth);
-                        else ForcePlayerSuicide(target);
+                        else {
+                            Ghostbusters_SetPP(target, false);
+                            ForcePlayerSuicide(target);
+                        }
                         Ghostbusters_hurt[target] = 6;
                     }
                     else Ghostbusters_hurt[target] -= 1;
@@ -317,7 +325,7 @@ Ghostbusters_SetPP(client, bool:input) {
         if (input == true && Ghostbusters_pp[client] == false) {
             TF2_SetPlayerPowerPlay(client, true);
             Ghostbusters_pp[client] = true;
-            SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", 400.0);
+            SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", 500.0);
         }
         if (input == false && Ghostbusters_pp[client] == true) {
             TF2_SetPlayerPowerPlay(client, false);
@@ -327,4 +335,12 @@ Ghostbusters_SetPP(client, bool:input) {
             Ghostbusters_FixSlap(client);
         }
     }
+}
+
+public Action:Ghostbusters_Hurt(victim, &attacker, &inflictor, &Float:damage, &damagetype) {
+    if (IsValidClient(victim) && IsValidClient(attacker) && g_Mission[victim] == GHOSTBUSTERS_SPY && g_Mission[attacker] == GHOSTBUSTERS_HEAVY) {
+        damage = 0.0;
+        return Plugin_Changed;
+    }
+    return Plugin_Continue;
 }

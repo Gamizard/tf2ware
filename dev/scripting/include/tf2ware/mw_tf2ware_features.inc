@@ -125,10 +125,14 @@ stock CreateSprite(client) {
 
             
             if (status == 2 && StrEqual(minigame, "Ghostbusters")) {
-                if (g_Mission[client] == 0) Format(sprite, sizeof(sprite), "materials/tf2ware/medicsign.vmt");
+                if (g_Mission[client] == 0) Format(sprite, sizeof(sprite), "materials/tf2ware/medicsign2.vmt");
                 if (g_Mission[client] == 1) {
-                    Format(sprite, sizeof(sprite), "materials/tf2ware/ghost.vmt");
+                    Format(sprite, sizeof(sprite), "materials/tf2ware/ghost2.vmt");
                     Format(scale, sizeof(scale), "0.5");
+                }
+                if (g_Mission[client] == 2) {
+                    Format(sprite, sizeof(sprite), "materials/tf2ware/frankenstein.vmt");
+                    Format(scale, sizeof(scale), "0.3");
                 }
             }
             else {

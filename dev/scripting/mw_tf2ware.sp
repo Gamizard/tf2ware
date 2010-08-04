@@ -717,6 +717,7 @@ public Action:Game_Start(Handle:hTimer) {
         // Play the microgame's music
         new String:sound[512];
         Format(sound, sizeof(sound), "imgay/tf2ware/minigame_%d.mp3", iMinigame);
+        if (StrEqual(minigame, "Ghostbusters") && GetRandomInt(1,3) == 1) Format(sound, sizeof(sound), "imgay/tf2ware/minigame_%d_alt.mp3", iMinigame);
         new channel = SNDCHAN_AUTO;
         if (GetMinigameConfNum(minigame, "dynamic", 0)) channel = SND_CHANNEL_SPECIFIC;
         if (GetConVarBool(ww_music)) EmitSoundToClient(1, sound, SOUND_FROM_PLAYER, channel, SNDLEVEL_NORMAL, SND_NOFLAGS, SNDVOL_NORMAL,GetSoundMultiplier());
