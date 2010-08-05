@@ -713,6 +713,11 @@ public Action:Game_Start(Handle:hTimer) {
         // Spawn everyone so they can participate
         RespawnAll();
         if (SpecialRound == 4) NoCollision(true);
+        if (SpecialRound == 8) {
+            for (new i = 1; i <= MaxClients; i++) {
+                if (IsValidClient(i) && !IsFakeClient(i)) ClientCommand(i, "wait; thirdperson");
+            }
+        }
         
         // Play the microgame's music
         new String:sound[512];
@@ -801,13 +806,6 @@ public Action:EndGame(Handle:hTimer) {
         Call_Finish();
         
         g_AlwaysShowPoints = false;
-
-        if (SpecialRound == 6) g_attack = true;
-        else g_attack = false;
-        status = 0;
-        
-        if (SpecialRound == 4) NoCollision(true);
-        else NoCollision(false);
         
         if (GetMinigameConfNum(minigame, "endrespawn", 0) > 0) RespawnAll(true, false);
         
@@ -818,6 +816,19 @@ public Action:EndGame(Handle:hTimer) {
         
         CleanupAllVocalizations();
         RespawnAll();
+        
+        if (SpecialRound == 6) g_attack = true;
+        else g_attack = false;
+        status = 0;
+        
+        if (SpecialRound == 4) NoCollision(true);
+        else NoCollision(false);
+        
+        if (SpecialRound == 8) {
+            for (new i = 1; i <= MaxClients; i++) {
+                if (IsValidClient(i) && !IsFakeClient(i)) ClientCommand(i, "wait; thirdperson");
+            }
+        }
         
         currentSpeed = GetConVarInt(ww_speed);
         ServerCommand("host_timescale %f", GetHostMultiplier(1.0));

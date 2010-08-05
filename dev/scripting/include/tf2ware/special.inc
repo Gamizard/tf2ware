@@ -6,10 +6,11 @@
     5:      Worst is Best   The person with the least points win
     6:      Bonk            Everyone gets a bat to push people with    
     7:      Pizza Plague    Collect pizza from losers for points    
+    8:      Thirdperson     Forced into thirdperson!    
 
 */
 
-#define SPECIAL_TOTAL 7
+#define SPECIAL_TOTAL 8
 
 #define SPECIAL_PIZZA "models/tf2ware/collectable.mdl"
 
@@ -17,8 +18,8 @@ new bool:Special_TwoBosses = false;
 new g_Special_Pizza[MAXPLAYERS+1] = -1;
 new bool:g_Special_Pizza_d[MAXPLAYERS+1] = false;
 
-new String:var_special_name[][] = {"SUPER SPEED", "NO TOUCHING", "x2 BOSS BATTLE", "SINGLEPLAYER", "LEAST IS BEST", "BONK", "PIZZA PLAGUE"};
-new String:var_special_desc[][] = {"The Game is Faster Than Usual!!", "Don't Touch Any Enemy Players or You'll Lose!!", "Two Boss Battles!!", "You're Playing Alone...?", "The Player With The Least Points Win!!", "Push Players With Your Bat!!", "Only dropped Pizza from Losers give Points!!"};
+new String:var_special_name[][] = {"SUPER SPEED", "NO TOUCHING", "x2 BOSS BATTLE", "SINGLEPLAYER", "LEAST IS BEST", "BONK", "PIZZA PLAGUE", "THIRDPERSON"};
+new String:var_special_desc[][] = {"The Game is Faster Than Usual!!", "Don't Touch Any Enemy Players or You'll Lose!!", "Two Boss Battles!!", "You're Playing Alone...?", "The Player With The Least Points Win!!", "Push Players With Your Bat!!", "Only dropped Pizza from Losers give Points!!", "Everything Is At A New Perspective!!"};
 
 
 public Special_NoTouch(entity, other) {
@@ -91,6 +92,11 @@ ResetSpecialRoundEffect() {
             g_Special_Pizza[i] = -1;
         }
     }
+    if (SpecialRound == 8) {
+        for (new i = 1; i <= MaxClients; i++) {
+            if (IsValidClient(i) && !IsFakeClient(i)) ClientCommand(i, "wait; firstperson");
+        }
+    }
 }
 
 AddSpecialRoundEffect() {
@@ -117,6 +123,11 @@ AddSpecialRoundEffect() {
     if (SpecialRound == 7) {
         for (new i = 1; i <= MaxClients; i++) {
             g_Special_Pizza[i] = -1;
+        }
+    }
+    if (SpecialRound == 8) {
+        for (new i = 1; i <= MaxClients; i++) {
+            if (IsValidClient(i) && !IsFakeClient(i)) ClientCommand(i, "wait; thirdperson");
         }
     }
 }

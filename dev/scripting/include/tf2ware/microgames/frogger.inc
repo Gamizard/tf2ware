@@ -64,7 +64,7 @@ public Frogger_End() {
             AcceptEntityInput(i, "SetCustomModel");
             SetVariantInt(0);
             AcceptEntityInput(i, "SetCustomModelRotates");
-            //SetEntProp(i, Prop_Send, "m_iObserverMode", 0);
+            ClientCommand(i, "wait; firstperson");
         }
     }
 }
@@ -139,6 +139,7 @@ Frogger_Position(client) {
     }
 
     TeleportEntity(client, pos, ang, vel);
+    ClientCommand(client, "wait; thirdperson");
 
 }
 

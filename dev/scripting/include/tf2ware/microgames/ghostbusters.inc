@@ -106,7 +106,7 @@ public Ghostbusters_End() {
             StopSound(i, SND_CHANNEL_SPECIFIC, MUSIC_GHOSTB);
             SetEntityRenderMode(i, RENDER_NORMAL);
             SetEntityRenderColor(i, 255, 255, 255, 255);
-            SDKUnhook(i, SDKHook_OnTakeDamage, Ghostbusters_Hurt);
+            SDKUnhook(i, SDKHook_OnTakeDamage, Ghostbusters_Damage);
             if (IsPlayerAlive(i)) Ghostbusters_FixSlap(i);
         }
     }
@@ -198,7 +198,7 @@ public Ghostbusters_justEntered(client) {
         TeleportEntity(client, pos, ang, vel);
         Ghostbusters_pp[client] = false;
         Ghostbusters_target[client] = 0;
-        SDKHook(client, SDKHook_OnTakeDamage, Ghostbusters_Hurt);
+        SDKHook(client, SDKHook_OnTakeDamage, Ghostbusters_Damage);
     }
 }
 
@@ -337,7 +337,7 @@ Ghostbusters_SetPP(client, bool:input) {
     }
 }
 
-public Action:Ghostbusters_Hurt(victim, &attacker, &inflictor, &Float:damage, &damagetype) {
+public Action:Ghostbusters_Damage(victim, &attacker, &inflictor, &Float:damage, &damagetype) {
     if (IsValidClient(victim) && IsValidClient(attacker) && g_Mission[victim] == GHOSTBUSTERS_SPY && g_Mission[attacker] == GHOSTBUSTERS_HEAVY) {
         damage = 0.0;
         return Plugin_Changed;
