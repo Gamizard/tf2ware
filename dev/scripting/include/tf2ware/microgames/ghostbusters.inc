@@ -277,8 +277,10 @@ public Action:Ghostbusters_Check(Handle:timer) {
     if (complete_spy) winner = 2;
     if (complete_medic) winner = 1;
     if (winner > 0) {
+        Ghostbusters_ended = true;
         for (new i = 1; i <= MaxClients; i++) {
             if (winner == 1) {
+                CPrintToChatAll("{green}All ghost spies are dead... {lightgreen}surviving medics win{green}!");
                 if (IsValidClient(i) && (g_Mission[i] == GHOSTBUSTERS_MEDIC) && IsPlayerAlive(i)) SetStateClient(i, true, true);
                 if (IsValidClient(i) && (g_Mission[i] != GHOSTBUSTERS_MEDIC)) {
                     SetStateClient(i, false, true);
@@ -286,6 +288,7 @@ public Action:Ghostbusters_Check(Handle:timer) {
                 }
             }
             if (winner == 2) {
+                CPrintToChatAll("{green}All medics are dead... {lightgreen}surviving undeads win{green}!");
                 if (IsValidClient(i) && (g_Mission[i] != GHOSTBUSTERS_MEDIC) && IsPlayerAlive(i)) SetStateClient(i, true, true);
                 if (IsValidClient(i) && (g_Mission[i] == GHOSTBUSTERS_MEDIC)) {
                     SetStateClient(i, false, true);
