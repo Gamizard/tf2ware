@@ -799,30 +799,31 @@ public Action:CountDown_Timer(Handle:hTimer) {
 }
 
 public Action:EndGame(Handle:hTimer) {
-    if (GetConVarBool(ww_log)) LogMessage("Microgame %s, (id:%d) ended!", minigame, iMinigame);
     microgametimer = INVALID_HANDLE;
     if (status == 2) {
+        if (GetConVarBool(ww_log)) LogMessage("Microgame %s, (id:%d) ended!", minigame, iMinigame);
         Call_StartForward(g_OnAlmostEnd);
         Call_Finish();
         
         g_AlwaysShowPoints = false;
+        SetCameraState(false);
+        status = 0;
+        
+        if (SpecialRound == 6) g_attack = true;
+        else g_attack = false;
+        
+        if (SpecialRound == 4) NoCollision(true);
+        else NoCollision(false);
         
         if (GetMinigameConfNum(minigame, "endrespawn", 0) > 0) RespawnAll(true, false);
-        
-        SetCameraState(false);
+        else RespawnAll();
         
         Call_StartForward(g_OnEndMinigame);
         Call_Finish();
         
         CleanupAllVocalizations();
-        RespawnAll();
         
-        if (SpecialRound == 6) g_attack = true;
-        else g_attack = false;
-        status = 0;
         
-        if (SpecialRound == 4) NoCollision(true);
-        else NoCollision(false);
         
         if (SpecialRound == 8) {
             for (new i = 1; i <= MaxClients; i++) {
