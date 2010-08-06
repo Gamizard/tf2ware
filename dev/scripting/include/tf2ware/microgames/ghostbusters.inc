@@ -263,7 +263,7 @@ public Ghostbusters_PlayerDeath(client) {
 public Action:Ghostbusters_Check(Handle:timer) {
     if (status != 2) return;
     if (!StrEqual(minigame, "Ghostbusters")) return;
-    if (Ghostbusters_ended) return;
+    if (Ghostbusters_ended == true) return;
 
     // Did the medics win?
     new bool:complete_medic = true;
@@ -278,9 +278,10 @@ public Action:Ghostbusters_Check(Handle:timer) {
     if (complete_medic) winner = 1;
     if (winner > 0) {
         Ghostbusters_ended = true;
+        if (winner == 1) CPrintToChatAll("{lightgreen}All ghost spies are dead... {green}surviving medics win!");
+        if (winner == 2) CPrintToChatAll("{lightgreen}All medics are dead... {green}surviving undeads win!");
         for (new i = 1; i <= MaxClients; i++) {
             if (winner == 1) {
-                CPrintToChatAll("{green}All ghost spies are dead... {lightgreen}surviving medics win{green}!");
                 if (IsValidClient(i) && (g_Mission[i] == GHOSTBUSTERS_MEDIC) && IsPlayerAlive(i)) SetStateClient(i, true, true);
                 if (IsValidClient(i) && (g_Mission[i] != GHOSTBUSTERS_MEDIC)) {
                     SetStateClient(i, false, true);
@@ -288,7 +289,6 @@ public Action:Ghostbusters_Check(Handle:timer) {
                 }
             }
             if (winner == 2) {
-                CPrintToChatAll("{green}All medics are dead... {lightgreen}surviving undeads win{green}!");
                 if (IsValidClient(i) && (g_Mission[i] != GHOSTBUSTERS_MEDIC) && IsPlayerAlive(i)) SetStateClient(i, true, true);
                 if (IsValidClient(i) && (g_Mission[i] == GHOSTBUSTERS_MEDIC)) {
                     SetStateClient(i, false, true);
