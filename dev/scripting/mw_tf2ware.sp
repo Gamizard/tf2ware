@@ -394,7 +394,7 @@ public OnMapStart() {
         g_ExplosionSprite = PrecacheModel("sprites/sprite_fire01.vmt");
 
         PrecacheSound( "ambient/explosions/explode_8.wav", true);
-        SetConVarInt(ww_speed, 1);
+        SetConVarFloat(ww_speed, 1.0);
         ResetScores();
         bossBattle = 0;
         Roundstarts = 0;
@@ -936,8 +936,8 @@ public Action:Speedup_timer(Handle:hTimer) {
         if (bossBattle == 1) {
         
             // Set the Speed. If special round, we want it to be a tad faster ;)
-            if (SpecialRound == 1) SetConVarInt(ww_speed, 3);
-            else SetConVarInt(ww_speed, 1);
+            if (SpecialRound == 1) SetConVarFloat(ww_speed, 3.0);
+            else SetConVarFloat(ww_speed, 1.0);
             currentSpeed = GetConVarFloat(ww_speed);
             ServerCommand("host_timescale %f", GetHostMultiplier(1.0));
             ServerCommand("phys_timescale %f", GetHostMultiplier(1.0));
@@ -962,7 +962,7 @@ public Action:Speedup_timer(Handle:hTimer) {
                 }
             }
             UpdateHud(GetSpeedMultiplier(MUSIC_SPEEDUP_LEN));
-            SetConVarInt(ww_speed, GetConVarInt(ww_speed) + 1);
+            SetConVarFloat(ww_speed, GetConVarFloat(ww_speed) + 1.0);
             CreateTimer(GetSpeedMultiplier(MUSIC_SPEEDUP_LEN), StartMinigame_timer2);
         }
         CreateAllSprites();
@@ -974,7 +974,7 @@ public Action:Speedup_timer(Handle:hTimer) {
 public Action:Victory_timer(Handle:hTimer) {
     if ((status == 4) && (bossBattle > 0)) {
         bossBattle = 0;
-        SetConVarInt(ww_speed, 1);
+        SetConVarFloat(ww_speed, 1.0);
         currentSpeed = GetConVarFloat(ww_speed);
         
         CreateTimer(GetSpeedMultiplier(8.17), Restartall_timer);
@@ -1045,8 +1045,8 @@ public Action:Restartall_timer(Handle:hTimer) {
         DestroyAllSprites();
         
         // Set the game speed
-        if (SpecialRound == 1) SetConVarInt(ww_speed, 3);
-        else SetConVarInt(ww_speed, 1);
+        if (SpecialRound == 1) SetConVarFloat(ww_speed, 3.0);
+        else SetConVarFloat(ww_speed, 1.0);
         
         if (SpecialRound > 0) AddSpecialRoundEffect();
         
