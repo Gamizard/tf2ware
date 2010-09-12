@@ -102,7 +102,7 @@ new g_Winner[MAXPLAYERS+1];
 new g_Minipoints[MAXPLAYERS+1];
 new g_Country[MAXPLAYERS+1];
 new g_Sprites[MAXPLAYERS+1];
-new currentSpeed;
+new Float:currentSpeed;
 new iMinigame;
 new status;
 new randommini;
@@ -196,7 +196,7 @@ public OnPluginStart() {
      // ConVars
     ww_enable = CreateConVar("ww_enable", "0", "Enables/Disables TF2 Ware.", FCVAR_PLUGIN);
     ww_force = CreateConVar("ww_force", "0", "Force a certain minigame (0 to not force).", FCVAR_PLUGIN);
-    ww_speed = CreateConVar("ww_speed", "1", "Speed level.", FCVAR_PLUGIN);
+    ww_speed = CreateConVar("ww_speed", "1.0", "Speed level.", FCVAR_PLUGIN);
     ww_music = CreateConVar("ww_music_fix", "0", "Apply music fix? Should only be on for localhosts during testing", FCVAR_PLUGIN);
     ww_log = CreateConVar("ww_log", "0", "Log server events?", FCVAR_PLUGIN);
     ww_special = CreateConVar("ww_special", "0", "Next round is Special Round?", FCVAR_PLUGIN);
@@ -276,7 +276,7 @@ public OnMapStart() {
         HookEvent("player_death", Camera_PlayerDeath);    
         
         // Vars
-        currentSpeed = GetConVarInt(ww_speed);
+        currentSpeed = GetConVarFloat(ww_speed);
         iMinigame = 1;
         status = 0;
         randommini = 0;
@@ -678,7 +678,7 @@ StartMinigame() {
         RespawnAll();
         if (SpecialRound == 4) NoCollision(true);
 
-        currentSpeed = GetConVarInt(ww_speed);
+        currentSpeed = GetConVarFloat(ww_speed);
         ServerCommand("host_timescale %f", GetHostMultiplier(1.0));
         ServerCommand("phys_timescale %f", GetHostMultiplier(1.0));
         
@@ -831,7 +831,7 @@ public Action:EndGame(Handle:hTimer) {
             }
         }
         
-        currentSpeed = GetConVarInt(ww_speed);
+        currentSpeed = GetConVarFloat(ww_speed);
         ServerCommand("host_timescale %f", GetHostMultiplier(1.0));
         ServerCommand("phys_timescale %f", GetHostMultiplier(1.0));
         
@@ -938,7 +938,7 @@ public Action:Speedup_timer(Handle:hTimer) {
             // Set the Speed. If special round, we want it to be a tad faster ;)
             if (SpecialRound == 1) SetConVarInt(ww_speed, 3);
             else SetConVarInt(ww_speed, 1);
-            currentSpeed = GetConVarInt(ww_speed);
+            currentSpeed = GetConVarFloat(ww_speed);
             ServerCommand("host_timescale %f", GetHostMultiplier(1.0));
             ServerCommand("phys_timescale %f", GetHostMultiplier(1.0));
             CreateTimer(GetSpeedMultiplier(MUSIC_BOSS_LEN), StartMinigame_timer2);
@@ -975,7 +975,7 @@ public Action:Victory_timer(Handle:hTimer) {
     if ((status == 4) && (bossBattle > 0)) {
         bossBattle = 0;
         SetConVarInt(ww_speed, 1);
-        currentSpeed = GetConVarInt(ww_speed);
+        currentSpeed = GetConVarFloat(ww_speed);
         
         CreateTimer(GetSpeedMultiplier(8.17), Restartall_timer);
         status = 5;
@@ -1050,7 +1050,7 @@ public Action:Restartall_timer(Handle:hTimer) {
         
         if (SpecialRound > 0) AddSpecialRoundEffect();
         
-        currentSpeed = GetConVarInt(ww_speed);
+        currentSpeed = GetConVarFloat(ww_speed);
         ResetScores();
         SetStateAll(false);
         ResetConVar(FindConVar("mp_friendlyfire"));
@@ -1247,19 +1247,19 @@ SetStateClient(client, bool:value, bool:complete=false) {
 }
 
 stock Float:GetSpeedMultiplier(Float:count) {
-    new Float:divide = ((float(currentSpeed-1)/7.5)+1.0);
+    new Float:divide = ((currentSpeed-1.0)/7.5)+1.0;
     new Float:speed = count / divide;
     return speed;
 }
 
 stock Float:GetHostMultiplier(Float:count) {
-    new Float:divide = ((float(currentSpeed-1)/7.5)+1.0);
+    new Float:divide = ((currentSpeed-1.0)/7.5)+1.0;
     new Float:speed = count * divide;
     return speed;
 }
 
 GetSoundMultiplier() {
-    new speed = SNDPITCH_NORMAL + (currentSpeed-1)*10;
+    new speed = SNDPITCH_NORMAL + RoundFloat((currentSpeed-1.0)*10.0);
     return speed;
 }
 
