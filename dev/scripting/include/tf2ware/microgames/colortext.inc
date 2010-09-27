@@ -64,7 +64,7 @@ public Action:ColorText_Player_Say(iClient, iArgs) {
         // Retrieve the first argument and check it's the correct color
         decl String:strArgument[64]; GetCmdArg(1, strArgument, sizeof(strArgument));
         
-        if (StrEqual(g_sColors[color_target], strArgument, false)) {
+        if (strncmp(g_sColors[color_target], strArgument, 2, false)) {
             SetStateClient(iClient, true, true);
             return Plugin_Handled;
         }
