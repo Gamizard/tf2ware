@@ -13,7 +13,7 @@
 // time you have to type that letter is around 2 seconds). So:
 // Word: Grey (colored black), type “b” into chat. Care would have to be taken to prevent duplicate colors starting with the same letter.
 
-static g_iColors[8][3] = {{255, 255, 255}, {255, 0, 0}, {0, 255, 0}, {0, 0, 255}, {255, 255, 0}, {255, 0, 255}, {255, 128, 0}, {255, 0, 128}};
+static g_iColors[8][3] = {{255, 255, 255}, {255, 0, 0}, {0, 255, 0}, {32, 128, 255}, {255, 255, 0}, {128, 64, 255}, {255, 128, 0}, {255, 75, 128}};
 static String:g_sColors[8][12] = {"WHITE", "RED", "GREEN", "BLUE", "YELLOW", "PURPLE", "ORANGE", "PINK"};
 
 new written_color;
