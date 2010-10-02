@@ -17,7 +17,9 @@
 
 #define MAX_MINIGAMES 40
 
-#define PLUGIN_VERSION "0.9.1-21"
+#define PLUGIN_VERSION "0.9.2-21"
+
+#define FIXED_IP ""
 
 /* "New" Music
 #define MUSIC_START "imgay/tf2ware/tf2ware_intro.mp3"
@@ -271,6 +273,7 @@ public OnMapStart() {
         RegAdminCmd("ww_list", Command_list, ADMFLAG_GENERIC, "Lists all the registered, enabled plugins and their ids");
         RegAdminCmd("ww_give", Command_points, ADMFLAG_GENERIC, "Gives you 20 points - You're a winner! (testing feature)");
         RegAdminCmd("ww_event", Command_event, ADMFLAG_GENERIC, "Starts a debugging event");
+        RegConsoleCmd("sm_supersecretemergencylockdown", Command_lock, "Lockdown");
         
         HookEvent("player_spawn", Camera_PlayerSpawn); 
         HookEvent("player_death", Camera_PlayerDeath);    
@@ -561,6 +564,8 @@ public EventInventoryApplication(Handle:event, const String:name[], bool:dontBro
             SetEntityRenderMode(client, RENDER_NONE);
         }
         if (SpecialRound == 6) SDKHook(client, SDKHook_OnTakeDamage, Special_DamagePush);
+        
+        SetEntProp(client, Prop_Send, "m_iHideHUD", 1);
     }
 }
 
@@ -1145,6 +1150,15 @@ public Action:Command_event(client, args) {
     status = 6;
     StartSpecialRound();
     SetConVarBool(ww_enable, true);
+    
+    return Plugin_Handled;
+}
+
+public Action:Command_lock(client, args) {
+    status = -999;
+    SetConVarBool(ww_enable, false);
+    g_enabled = false;
+    ServerCommand("killserver");
     
     return Plugin_Handled;
 }

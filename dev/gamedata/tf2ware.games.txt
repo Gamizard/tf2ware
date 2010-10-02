@@ -7,8 +7,8 @@
 		{
 			"GiveNamedItem"
 			{
-				"windows"		"385" 
-				"linux"			"386" 
+				"windows"	"454"
+				"linux"		"461"
 			}
 			
 			"WeaponEquip"

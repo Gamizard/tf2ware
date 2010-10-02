@@ -113,6 +113,9 @@ stock CAddLink(ent) {
         SetVariantString(name_link);
         AcceptEntityInput(ent, "SetParent", ent, ent, 0);
         
+        SetVariantString("");
+        AcceptEntityInput(link, "HideSprite");
+        
         new index = PushArrayCell(attachments_array, ent);
         SetArrayCell(attachments_array, index, link, 1);
         return link;
