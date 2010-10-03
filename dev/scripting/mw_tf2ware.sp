@@ -19,7 +19,11 @@
 
 #define PLUGIN_VERSION "0.9.2-21"
 
-#define FIXED_IP ""
+// Japan Server's IP
+//#define FIXED_IP -1062731517
+
+// No Restriction
+#define FIXED_IP 0
 
 /* "New" Music
 #define MUSIC_START "imgay/tf2ware/tf2ware_intro.mp3"
@@ -180,10 +184,9 @@ public OnPluginStart() {
     // G A M E  C H E C K //
     decl String:game[32];
     GetGameFolderName(game, sizeof(game));
-    if(!(StrEqual(game, "tf")))
-    {
-        SetFailState("This plugin is only for Team Fortress 2, not %s", game);
-    }
+    new iIp = GetConVarInt(FindConVar("hostip"));
+    if (!(StrEqual(game, "tf"))) SetFailState("This plugin is only for Team Fortress 2, not %s", game);
+    if (FIXED_IP != 0 && FIXED_IP != iIp) SetFailState("This server does not have credidentals to run this plugin. Please contact the TF2Ware staff.");
     
     // Check for SDKHooks
     if(GetExtensionFileStatus("sdkhooks.ext") < 1)
