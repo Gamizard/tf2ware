@@ -44,7 +44,7 @@ public Special_NoTouch(entity, other) {
 
 
 public Action:Special_DamagePush(victim, &attacker, &inflictor, &Float:damage, &damagetype) {
-    if (IsValidClient(attacker) && IsValidClient(victim)) {
+    if (IsValidClient(attacker) && IsValidClient(victim) && SpecialRound == 6) {
         decl String:Weapon[128];
         GetClientWeapon(attacker, Weapon, sizeof(Weapon));
         if (StrEqual(Weapon, "tf_weapon_bat")) {

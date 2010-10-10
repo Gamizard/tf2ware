@@ -6,6 +6,7 @@ new g_Hopscotch_weapon = false;
 public Hopscotch_OnMinigame() {
     AddToForward(g_justEntered, INVALID_HANDLE, Hopscotch_justEntered);
     AddToForward(g_OnGameFrame_Minigames, INVALID_HANDLE, Hopscotch_OnGameFrame);
+    AddToForward(g_OnEndMinigame, INVALID_HANDLE, Hopscotch_End);
     
     g_Hopscotch_arena = GetRandomInt(0,1);
     g_Hopscotch_weapon = false;
@@ -88,4 +89,10 @@ public Action:Hopscotch_OnTakeDamageClient(victim, &attacker, &inflictor, &Float
         damage = 0.0;
     }
     return Plugin_Changed;
+}
+
+public Hopscotch_End() {
+    for (new i = 1; i <= MaxClients; i++) {
+        SDKUnhook(i, SDKHook_OnTakeDamage, Hopscotch_OnTakeDamageClient);
+    }
 }

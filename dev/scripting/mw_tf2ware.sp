@@ -17,7 +17,7 @@
 
 #define MAX_MINIGAMES 40
 
-#define PLUGIN_VERSION "0.9.2-21"
+#define PLUGIN_VERSION "0.9.5-20"
 
 // Japan Server's IP
 //#define FIXED_IP -1062731517
@@ -487,13 +487,13 @@ public OnClientPutInServer(client) {
     if (GetConVarBool(ww_log)) LogMessage("Client put in server and hooked");
     SDKHook(client, SDKHook_PreThink, OnPreThink);
     SDKHook(client, SDKHook_OnTakeDamage, OnTakeDamageClient);
+    SDKHook(client, SDKHook_Touch, Special_NoTouch);
+    SDKHook(client, SDKHook_OnTakeDamage, Special_DamagePush);
     
 }
 
 public OnClientDisconnect(client) {
     if (GetConVarBool(ww_log)) LogMessage("Client disconnected");
-    SDKUnhook(client, SDKHook_PreThink, OnPreThink);
-    SDKUnhook(client, SDKHook_OnTakeDamage, OnTakeDamageClient);
     
     if(ClientCamera[client] != 0) DestroyCamera(client);
 
@@ -561,12 +561,10 @@ public EventInventoryApplication(Handle:event, const String:name[], bool:dontBro
         
         HandlePlayerItems(client);
         
-        if (SpecialRound == 2) SDKHook(client, SDKHook_Touch, Special_NoTouch);
         if (SpecialRound == 4) {
+            SetEntityRenderMode(client, RENDER_TRANSCOLOR);
             SetEntityRenderColor(client, 255, 255, 255, 0);
-            SetEntityRenderMode(client, RENDER_NONE);
         }
-        if (SpecialRound == 6) SDKHook(client, SDKHook_OnTakeDamage, Special_DamagePush);
         
         SetEntProp(client, Prop_Send, "m_iHideHUD", 1);
     }

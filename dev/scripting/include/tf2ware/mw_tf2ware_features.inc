@@ -278,7 +278,7 @@ public Action:SetWeaponState(client, bool:input) {
         }
         else {
             SetEntityRenderColor(ActiveWeapon, 255, 255, 255, 0);
-            SetEntityRenderMode(ActiveWeapon, RENDER_NONE);
+            SetEntityRenderMode(ActiveWeapon, RENDER_TRANSCOLOR);
             SetWeaponAmmo(client, 0, 0);
             SetEntProp(client, Prop_Send, "m_bDrawViewmodel", 0);
         }
@@ -335,14 +335,14 @@ DisableClientWeapons(client) {
     
         else {
             new TFClassType:class = TF2_GetPlayerClass(client);
-            if (class == TFClass_Scout) GiveClientWeapon(client, "tf_weapon_scattergun", 0, false);
-            if (class == TFClass_Soldier) GiveClientWeapon(client, "tf_weapon_rocketlauncher", 0, false);
-            if (class == TFClass_Pyro) GiveClientWeapon(client, "tf_weapon_flamethrower", 0, false);
-            if (class == TFClass_DemoMan) GiveClientWeapon(client, "tf_weapon_grenadelauncher", 0, false);
+            if (class == TFClass_Scout) GiveClientWeapon(client, "tf_weapon_bat", 0, false);
+            if (class == TFClass_Soldier) GiveClientWeapon(client, "tf_weapon_shovel", 0, false);
+            if (class == TFClass_Pyro) GiveClientWeapon(client, "tf_weapon_fireaxe", 0, false);
+            if (class == TFClass_DemoMan) GiveClientWeapon(client, "tf_weapon_bottle", 0, false);
             if (class == TFClass_Heavy) GiveClientWeapon(client, "tf_weapon_minigun", 0, false);
-            if (class == TFClass_Engineer) GiveClientWeapon(client, "tf_weapon_shotgun_primary", 0, false);
-            if (class == TFClass_Medic) GiveClientWeapon(client, "tf_weapon_syringegun_medic", 0, false);
-            if (class == TFClass_Sniper) GiveClientWeapon(client, "tf_weapon_sniperrifle", 0, false);
+            if (class == TFClass_Engineer) GiveClientWeapon(client, "tf_weapon_wrench", 0, false);
+            if (class == TFClass_Medic) GiveClientWeapon(client, "tf_weapon_bonesaw", 0, false);
+            if (class == TFClass_Sniper) GiveClientWeapon(client, "tf_weapon_club", 0, false);
             if (class == TFClass_Spy) GiveClientWeapon(client, "tf_weapon_revolver", 0, false);
 
             SetWeaponState(client, false);

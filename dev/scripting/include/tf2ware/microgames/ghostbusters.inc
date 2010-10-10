@@ -102,12 +102,17 @@ public Ghostbusters_End() {
     SetConVarInt(FindConVar("mp_autoteambalance"), 1);
     
     for (new i = 1; i <= MaxClients; i++) {
+        SDKUnhook(i, SDKHook_OnTakeDamage, Ghostbusters_Damage);
         if (IsValidClient(i)) {
             StopSound(i, SND_CHANNEL_SPECIFIC, MUSIC_GHOSTB);
-            SetEntityRenderMode(i, RENDER_NORMAL);
-            SetEntityRenderColor(i, 255, 255, 255, 255);
-            SDKUnhook(i, SDKHook_OnTakeDamage, Ghostbusters_Damage);
-            if (IsPlayerAlive(i)) Ghostbusters_FixSlap(i);
+            if (IsPlayerAlive(i)) {
+                Ghostbusters_FixSlap(i);
+                SetEntityRenderMode(i, RENDER_NORMAL);
+                SetEntityRenderColor(i, 255, 255, 255, 255);
+                
+                new default_fov = GetEntProp(i, Prop_Send, "m_iDefaultFOV"); 
+                SetEntProp(i, Prop_Send, "m_iFOV", default_fov);
+            }
         }
     }
     
@@ -226,7 +231,11 @@ public Ghostbusters_OnGameFrame() {
                     
                     if (Ghostbusters_hurt[target] <= 0) {
                         Ghostbusters_Slap(i);
-                        Ghostbusters_Slap(target);
+                        //Ghostbusters_Slap(target);
+                        new default_fov = GetEntProp(target, Prop_Send, "m_iDefaultFOV"); 
+                        new health = GetClientHealth(target);
+                        new new_fov = default_fov + (125 - health)/2;
+                        SetEntProp(target, Prop_Send, "m_iFOV", new_fov);
                     
                         new target_health = GetClientHealth(target);
                         new target_newhealth = target_health - 10;

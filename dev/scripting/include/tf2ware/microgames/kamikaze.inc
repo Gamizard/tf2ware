@@ -14,13 +14,7 @@ public Kamikaze_OnMapStart() {
     precacheSound(WW_BOMB);
 }
 
-public Kamikaze_OnMinigame() {
-    for (new i = 1; i <= MaxClients; i++) {
-        if (IsValidClient(i)) {
-            SDKHook(i, SDKHook_OnTakeDamage, Kamikaze_OnTakeDamageClient);
-        }
-    }
-    
+public Kamikaze_OnMinigame() {   
     AddToForward(g_justEntered, INVALID_HANDLE, Kamikaze_justEntered);
     AddToForward(g_OnAlmostEnd, INVALID_HANDLE, Kamikaze_OnAlmostEnd);
     AddToForward(g_OnEndMinigame, INVALID_HANDLE, Kamikaze_End);
@@ -50,16 +44,6 @@ public Kamikaze_End() {
         AcceptEntityInput(g_bomb, "Kill" );
         g_bomb = 0;
     }
-    for (new i = 1; i <= MaxClients; i++) {
-        SDKUnhook(i, SDKHook_OnTakeDamage, Kamikaze_OnTakeDamageClient);
-    }
-}
-
-public Action:Kamikaze_OnTakeDamageClient(victim, &attacker, &inflictor, &Float:damage, &damagetype) {
-    if ((IsValidClient(victim)) && (victim != attacker) && (status == 2) && IsValidClient(attacker)&& g_Mission[victim] == 1) {
-        SetStateClient(attacker, true, true);
-    }
-    return Plugin_Continue;
 }
 
 public Kamikaze_OnAlmostEnd() {

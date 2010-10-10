@@ -104,20 +104,49 @@ Frogger_Position(client) {
     decl Float:pos[3]; 
     
     new checkpoint = g_Frogger_Pos[client];
+
     
     if (checkpoint == 99) {
         pos[0] = 8726.0;
         pos[1] = 3947.0;
         pos[2] = 455.0;
     }
-    if (checkpoint == 3) {
+    if (checkpoint == 8) {
+        pos[0] = 9468.0;
+        pos[1] = 2935.0;
+        pos[2] = 293.0;
+        ang[1] = 0.0;
+    }
+    if (checkpoint == 7) {
+        pos[0] = 8932.0;
+        pos[1] = 2831.0;
+        pos[2] = 293.0;
+        ang[1] = 0.0;
+    }
+    if (checkpoint == 6) {
+        pos[0] = 8020.0;
+        pos[1] = 2873.0;
+        pos[2] = 293.0;
+        ang[1] = 0.0;
+    }
+    if (checkpoint == 5) {
         pos[0] = 8654.0;
         pos[1] = 1873.0;
         pos[2] = 195.0;
     }
-    if (checkpoint == 2) {
+    if (checkpoint == 4) {
+        pos[0] = 8654.0;
+        pos[1] = 1322.0;
+        pos[2] = 195.0;
+    }
+    if (checkpoint == 3) {
         pos[0] = 8615.0;
         pos[1] = 603.0;
+        pos[2] = 191.0;
+    }
+    if (checkpoint == 2) {
+        pos[0] = 8615.0;
+        pos[1] = -209.0;
         pos[2] = 191.0;
     }
     if (checkpoint == 1) {
@@ -150,9 +179,9 @@ public Frogger_PlayerDeath(client) {
         SetVariantInt(0);
         AcceptEntityInput(client, "SetCustomModelRotates");
         SetEntProp(client, Prop_Send, "m_iObserverMode", 0);
-        CreateTimer(3.0, Frogger_Respawn, client);
+        CreateTimer(1.0, Frogger_Respawn, client);
         
-        CreateTimer(0.1, Frogger_Ragdoll, client);
+        CreateTimer(0.0, Frogger_Ragdoll, client);
     }
 }
 
@@ -179,9 +208,13 @@ public Frogger_OnGameFrame() {
             
             // checkpoints
             if (pos[1] >= -1566.0 && g_Frogger_Pos[i] < 1) g_Frogger_Pos[i] = 1;
-            if (pos[1] >= 603.0 && g_Frogger_Pos[i] < 2) g_Frogger_Pos[i] = 2;
-            if (pos[1] >= 1873.0 && g_Frogger_Pos[i] < 3) g_Frogger_Pos[i] = 3;
-
+            if (pos[1] >= -209.0 && g_Frogger_Pos[i] < 2) g_Frogger_Pos[i] = 2;
+            if (pos[1] >= 603.0 && g_Frogger_Pos[i] < 3) g_Frogger_Pos[i] = 3;
+            if (pos[1] >= 1322.0 && g_Frogger_Pos[i] < 4) g_Frogger_Pos[i] = 4;
+            if (pos[1] >= 1873.0 && g_Frogger_Pos[i] < 5) g_Frogger_Pos[i] = 5;
+            if (pos[1] >= 2831.0 && pos[0] >= 8020.0 && g_Frogger_Pos[i] < 6) g_Frogger_Pos[i] = 6;
+            if (pos[1] >= 2831.0 && pos[0] >= 8932.0 && g_Frogger_Pos[i] < 7) g_Frogger_Pos[i] = 7;
+            if (pos[1] >= 2935.0 && pos[0] >= 9468.0 && g_Frogger_Pos[i] < 8) g_Frogger_Pos[i] = 8;
             
             // goal
             if (pos[1] > 3751.0 && g_Complete[i] == false ) {
