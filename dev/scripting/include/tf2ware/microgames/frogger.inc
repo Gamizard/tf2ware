@@ -20,7 +20,7 @@ public Frogger_OnMinigame() {
     //SetCameraState(true);
     NoCollision(true);
     
-    g_Frogger_Timer = 6;
+    g_Frogger_Timer = 11;
     g_Frogger_Goal = false;
     
     for (new i = 1; i <= MaxClients; i++) {
@@ -30,11 +30,11 @@ public Frogger_OnMinigame() {
 
 public Frogger_OnMapStart() {
     PrecacheModel(FROGGER_MODEL, true);
-    precacheSound("vo/announcer_ends_5sec.wav");
-    precacheSound("vo/announcer_ends_4sec.wav");
-    precacheSound("vo/announcer_ends_3sec.wav");
-    precacheSound("vo/announcer_ends_2sec.wav");
-    precacheSound("vo/announcer_ends_1sec.wav");
+    precacheSound("vo/announcer_ends_5sec.wav", true);
+    precacheSound("vo/announcer_ends_4sec.wav", true);
+    precacheSound("vo/announcer_ends_3sec.wav", true);
+    precacheSound("vo/announcer_ends_2sec.wav", true);
+    precacheSound("vo/announcer_ends_1sec.wav", true);
 }
 
 public Action:Frogger_Timer(Handle:hTimer) {
@@ -44,8 +44,8 @@ public Action:Frogger_Timer(Handle:hTimer) {
         
         if (g_Frogger_Timer > 0) {
             decl String:sound[512];
-            Format(sound, sizeof(sound), "vo\announcer_ends_%dsec.wav", g_Frogger_Timer);
-            if (GetConVarBool(ww_music)) EmitSoundToClient(1, sound);
+            Format(sound, sizeof(sound), "vo/announcer_ends_%dsec.wav", g_Frogger_Timer);
+            if (GetConVarBool(ww_music) == true) EmitSoundToClient(1, sound);
             else EmitSoundToAll(sound);
             if (g_Frogger_Timer < 5) CPrintToChatAll("{red}%d{default}!", g_Frogger_Timer);
         }
@@ -223,7 +223,7 @@ public Frogger_OnGameFrame() {
                     g_Frogger_Goal = true;
                     CreateTimer(0.0, Frogger_Timer);
                     CPrintToChatAllEx(i, "{teamcolor}%N{default} made it to the goal first!", i);
-                    CPrintToChatAll("The boss will end in {red}5 seconds{default}!");
+                    CPrintToChatAll("The boss will end in {red}10 seconds{default}!");
                     g_Frogger_Pos[i] = 99;
                 }
             }

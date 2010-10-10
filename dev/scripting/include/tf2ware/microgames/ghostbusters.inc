@@ -234,7 +234,7 @@ public Ghostbusters_OnGameFrame() {
                         //Ghostbusters_Slap(target);
                         new default_fov = GetEntProp(target, Prop_Send, "m_iDefaultFOV"); 
                         new health = GetClientHealth(target);
-                        new new_fov = default_fov + (125 - health)/2;
+                        new new_fov = default_fov + (125 - health);
                         SetEntProp(target, Prop_Send, "m_iFOV", new_fov);
                     
                         new target_health = GetClientHealth(target);

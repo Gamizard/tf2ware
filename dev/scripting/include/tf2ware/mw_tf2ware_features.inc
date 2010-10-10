@@ -335,14 +335,14 @@ DisableClientWeapons(client) {
     
         else {
             new TFClassType:class = TF2_GetPlayerClass(client);
-            if (class == TFClass_Scout) GiveClientWeapon(client, "tf_weapon_bat", 0, false);
-            if (class == TFClass_Soldier) GiveClientWeapon(client, "tf_weapon_shovel", 0, false);
-            if (class == TFClass_Pyro) GiveClientWeapon(client, "tf_weapon_fireaxe", 0, false);
-            if (class == TFClass_DemoMan) GiveClientWeapon(client, "tf_weapon_bottle", 0, false);
+            if (class == TFClass_Scout) GiveClientWeapon(client, "tf_weapon_bat", 2, false);
+            if (class == TFClass_Soldier) GiveClientWeapon(client, "tf_weapon_shovel", 2, false);
+            if (class == TFClass_Pyro) GiveClientWeapon(client, "tf_weapon_fireaxe", 2, false);
+            if (class == TFClass_DemoMan) GiveClientWeapon(client, "tf_weapon_bottle", 2, false);
             if (class == TFClass_Heavy) GiveClientWeapon(client, "tf_weapon_minigun", 0, false);
-            if (class == TFClass_Engineer) GiveClientWeapon(client, "tf_weapon_wrench", 0, false);
-            if (class == TFClass_Medic) GiveClientWeapon(client, "tf_weapon_bonesaw", 0, false);
-            if (class == TFClass_Sniper) GiveClientWeapon(client, "tf_weapon_club", 0, false);
+            if (class == TFClass_Engineer) GiveClientWeapon(client, "tf_weapon_wrench", 2, false);
+            if (class == TFClass_Medic) GiveClientWeapon(client, "tf_weapon_bonesaw", 2, false);
+            if (class == TFClass_Sniper) GiveClientWeapon(client, "tf_weapon_club", 2, false);
             if (class == TFClass_Spy) GiveClientWeapon(client, "tf_weapon_revolver", 0, false);
 
             SetWeaponState(client, false);
