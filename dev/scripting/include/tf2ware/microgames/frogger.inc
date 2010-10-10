@@ -30,11 +30,11 @@ public Frogger_OnMinigame() {
 
 public Frogger_OnMapStart() {
     PrecacheModel(FROGGER_MODEL, true);
-    precacheSound("vo/announcer_ends_5sec.wav", true);
-    precacheSound("vo/announcer_ends_4sec.wav", true);
-    precacheSound("vo/announcer_ends_3sec.wav", true);
-    precacheSound("vo/announcer_ends_2sec.wav", true);
-    precacheSound("vo/announcer_ends_1sec.wav", true);
+    precacheSound("vo/announcer_ends_5sec.wav");
+    precacheSound("vo/announcer_ends_4sec.wav");
+    precacheSound("vo/announcer_ends_3sec.wav");
+    precacheSound("vo/announcer_ends_2sec.wav");
+    precacheSound("vo/announcer_ends_1sec.wav");
 }
 
 public Action:Frogger_Timer(Handle:hTimer) {
