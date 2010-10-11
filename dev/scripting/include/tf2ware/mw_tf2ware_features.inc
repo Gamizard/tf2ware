@@ -1,3 +1,5 @@
+new g_PlayerVisibleWeapon[MAXPLAYERS+1] = -1;
+
 stock bool:IsValidClient(iClient) {
     if (iClient <= 0) return false;
     if (iClient > MaxClients) return false;
@@ -270,6 +272,7 @@ public SetWeaponAmmo(client, slot1, slot2) {
 
 public Action:SetWeaponState(client, bool:input) {
     new ActiveWeapon = GetEntDataEnt2(client,FindSendPropOffs("CTFPlayer", "m_hActiveWeapon"));
+    new iEntity = g_PlayerVisibleWeapon[client];
     if (IsValidEntity(ActiveWeapon)) {
         if (input == true) {
             SetEntityRenderColor(ActiveWeapon, 255, 255, 255, 255);
@@ -281,6 +284,16 @@ public Action:SetWeaponState(client, bool:input) {
             SetEntityRenderMode(ActiveWeapon, RENDER_TRANSCOLOR);
             SetWeaponAmmo(client, 0, 0);
             SetEntProp(client, Prop_Send, "m_bDrawViewmodel", 0);
+        }
+    }
+    if (iEntity > 0 && IsValidEntity(iEntity)) {
+        if (input == true) {
+            SetEntityRenderColor(iEntity, 255, 255, 255, 255);
+            SetEntityRenderMode(iEntity, RENDER_NORMAL);
+        }
+        else {
+            SetEntityRenderColor(iEntity, 255, 255, 255, 0);
+            SetEntityRenderMode(iEntity, RENDER_TRANSCOLOR);
         }
     }
 }
@@ -305,8 +318,51 @@ public Action:GiveClientWeapon(client, String:weapon[128], slot, bool:input) {
             if (StrEqual(weapon, "tf_weapon_pipebomblauncher")) SetWeaponAmmo(client, 8, 24);
         }
         
+        // Create a model everyone else can oodle at
+        RemoveFakeWeapon(client);
+        
+        decl String:strModel[PLATFORM_MAX_PATH];
+        Format(strModel, sizeof(strModel), "");
+        
+        if (StrEqual(weapon, "tf_weapon_bat")) Format(strModel, sizeof(strModel), "models/weapons/w_models/w_bat.mdl");
+        if (StrEqual(weapon, "tf_weapon_minigun")) Format(strModel, sizeof(strModel), "models/weapons/w_models/w_minigun.mdl");
+        if (StrEqual(weapon, "tf_weapon_bonesaw")) Format(strModel, sizeof(strModel), "models/weapons/w_models/w_bonesaw.mdl");
+        if (StrEqual(weapon, "tf_weapon_wrench")) Format(strModel, sizeof(strModel), "models/weapons/w_models/w_wrench.mdl");
+        if (StrEqual(weapon, "tf_weapon_bottle")) Format(strModel, sizeof(strModel), "models/weapons/w_models/w_bottle.mdl");
+        if (StrEqual(weapon, "tf_weapon_club")) Format(strModel, sizeof(strModel), "models/weapons/w_models/w_club.mdl");
+        if (StrEqual(weapon, "tf_weapon_fireaxe")) Format(strModel, sizeof(strModel), "models/weapons/w_models/w_fireaxe.mdl");
+        if (StrEqual(weapon, "tf_weapon_shovel")) Format(strModel, sizeof(strModel), "models/weapons/w_models/w_shovel.mdl");
+        if (StrEqual(weapon, "tf_weapon_revolver")) Format(strModel, sizeof(strModel), "models/weapons/w_models/w_revolver.mdl");
+        if (StrEqual(weapon, "tf_weapon_shotgun_primary")) Format(strModel, sizeof(strModel), "models/weapons/w_models/w_shotgun.mdl");
+        if (StrEqual(weapon, "tf_weapon_flamethrower")) Format(strModel, sizeof(strModel), "models/weapons/w_models/w_flamethrower.mdl");
+        if (StrEqual(weapon, "tf_weapon_grenadelauncher")) Format(strModel, sizeof(strModel), "models/weapons/w_models/w_grenadelauncher.mdl");
+        if (StrEqual(weapon, "tf_weapon_syringegun_medic")) Format(strModel, sizeof(strModel), "models/weapons/w_models/w_syringegun.mdl");
+        if (StrEqual(weapon, "tf_weapon_sniperrifle")) Format(strModel, sizeof(strModel), "models/weapons/w_models/w_sniperrifle.mdl");
+        if (StrEqual(weapon, "tf_weapon_rocketlauncher")) Format(strModel, sizeof(strModel), "models/weapons/w_models/w_rocketlauncher.mdl");
+        if (StrEqual(weapon, "tf_weapon_pipebomblauncher")) Format(strModel, sizeof(strModel), "models/weapons/w_models/w_stickybomb_launcher.mdl");
+        
+        if (!StrEqual(strModel, "")) {
+            new iEntity = Attachable_CreateAttachable(client);
+            if (iEntity > 0 && IsValidEdict(iEntity)) {
+                
+                SetEntityModel(iEntity, strModel);
+                g_PlayerVisibleWeapon[client] = iEntity;
+            }
+        }
+        
+        
         SetWeaponState(client, input);
     }
+}
+
+RemoveFakeWeapon(iClient) {
+    new iEntity = g_PlayerVisibleWeapon[iClient];
+    
+    if (iEntity > 0 && IsValidEdict(iEntity)) {
+        if (Attachable_IsHooked(iEntity)) Attachable_UnhookEntity(iEntity);
+        RemoveEdict(iEntity);
+    }
+    g_PlayerVisibleWeapon[iClient] = -1;
 }
 
 public Action:RemoveClientSlot(i, slot) {
@@ -399,10 +455,8 @@ RemoveEquipMisc(client) {
     edict = MaxClients+1;
     
     while((edict = FindEntityByClassname(edict, "tf_wearable_item")) != -1) {
-        if (GetEntProp(edict, Prop_Send, "m_iItemDefinitionIndex") == 57 || GetEntProp(edict, Prop_Send, "m_iItemDefinitionIndex") == 131) {
-            new owner = GetEntPropEnt(edict, Prop_Send, "m_hOwnerEntity");
-            if (owner == client) RemoveEdict(edict);
-        }
+        new owner = GetEntPropEnt(edict, Prop_Send, "m_hOwnerEntity");
+        if (owner == client) RemoveEdict(edict);
     }
 }
 

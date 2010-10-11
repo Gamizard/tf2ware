@@ -10,6 +10,7 @@
 #include <sdkhooks>
 #include <geoip>
 #include <attachments>
+#include <attachables>
 
 #undef REQUIRE_PLUGIN
 #include <mw_achievements_natives>
@@ -375,6 +376,23 @@ public OnMapStart() {
         PrecacheModel("models/props_farm/gibs/wooden_barrel_chunk04.mdl", true);
         PrecacheModel("models/props_farm/gibs/wooden_barrel_chunk03.mdl", true);
         PrecacheModel("models/props_farm/gibs/wooden_barrel_chunk01.mdl", true);
+        
+        PrecacheModel( "models/weapons/w_models/w_bat.mdl", true);
+        PrecacheModel( "models/weapons/w_models/w_minigun.mdl", true);
+        PrecacheModel( "models/weapons/w_models/w_bonesaw.mdl", true);
+        PrecacheModel( "models/weapons/w_models/w_wrench.mdl", true);
+        PrecacheModel( "models/weapons/w_models/w_bottle.mdl", true);
+        PrecacheModel( "models/weapons/w_models/w_club.mdl", true);
+        PrecacheModel( "models/weapons/w_models/w_fireaxe.mdl", true);
+        PrecacheModel( "models/weapons/w_models/w_shovel.mdl", true);
+        PrecacheModel( "models/weapons/w_models/w_revolver.mdl", true);
+        PrecacheModel( "models/weapons/w_models/w_shotgun.mdl", true);
+        PrecacheModel( "models/weapons/w_models/w_flamethrower.mdl", true);
+        PrecacheModel( "models/weapons/w_models/w_grenadelauncher.mdl", true);
+        PrecacheModel( "models/weapons/w_models/w_syringegun.mdl", true);
+        PrecacheModel( "models/weapons/w_models/w_sniperrifle.mdl", true);
+        PrecacheModel( "models/weapons/w_models/w_rocketlauncher.mdl", true);
+        PrecacheModel( "models/weapons/w_models/w_stickybomb_launcher.mdl", true);
         
         decl String:input[512];
         
@@ -1492,6 +1510,8 @@ public Player_Death(Handle:event, const String:name[], bool:dontBroadcast) {
     }
     
     if (SpecialRound == 7) DropPizza(client);
+    
+    RemoveFakeWeapon(client);
 }
 
 /* public ScoreGreaterThan(left, right, playerids[], Handle:data) {
