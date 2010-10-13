@@ -6,7 +6,7 @@ public Movement_OnMinigame() {
     SetStateAll(true);
     new mission = GetRandomInt(0,1);
     for (new i = 1; i <= MaxClients; i++) {
-        if (IsValidClient(i)) {
+        if (IsValidClient(i) && IsClientParticipating(i)) {
             g_Mission[i] = mission;
         }
     }
@@ -20,7 +20,7 @@ public Movement_OnGameFrame() {
         speed = 0.0;
         limit = 0.0;
         for (new i = 1; i <= MaxClients; i++) {
-            if (IsValidClient(i) && IsPlayerAlive(i)) {
+            if (IsValidClient(i) && IsPlayerAlive(i) && IsClientParticipating(i)) {
                 limit = GetEntPropFloat(i, Prop_Send, "m_flMaxspeed") - 100.0;
                 GetEntPropVector(i, Prop_Data, "m_vecVelocity", fVelocity);
                 speed = (FloatAbs(fVelocity[0]) + FloatAbs(fVelocity[1]) + FloatAbs(fVelocity[2]));

@@ -58,6 +58,7 @@ public ColorText_End() {
 public Action:ColorText_Player_Say(iClient, iArgs) {
     if (!StrEqual(minigame, "ColorText")) return Plugin_Continue;
     if (!(IsValidClient(iClient))) return Plugin_Continue;
+    if (!(IsClientParticipating(iClient))) return Plugin_Continue;
     if (iArgs < 1) return Plugin_Continue;
     
     if ((IsPlayerAlive(iClient)) && (status == 2) && (g_Complete[iClient] == false)) {

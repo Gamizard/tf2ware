@@ -233,7 +233,7 @@ stock GetActivePlayers(team = 0, bool:mustbealive = false) {
     new output = 0;
     for (new client = 1; client <= MaxClients; client++) {
         if (IsValidClient(client) && g_Spawned[client]) {
-            if ((team == 0 && GetClientTeam(client) >= 2) || (team > 0 && GetClientTeam(client) == team) && (mustbealive == false || IsPlayerAlive(client))) output += 1;
+            if (((team == 0 && GetClientTeam(client) >= 2) || (team > 0 && GetClientTeam(client) == team)) && (mustbealive == false || IsPlayerAlive(client)) && g_Participating[client] == true) output += 1;
         }
     }
     return output;
@@ -252,6 +252,7 @@ stock bool:IsPlayerTaunting(client)
 
 public RemoveClientWeapons(i) {
     if (GetConVarBool(ww_log)) LogMessage("Removing all client weapons");
+    RemoveFakeWeapon(i);
     if (IsValidClient(i) && (IsPlayerAlive(i)) && (g_Winner[i] == 0)) {
         SetClientSlot(i, 0);
         for (new j=0; j<=5; j++) {
@@ -357,12 +358,12 @@ public Action:GiveClientWeapon(client, String:weapon[128], slot, bool:input) {
 
 RemoveFakeWeapon(iClient) {
     new iEntity = g_PlayerVisibleWeapon[iClient];
+    g_PlayerVisibleWeapon[iClient] = -1;
     
     if (iEntity > 0 && IsValidEdict(iEntity)) {
         if (Attachable_IsHooked(iEntity)) Attachable_UnhookEntity(iEntity);
         RemoveEdict(iEntity);
     }
-    g_PlayerVisibleWeapon[iClient] = -1;
 }
 
 public Action:RemoveClientSlot(i, slot) {

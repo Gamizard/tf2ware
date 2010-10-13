@@ -55,7 +55,7 @@ public Action:JumpRope_NewRound(Handle:timer) {
     
     new activeplayers = 0;
     for (new i = 1; i <= MaxClients; i++) {
-        if (IsValidClient(i) && g_Complete[i] && IsPlayerAlive(i) && g_Spawned[i] && GetClientTeam(i) >= 2) {
+        if (IsValidClient(i) && g_Complete[i] && IsClientParticipating(i)) {
             activeplayers += 1;
         }
     }
@@ -69,7 +69,7 @@ public Action:JumpRope_Drain(Handle:timer) {
     if (!StrEqual(minigame, "JumpRope")) return;
     if (status != 2) return;
     for(new i = 1; i <= MaxClients; i++) {
-        if(IsValidClient(i)) {
+        if(IsValidClient(i) && IsPlayerAlive(i) && IsClientParticipating(i)) {
             new health = GetClientHealth(i);
             if (health > jumprope_drainhp) SetEntityHealth(i, health - jumprope_drainhp);
             else ForcePlayerSuicide(i);
@@ -83,6 +83,3 @@ public Action:JumpRope_Drain(Handle:timer) {
 public JumpRope_PlayerDeath(client) {
         SetStateClient(client, false);
 }
-
-// setpos 44.515419 2662.085693 -204.700958;
-// setpos -395.411346 2626.408203 -194.808960;

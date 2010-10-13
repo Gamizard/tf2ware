@@ -7,7 +7,6 @@ public HitEnemy_OnMinigame() {
     randommini = GetRandomInt(0, 2);
 
     g_attack = true;
-    RemoveAllWeapons();
 
 }
 
@@ -30,6 +29,7 @@ public HitEnemy_justEntered(client) {
     if (IsValidClient(client)) {
         SDKHook(client, SDKHook_OnTakeDamage, HitEnemy_OnTakeDamageClient);
 
+        RemoveClientWeapons(client);
         if (randommini <= 0) {
             SetClientClass(client, "spy");
             GiveClientWeapon(client, "tf_weapon_revolver", 0, true);

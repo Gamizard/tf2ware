@@ -16,7 +16,6 @@ public Hugging_OnMapStart() {
 }
 
 public Hugging_OnMinigame() {
-
     AddToForward(g_justEntered, INVALID_HANDLE, Hugging_justEntered);
     AddToForward(g_OnEndMinigame, INVALID_HANDLE, Hugging_End);
     AddToForward(g_PlayerDeath, INVALID_HANDLE, Hugging_PlayerDeath);
@@ -32,7 +31,7 @@ public Hugging_OnMinigame() {
     for (new i = 1; i <= heavies; i++) {
         attempts = 0;
         target = GetRandomInt(1, AllPlayers);
-        while (((!IsValidClient(target)) || GetClientTeam(target) < 2 || g_Spawned[target] == false || IsFakeClient(target) || g_Mission[target] > 0) && attempts <= 50) {
+        while (((!IsValidClient(target)) || IsClientParticipating(target) == false || g_Spawned[target] == false || IsFakeClient(target) || g_Mission[target] > 0) && attempts <= 50) {
             target = GetRandomInt(1, AllPlayers);
             attempts += 1;
         }
@@ -41,7 +40,7 @@ public Hugging_OnMinigame() {
         }
     }
     for (new i = 1; i <= MaxClients; i++) {
-        if (IsValidClient(i)) {
+        if (IsValidClient(i) && IsClientParticipating(i)) {
             if (g_Mission[i] == 0) {
                 SetStateClient(i, true);
                 scoutclients[i-1] = i;
@@ -151,22 +150,11 @@ public Action:Hugging_Check(Handle:timer) {
 
     new bool:complete = true;
     for (new i = 1; i <= MaxClients; i++) {
-        if (IsValidClient(i) && (g_Mission[i] == 0) && g_Spawned[i] && IsPlayerAlive(i)) complete = false;
+        if (IsValidClient(i) && (g_Mission[i] == 0) && IsClientParticipating(i) && IsPlayerAlive(i)) complete = false;
     }
     if (complete) {
         for (new i = 1; i <= MaxClients; i++) {
-            if (IsValidClient(i) && (g_Mission[i] == 1)) SetStateClient(i, true, true);
+            if (IsValidClient(i) && (g_Mission[i] == 1) && IsClientParticipating(i)) SetStateClient(i, true, true);
         }
     }
 }
-
-/* public Action:HeavyLoveTaunt(Handle:hTimer, any:client) {
-    heavy_love[client] = INVALID_HANDLE;
-    if (IsValidEntity(client) && status == 2 && iMinigame == 14 && g_Mission[client] > 0) {
-        new random = GetRandomInt(0, sizeof(var_heavy_love)-1);
-        EmitSoundToAll(var_heavy_love[random], client);
-        new Float:timerrandom = GetRandomFloat(8.0, 13.0);
-        heavy_love[client] = CreateTimer(timerrandom, HeavyLoveTaunt, client);
-    }
-    return Plugin_Stop;
-} */

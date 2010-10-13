@@ -18,7 +18,6 @@ new simon_action;
 new simon_or_someone;
 
 public SimonSays_OnMinigame() {
-    AddToForward(g_justEntered, INVALID_HANDLE, SimonSays_justEntered);
     AddToForward(g_OnGameFrame_Minigames, INVALID_HANDLE, SimonSays_OnGameFrame);
 
     simon_action = GetRandomInt(0,2);
@@ -34,17 +33,11 @@ public SimonSays_OnMinigame() {
     SetStateAll(simon_or_someone == 1);
 }
 
-public SimonSays_justEntered(client) {
-    if (IsValidClient(client)) {
-        DisableClientWeapons(client);
-    }
-}
-
 public SimonSays_OnGameFrame() {
     if (timeleft <= 6) {
         for (new i = 1; i <= MaxClients; i++) {
             // If the player is valid and taunting
-            if(IsValidClient(i) && IsPlayerAlive(i)) {
+            if(IsValidClient(i) && IsPlayerAlive(i) && IsClientParticipating(i)) {
                 if (IsPlayerDoing(i)) {
                     if (simon_or_someone == 0) {
                     // If simon says it

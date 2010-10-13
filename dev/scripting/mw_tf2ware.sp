@@ -18,7 +18,7 @@
 
 #define MAX_MINIGAMES 40
 
-#define PLUGIN_VERSION "0.9.5-20"
+#define PLUGIN_VERSION "0.9.6-20"
 
 // Japan Server's IP
 //#define FIXED_IP -1062731517
@@ -26,17 +26,20 @@
 // No Restriction
 #define FIXED_IP 0
 
-/* "New" Music
-#define MUSIC_START "imgay/tf2ware/tf2ware_intro.mp3"
-#define MUSIC_START_LEN 2.18
-#define MUSIC_WIN "imgay/tf2ware/tf2ware_win.mp3"
-#define MUSIC_FAIL "imgay/tf2ware/tf2ware_fail.mp3"
-#define MUSIC_END_LEN 2.2
-#define MUSIC_SPEEDUP "imgay/tf2ware/tf2ware_speedup.mp3"
-#define MUSIC_SPEEDUP_LEN 3.29
-#define MUSIC_BOSS "imgay/tf2ware/boss.mp3"
-#define MUSIC_BOSS_LEN 3.9
-*/
+
+#define MUSIC2_START "imgay/tf2ware/tf2ware_intro.mp3"
+#define MUSIC2_START_LEN 2.18
+#define MUSIC2_WIN "imgay/tf2ware/tf2ware_win.mp3"
+#define MUSIC2_FAIL "imgay/tf2ware/tf2ware_fail.mp3"
+#define MUSIC2_END_LEN 2.2
+#define MUSIC2_SPEEDUP "imgay/tf2ware/tf2ware_speedup.mp3"
+#define MUSIC2_SPEEDUP_LEN 3.29
+#define MUSIC2_BOSS "imgay/tf2ware/boss.mp3"
+#define MUSIC2_BOSS_LEN 3.9
+#define MUSIC2_GAMEOVER "imgay/tf2ware/warioman_gameover.mp3"
+#define MUSIC2_GAMEOVER_LEN 8.17
+
+
 #define MUSIC_START "imgay/tf2ware/warioman_intro.mp3"
 #define MUSIC_START_LEN 2.17
 #define MUSIC_WIN "imgay/tf2ware/warioman_win.mp3"
@@ -48,6 +51,7 @@
 #define MUSIC_BOSS_LEN 4.2
 #define MUSIC_GAMEOVER "imgay/tf2ware/warioman_gameover.mp3"
 #define MUSIC_GAMEOVER_LEN 8.17
+
 #define SOUND_COMPLETE "imgay/tf2ware/complete_me.mp3"
 #define SOUND_COMPLETE_YOU "imgay/tf2ware/complete_you.mp3"
 #define SOUND_MINISCORE "items/pumpkin_drop.wav"
@@ -77,6 +81,7 @@ new Handle:ww_music;
 new Handle:ww_force;
 new Handle:ww_log;
 new Handle:ww_special;
+new Handle:ww_gamemode;
 new Handle:ww_force_special;
 new Handle:ww_allowedCommands;
 new Handle:hudScore;
@@ -127,6 +132,8 @@ new g_lastboss = 0;
 new g_minigamestotal = 0;
 new bossBattle = 0;
 new SpecialRound = 0;
+new bool:g_Participating[MAXPLAYERS+1] = false;
+new g_Gamemode = 0;
 
 
 // Strings
@@ -172,6 +179,9 @@ new Handle:g_PlayerDeath;
 #include tf2ware\vocalize.inc
 #include tf2ware\camera.inc
 
+#define GAMEMODE_NORMAL         0
+#define GAMEMODE_WIPEOUT        1
+#define GAMEMODE_WIPEOUT_HEIGHT 1190.0
 
 public Plugin:myinfo = {
     name = "TF2 Ware",
@@ -206,6 +216,7 @@ public OnPluginStart() {
     ww_music = CreateConVar("ww_music_fix", "0", "Apply music fix? Should only be on for localhosts during testing", FCVAR_PLUGIN);
     ww_log = CreateConVar("ww_log", "0", "Log server events?", FCVAR_PLUGIN);
     ww_special = CreateConVar("ww_special", "0", "Next round is Special Round?", FCVAR_PLUGIN);
+    ww_gamemode = CreateConVar("ww_gamemode", "-1", "Gamemode", FCVAR_PLUGIN);
     ww_force_special = CreateConVar("ww_force_special", "0", "Forces a specific Special Round on Special Round", FCVAR_PLUGIN);
     
 }
@@ -349,6 +360,7 @@ public OnMapStart() {
         RemoveNotifyFlag("mp_friendlyfire");
         RemoveNotifyFlag("tf_tournament_hide_domination_icons");
         SetConVarInt(FindConVar("tf_tournament_hide_domination_icons"), 0, true);
+        SetConVarInt(FindConVar("mp_friendlyfire"), 1);
         
         // Include optional achievements
         if (LibraryExists("mw_ach")) g_Achievements = true;
@@ -361,14 +373,23 @@ public OnMapStart() {
         precacheSound(MUSIC_START);
         precacheSound(MUSIC_WIN);
         precacheSound(MUSIC_FAIL);
-        precacheSound(SOUND_COMPLETE);
-        precacheSound(SOUND_COMPLETE_YOU);
         precacheSound(MUSIC_SPEEDUP);
         precacheSound(MUSIC_BOSS);
         precacheSound(MUSIC_GAMEOVER);
-        precacheSound(SOUND_MINISCORE);
+        
+        precacheSound(MUSIC2_START);
+        precacheSound(MUSIC2_WIN);
+        precacheSound(MUSIC2_FAIL);
+        precacheSound(MUSIC2_SPEEDUP);
+        precacheSound(MUSIC2_BOSS);
+        precacheSound(MUSIC2_GAMEOVER);
+        
         precacheSound(MUSIC_WAITING);
         precacheSound(MUSIC_SPECIAL);
+        
+        precacheSound(SOUND_COMPLETE);
+        precacheSound(SOUND_COMPLETE_YOU);
+        precacheSound(SOUND_MINISCORE);
         precacheSound(SOUND_SELECT);
         PrecacheModel("models/props_farm/wooden_barrel.mdl", true);
         PrecacheModel("models/props_farm/gibs/wooden_barrel_break02.mdl", true);
@@ -459,17 +480,24 @@ public Action:Event_Roundstart(Handle:event,const String:name[],bool:dontBroadca
     if (g_enabled && GetConVarBool(ww_enable)) {
         if ( Roundstarts == 0 ) {
             g_waiting = true;
+            SetGameMode();
+            RemoveAllParticipants();
         }
 
         if ( Roundstarts == 1 ) {
             g_waiting = false;
+            SetGameMode();
+            ResetScores();
+            StartMinigame();
             for (new i = 1; i <= MaxClients; i++) {
-                if (IsValidClient(i) && !IsFakeClient(i) && g_Spawned[i]) {
-                StopSound(i, SND_CHANNEL_SPECIFIC, MUSIC_WAITING);
-                SetOverlay(i, "");
+                if (IsValidClient(i) && g_Spawned[i]) {
+                    if (!IsFakeClient(i)) {
+                        StopSound(i, SND_CHANNEL_SPECIFIC, MUSIC_WAITING);
+                        SetOverlay(i, "");
+                    }
+                    if (g_Gamemode == GAMEMODE_WIPEOUT) SetWipeoutPosition(i, true);
                 }
             }
-            StartMinigame();
             if (GetConVarBool(ww_log)) LogMessage("Waiting-for-players period has ended");
         }
     }
@@ -488,6 +516,7 @@ public OnClientPostAdminCheck(client) {
     if (!g_enabled) return;
     UpdateClientCheatValue();
     g_Points[client] = GetAverageScore();
+    if (g_Gamemode == GAMEMODE_WIPEOUT) g_Points[client] = -1;
     
     // Country
     decl String:ip[32];
@@ -543,7 +572,7 @@ public OnPreThink(client) {
         }
     }
     
-    if ((status == 2) && (g_attack == false) && GetConVarBool(ww_enable) && g_enabled) {
+    if ((status == 2) && (g_attack == false || !IsClientParticipating(client)) && GetConVarBool(ww_enable) && g_enabled) {
         if ((iButtons & IN_ATTACK2) || (iButtons & IN_ATTACK)) {
         iButtons &= ~IN_ATTACK;
         iButtons &= ~IN_ATTACK2;
@@ -567,7 +596,7 @@ public EventInventoryApplication(Handle:event, const String:name[], bool:dontBro
             DisableClientWeapons(client);
             if (status != 5) CreateSprite(client);
         }
-        if (status == 2) {
+        if (status == 2 && IsClientParticipating(client)) {
             Call_StartForward(g_justEntered);
             Call_PushCell(client);
             Call_Finish();
@@ -584,7 +613,15 @@ public EventInventoryApplication(Handle:event, const String:name[], bool:dontBro
             SetEntityRenderColor(client, 255, 255, 255, 0);
         }
         
-        SetEntProp(client, Prop_Send, "m_iHideHUD", 1);
+        if (g_Gamemode == GAMEMODE_WIPEOUT && g_waiting == false) {
+            if (status == 2 && IsClientParticipating(client)) {
+                // do nothing
+            }
+            else {
+                SetWipeoutPosition(client, true);
+                HandleWipeoutLives(client);
+            }
+        }
     }
 }
 
@@ -614,6 +651,18 @@ public OnGameFrame() {
     if (GetConVarBool(ww_enable) && g_enabled && (status == 2) && (g_OnGameFrame_Minigames != INVALID_HANDLE)) {
         Call_StartForward(g_OnGameFrame_Minigames);
         Call_Finish();
+        
+        if (g_Gamemode == GAMEMODE_WIPEOUT && status == 1) {
+            for (new i = 1; i <= MaxClients; i++) {
+                if (IsValidClient(i) && IsPlayerAlive(i) && IsClientParticipating(i)) {
+                    new Float:pos[3];
+                    GetClientAbsOrigin(i, pos);
+                    pos[2] -= 25.0;
+                    if (pos[2] < GAMEMODE_WIPEOUT_HEIGHT) pos[2] = GAMEMODE_WIPEOUT_HEIGHT;
+                    TeleportEntity(i, pos, NULL_VECTOR, NULL_VECTOR);
+                }
+            }
+        }
     }
 }
 
@@ -688,7 +737,18 @@ HandOutPoints() {
     for (new i = 1; i <= MaxClients; i++) {
         new points = 1;
         if (bossBattle == 1) points = 5;
-        if ((IsValidClient(i)) && (g_Complete[i]) && (GetClientTeam(i) >= 2) && (g_Spawned[i]) && SpecialRound != 7) g_Points[i] += points;
+        if ((IsValidClient(i)) && IsClientParticipating(i) && SpecialRound != 7) {
+            if (g_Complete[i]) {
+                if (g_Gamemode == GAMEMODE_NORMAL) g_Points[i] += points;
+            }
+            else {
+                if (g_Gamemode == GAMEMODE_WIPEOUT && g_Points[i] > 0) {
+                    g_Points[i] -= points;
+                    if (g_Points[i] < 0) g_Points[i] = 0;
+                    HandleWipeoutLives(i);
+                }
+            }
+        }
         g_Complete[i] = false;
     }
 }
@@ -698,16 +758,55 @@ StartMinigame() {
         if (GetConVarBool(ww_log)) LogMessage("Starting microgame %s! Status = 0", minigame);
         SetConVarInt(FindConVar("mp_respawnwavetime"), 9999);
         
-        HandOutPoints();
+        new Float:MUSIC_INFO_LEN = MUSIC_START_LEN;
+        decl String:MUSIC_INFO[PLATFORM_MAX_PATH];
+        Format(MUSIC_INFO, sizeof(MUSIC_INFO), MUSIC_START);
+        if (g_Gamemode == GAMEMODE_WIPEOUT) {
+            MUSIC_INFO_LEN = MUSIC2_START_LEN;
+            Format(MUSIC_INFO, sizeof(MUSIC_INFO), MUSIC2_START);
+        }
+        
         RespawnAll();
+        RemoveAllParticipants();
+        UpdateHud(GetSpeedMultiplier(MUSIC_INFO_LEN));
         if (SpecialRound == 4) NoCollision(true);
 
         currentSpeed = GetConVarFloat(ww_speed);
         ServerCommand("host_timescale %f", GetHostMultiplier(1.0));
         ServerCommand("phys_timescale %f", GetHostMultiplier(1.0));
         
-        if (GetConVarBool(ww_music)) EmitSoundToClient(1, MUSIC_START, SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, SNDVOL_NORMAL,GetSoundMultiplier());
-        else EmitSoundToAll(MUSIC_START, SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, SNDVOL_NORMAL,GetSoundMultiplier());
+        if (g_Gamemode == GAMEMODE_WIPEOUT) {
+            // Get two people to fight it off
+            new personA = GetRandomWipeoutPlayer();
+            if (IsValidClient(personA)) g_Participating[personA] = true;
+            new personB = GetRandomWipeoutPlayer();
+            if (IsValidClient(personB)) g_Participating[personB] = true;
+            
+            new personC = -1;
+            if (GetLeftWipeoutPlayers() > 4) personC = GetRandomWipeoutPlayer();
+            if (IsValidClient(personC)) g_Participating[personC] = true;
+            
+            if (IsValidClient(personA) == false || IsValidClient(personB) == false) {
+                status = 4;
+                bossBattle = 2;
+                CreateTimer(GetSpeedMultiplier(MUSIC_INFO_LEN), Victory_timer);
+                return;
+            }
+            decl String:strMessage[512];
+            Format(strMessage, sizeof(strMessage), "%N\n%N", personA, personB);
+            
+            if (IsValidClient(personC)) Format(strMessage, sizeof(strMessage), "%s\n%N", strMessage, personC);
+            PrintCenterTextAll(strMessage);
+        }
+        else {
+            for (new i = 1; i <= MaxClients; i++) {
+                if (IsValidClient(i) && GetClientTeam(i) >= 2 && g_Spawned[i] == true) g_Participating[i] = true;
+            }
+        }
+        
+        
+        if (GetConVarBool(ww_music)) EmitSoundToClient(1, MUSIC_INFO, SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, SNDVOL_NORMAL,GetSoundMultiplier());
+        else EmitSoundToAll(MUSIC_INFO, SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, SNDVOL_NORMAL,GetSoundMultiplier());
         
         for (new i = 1; i <= MaxClients; i++) {
             if (IsValidClient(i) && (!(IsFakeClient(i)))) {
@@ -722,11 +821,10 @@ StartMinigame() {
         minigame = g_name[iMinigame-1];
         if (bossBattle == 1) g_lastboss = iMinigame;
         else g_lastminigame = iMinigame;
-        CreateTimer(GetSpeedMultiplier(MUSIC_START_LEN), Game_Start);
+        CreateTimer(GetSpeedMultiplier(MUSIC_INFO_LEN), Game_Start);
         if (SpecialRound == 6) g_attack = true;
         else g_attack = false;
         CreateAllSprites();
-        UpdateHud(GetSpeedMultiplier(MUSIC_START_LEN));
     }
 }
 
@@ -740,6 +838,15 @@ public Action:Game_Start(Handle:hTimer) {
         if (SpecialRound == 8) {
             for (new i = 1; i <= MaxClients; i++) {
                 if (IsValidClient(i) && !IsFakeClient(i)) ClientCommand(i, "wait; thirdperson");
+            }
+        }
+        
+        if (g_Gamemode == GAMEMODE_WIPEOUT) {
+            for (new i2 = 1; i2 <= MaxClients; i2++) {
+                if (IsValidClient(i2) && IsPlayerAlive(i2) && IsClientParticipating(i2)) {
+                    SetEntityMoveType(i2, MoveType:MOVETYPE_WALK);
+                    SetWipeoutPosition(i2, false);
+                }
             }
         }
         
@@ -833,21 +940,37 @@ public Action:EndGame(Handle:hTimer) {
         SetCameraState(false);
         status = 0;
         
+        new Float:MUSIC_INFO_LEN = MUSIC_END_LEN;
+        decl String:MUSIC_INFO_WIN[PLATFORM_MAX_PATH];
+        decl String:MUSIC_INFO_FAIL[PLATFORM_MAX_PATH];
+        Format(MUSIC_INFO_WIN, sizeof(MUSIC_INFO_WIN), MUSIC_WIN);
+        Format(MUSIC_INFO_FAIL, sizeof(MUSIC_INFO_FAIL), MUSIC_FAIL);
+        if (g_Gamemode == GAMEMODE_WIPEOUT) {
+            MUSIC_INFO_LEN = MUSIC2_END_LEN;
+            Format(MUSIC_INFO_WIN, sizeof(MUSIC_INFO_WIN), MUSIC2_WIN);
+            Format(MUSIC_INFO_FAIL, sizeof(MUSIC_INFO_FAIL), MUSIC2_FAIL);
+        }
+        
+        if (GetMinigameConfNum(minigame, "endrespawn", 0) > 0) RespawnAll(true, false);
+        else if (g_Gamemode == GAMEMODE_WIPEOUT) {
+            for (new i2 = 1; i2 <= MaxClients; i2++) {
+                if (IsValidClient(i2) && IsClientParticipating(i2)) {
+                    SetWipeoutPosition(i2, true);
+                }
+            }
+        }
+        else RespawnAll();
+        
         if (SpecialRound == 6) g_attack = true;
         else g_attack = false;
         
         if (SpecialRound == 4) NoCollision(true);
         else NoCollision(false);
         
-        if (GetMinigameConfNum(minigame, "endrespawn", 0) > 0) RespawnAll(true, false);
-        else RespawnAll();
-        
         Call_StartForward(g_OnEndMinigame);
         Call_Finish();
         
         CleanupAllVocalizations();
-        
-        
         
         if (SpecialRound == 8) {
             for (new i = 1; i <= MaxClients; i++) {
@@ -861,8 +984,8 @@ public Action:EndGame(Handle:hTimer) {
         
         new String:sound[512];
         for (new i = 1; i <= MaxClients; i++) {
-            if (IsValidClient(i) && (!(IsFakeClient(i)))) {
-                if (GetClientTeam(i) >= 2 && (g_Spawned[i])) {
+            if (IsValidClient(i)) {
+                if (IsClientParticipating(i)) {
                     // heal everyone
                     //TF2_RegeneratePlayer(i);
                     
@@ -875,21 +998,21 @@ public Action:EndGame(Handle:hTimer) {
                     
                     // if client won
                     if (g_Complete[i]) {
-                        Format(sound, sizeof(sound), MUSIC_WIN);
+                        Format(sound, sizeof(sound), MUSIC_INFO_WIN);
                         Format(event, sizeof(event), "tf2ware_complete_%d", iMinigame);
                         if (g_Achievements) mw_AchievementEvent(event, i, 0, 0, 1);
                     }
                     
                     // if client lost
                     if (g_Complete[i] == false) {
-                        Format(sound, sizeof(sound), MUSIC_FAIL);
+                        Format(sound, sizeof(sound), MUSIC_INFO_FAIL);
                         Format(event, sizeof(event), "tf2ware_fail_%d", iMinigame);
                         if (SpecialRound == 7) DropPizza(i);
                         if (g_Achievements) mw_AchievementEvent(event, i, 0, 0, 1);
                     }
                 }
                 else {
-                    Format(sound, sizeof(sound), MUSIC_WIN);
+                    Format(sound, sizeof(sound), MUSIC_INFO_WIN);
                 }
                 new String:oldsound[512];
                 Format(oldsound, sizeof(oldsound), "imgay/tf2ware/minigame_%d.mp3", iMinigame);
@@ -908,7 +1031,7 @@ public Action:EndGame(Handle:hTimer) {
         RemoveAllFromForward(g_PlayerDeath, INVALID_HANDLE);
         
         for (new i = 1; i <= MaxClients; i++) {
-            if (IsValidClient(i) && (!(IsFakeClient(i)))  && (GetClientTeam(i) >= 2) && (g_Spawned[i])) {
+            if (IsValidClient(i) && !IsFakeClient(i) && IsClientParticipating(i)) {
                 if (g_Complete[i]) {
                     SetOverlay(i,"tf2ware_minigame_win");
                 }
@@ -918,38 +1041,69 @@ public Action:EndGame(Handle:hTimer) {
                 }
             }
         }
-        UpdateHud(GetSpeedMultiplier(MUSIC_END_LEN));
-        HandOutPoints();
+        UpdateHud(GetSpeedMultiplier(MUSIC_INFO_LEN));
+        
+        new bool:bHandlePoints = true;
+        if (g_Gamemode == GAMEMODE_WIPEOUT) {
+            new bool:bSomeoneWon = false;
+            for (new i = 1; i <= MaxClients; i++) {
+                if (IsValidClient(i) && IsClientParticipating(i) && g_Complete[i] == true) bSomeoneWon = true;
+            }
+            if (bSomeoneWon == false && bossBattle == 1 && GetLeftWipeoutPlayers() == 2) {
+                bHandlePoints = false;
+                CPrintToChatAll("{red}DRAW{default}... playing new boss!");
+            }
+        }
+        if (bHandlePoints) HandOutPoints();
 
         new bool:speedup = false;
         g_minigamestotal += 1;
         
         if (bossBattle == 1) bossBattle = 2;
-        if ((g_minigamestotal == 4) && (bossBattle == 0)) speedup = true;
-        if ((g_minigamestotal == 8) && (bossBattle == 0)) speedup = true;
-        if ((g_minigamestotal == 12) && (bossBattle == 0)) speedup = true;
-        if ((g_minigamestotal == 16) && (bossBattle == 0)) speedup = true;
-        if ((g_minigamestotal == 19) && (bossBattle == 0)) {
-            speedup = true;
-            bossBattle = 1;
-        }
-        if ((g_minigamestotal >= 19) && bossBattle == 2 && SpecialRound == 3 && Special_TwoBosses == false) {
-            speedup = true;
-            bossBattle = 1;
-            Special_TwoBosses = true;
-        }
         
+        if (g_Gamemode == GAMEMODE_WIPEOUT) {
+            if ((GetAverageScoreFloat() <= 2.80) && (bossBattle == 0) && currentSpeed <= 1.0) speedup = true;
+            if ((GetAverageScoreFloat() <= 2.50) && (bossBattle == 0) && currentSpeed <= 2.0) speedup = true;
+            if ((GetAverageScoreFloat() <= 2.20) && (bossBattle == 0) && currentSpeed <= 3.0) speedup = true;
+            if ((GetAverageScoreFloat() <= 1.80) && (bossBattle == 0) && currentSpeed <= 4.0) speedup = true;
+            if ((GetAverageScoreFloat() <= 1.40) && (bossBattle == 0) && currentSpeed <= 5.0) speedup = true;
+            if ((GetAverageScoreFloat() <= 1.0) && (bossBattle == 0) && currentSpeed <= 6.0) speedup = true;
+            if ((GetLeftWipeoutPlayers() == 2) && (bossBattle != 1)) {
+                speedup = true;
+                bossBattle = 1;
+            }
+            
+        }
+        else {
+            if ((g_minigamestotal == 4) && (bossBattle == 0)) speedup = true;
+            if ((g_minigamestotal == 8) && (bossBattle == 0)) speedup = true;
+            if ((g_minigamestotal == 12) && (bossBattle == 0)) speedup = true;
+            if ((g_minigamestotal == 16) && (bossBattle == 0)) speedup = true;
+            if ((g_minigamestotal == 19) && (bossBattle == 0)) {
+                speedup = true;
+                bossBattle = 1;
+            }
+            if ((g_minigamestotal >= 19) && bossBattle == 2 && SpecialRound == 3 && Special_TwoBosses == false) {
+                speedup = true;
+                bossBattle = 1;
+                Special_TwoBosses = true;
+            }
+        }
+        if (g_Gamemode == GAMEMODE_WIPEOUT && GetLeftWipeoutPlayers() <= 1) {
+            status = 4;
+            CreateTimer(GetSpeedMultiplier(MUSIC_INFO_LEN), Victory_timer);
+        }
         if (speedup == false) {
             status = 10;
-            CreateTimer(GetSpeedMultiplier(MUSIC_END_LEN), StartMinigame_timer2);
+            CreateTimer(GetSpeedMultiplier(MUSIC_INFO_LEN), StartMinigame_timer2);
         }
         if (speedup == true) {
             status = 3;
-            CreateTimer(GetSpeedMultiplier(MUSIC_END_LEN), Speedup_timer);
+            CreateTimer(GetSpeedMultiplier(MUSIC_INFO_LEN), Speedup_timer);
         }
         if (bossBattle == 2 && speedup == false) {
             status = 4;
-            CreateTimer(GetSpeedMultiplier(MUSIC_END_LEN), Victory_timer);
+            CreateTimer(GetSpeedMultiplier(MUSIC_INFO_LEN), Victory_timer);
         }
     }
     return Plugin_Stop;
@@ -957,7 +1111,15 @@ public Action:EndGame(Handle:hTimer) {
 
 public Action:Speedup_timer(Handle:hTimer) {
     if (status == 3) {
+        RemoveAllParticipants();
         if (bossBattle == 1) {
+            new Float:MUSIC_INFO_LEN = MUSIC_BOSS_LEN;
+            decl String:MUSIC_INFO[PLATFORM_MAX_PATH];
+            Format(MUSIC_INFO, sizeof(MUSIC_INFO), MUSIC_BOSS);
+            if (g_Gamemode == GAMEMODE_WIPEOUT) {
+                MUSIC_INFO_LEN = MUSIC2_BOSS_LEN;
+                Format(MUSIC_INFO, sizeof(MUSIC_INFO), MUSIC2_BOSS);
+            }
         
             // Set the Speed. If special round, we want it to be a tad faster ;)
             if (SpecialRound == 1) SetConVarFloat(ww_speed, 3.0);
@@ -965,29 +1127,37 @@ public Action:Speedup_timer(Handle:hTimer) {
             currentSpeed = GetConVarFloat(ww_speed);
             ServerCommand("host_timescale %f", GetHostMultiplier(1.0));
             ServerCommand("phys_timescale %f", GetHostMultiplier(1.0));
-            CreateTimer(GetSpeedMultiplier(MUSIC_BOSS_LEN), StartMinigame_timer2);
+            CreateTimer(GetSpeedMultiplier(MUSIC_INFO_LEN), StartMinigame_timer2);
             
-            if (GetConVarBool(ww_music)) EmitSoundToClient(1, MUSIC_BOSS, SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, SNDVOL_NORMAL,GetSoundMultiplier());
-            else EmitSoundToAll(MUSIC_BOSS, SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, SNDVOL_NORMAL,GetSoundMultiplier());
+            if (GetConVarBool(ww_music)) EmitSoundToClient(1, MUSIC_INFO, SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, SNDVOL_NORMAL,GetSoundMultiplier());
+            else EmitSoundToAll(MUSIC_INFO, SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, SNDVOL_NORMAL,GetSoundMultiplier());
             for (new i = 1; i <= MaxClients; i++) {
                 if (IsValidClient(i) && (!(IsFakeClient(i)))) {
                     SetOverlay(i,"tf2ware_minigame_boss");
                 }
             }            
-            UpdateHud(GetSpeedMultiplier(MUSIC_BOSS_LEN));
+            UpdateHud(GetSpeedMultiplier(MUSIC_INFO_LEN));
         }
     
         if (bossBattle != 1) {
-            if (GetConVarBool(ww_music)) EmitSoundToClient(1, MUSIC_SPEEDUP, SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, SNDVOL_NORMAL,GetSoundMultiplier());
-            else EmitSoundToAll(MUSIC_SPEEDUP, SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, SNDVOL_NORMAL,GetSoundMultiplier());
+            new Float:MUSIC_INFO_LEN = MUSIC_SPEEDUP_LEN;
+            decl String:MUSIC_INFO[PLATFORM_MAX_PATH];
+            Format(MUSIC_INFO, sizeof(MUSIC_INFO), MUSIC_SPEEDUP);
+            if (g_Gamemode == GAMEMODE_WIPEOUT) {
+                MUSIC_INFO_LEN = MUSIC2_SPEEDUP_LEN;
+                Format(MUSIC_INFO, sizeof(MUSIC_INFO), MUSIC2_SPEEDUP);
+            }
+        
+            if (GetConVarBool(ww_music)) EmitSoundToClient(1, MUSIC_INFO, SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, SNDVOL_NORMAL,GetSoundMultiplier());
+            else EmitSoundToAll(MUSIC_INFO, SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, SNDVOL_NORMAL,GetSoundMultiplier());
             for (new i = 1; i <= MaxClients; i++) {
                 if (IsValidClient(i) && (!(IsFakeClient(i)))) {
                     SetOverlay(i,"tf2ware_minigame_speed");
                 }
             }
-            UpdateHud(GetSpeedMultiplier(MUSIC_SPEEDUP_LEN));
+            UpdateHud(GetSpeedMultiplier(MUSIC_INFO_LEN));
             SetConVarFloat(ww_speed, GetConVarFloat(ww_speed) + 1.0);
-            CreateTimer(GetSpeedMultiplier(MUSIC_SPEEDUP_LEN), StartMinigame_timer2);
+            CreateTimer(GetSpeedMultiplier(MUSIC_INFO_LEN), StartMinigame_timer2);
         }
         CreateAllSprites();
         status = 10;
@@ -1004,9 +1174,16 @@ public Action:Victory_timer(Handle:hTimer) {
         CreateTimer(GetSpeedMultiplier(8.17), Restartall_timer);
         status = 5;
         
+        new Float:MUSIC_INFO_LEN = MUSIC_GAMEOVER_LEN;
+        decl String:MUSIC_INFO[PLATFORM_MAX_PATH];
+        Format(MUSIC_INFO, sizeof(MUSIC_INFO), MUSIC_GAMEOVER);
+        if (g_Gamemode == GAMEMODE_WIPEOUT) {
+            MUSIC_INFO_LEN = MUSIC2_GAMEOVER_LEN;
+            Format(MUSIC_INFO, sizeof(MUSIC_INFO), MUSIC2_GAMEOVER);
+        }
         
-        if (GetConVarBool(ww_music)) EmitSoundToClient(1, MUSIC_GAMEOVER, SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, SNDVOL_NORMAL,GetSoundMultiplier());
-        else EmitSoundToAll(MUSIC_GAMEOVER, SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, SNDVOL_NORMAL,GetSoundMultiplier());
+        if (GetConVarBool(ww_music)) EmitSoundToClient(1, MUSIC_INFO, SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, SNDVOL_NORMAL,GetSoundMultiplier());
+        else EmitSoundToAll(MUSIC_INFO, SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, SNDVOL_NORMAL,GetSoundMultiplier());
         
         DestroyAllSprites();
         ResetWinners();
@@ -1017,11 +1194,24 @@ public Action:Victory_timer(Handle:hTimer) {
         new Handle:ArrayWinners = CreateArray();
         decl String:winnerstring_prefix[128];
         decl String:winnerstring_names[512];
+        decl String:pointsname[512];
+        Format(pointsname, sizeof(pointsname), "points");
+        if (g_Gamemode == GAMEMODE_WIPEOUT) Format(pointsname, sizeof(pointsname), "lives");
+        if (SpecialRound == 7) Format(pointsname, sizeof(pointsname), "pizzas");
         
+        new bool:bAccepted = false;
         for (new i = 1; i <= MaxClients; i++) {
             SetOverlay(i, "");
             if (IsValidClient(i)) {
-                if ((SpecialRound != 5 && g_Points[i] >= targetscore) || (SpecialRound == 5 && g_Points[i] <= targetscore)) {
+                bAccepted = false;
+                if (g_Gamemode == GAMEMODE_WIPEOUT) {
+                    if (g_Points[i] > 0) bAccepted = true;
+                }
+                else {
+                    if (SpecialRound != 5 && g_Points[i] >= targetscore) bAccepted = true;
+                    if (SpecialRound == 5 && g_Points[i] <= targetscore) bAccepted = true;
+                }
+                if (bAccepted) {
                     g_Winner[i] = 1;
                     CreateSprite(i);
                     RespawnClient(i, true, true);
@@ -1046,7 +1236,7 @@ public Action:Victory_timer(Handle:hTimer) {
         if (winnernumber == 1) Format(winnerstring_prefix, sizeof(winnerstring_prefix), "{green}The winner is");
         else Format(winnerstring_prefix, sizeof(winnerstring_prefix), "{green}The winners are");
         
-        CPrintToChatAll("%s %s (%i points)!", winnerstring_prefix, winnerstring_names, targetscore);
+        CPrintToChatAll("%s %s (%i %s)!", winnerstring_prefix, winnerstring_names, targetscore, pointsname);
         CloseHandle(ArrayWinners);
         
         if (SpecialRound > 0) {
@@ -1056,8 +1246,8 @@ public Action:Victory_timer(Handle:hTimer) {
             ShowGameText("Special Round is over!");
         }
         
-        UpdateHud(GetSpeedMultiplier(MUSIC_GAMEOVER_LEN));
-        SetConVarInt(FindConVar("mp_friendlyfire"), 1);
+        UpdateHud(GetSpeedMultiplier(MUSIC_INFO_LEN));
+        
     }
     return Plugin_Stop;
 }
@@ -1077,7 +1267,6 @@ public Action:Restartall_timer(Handle:hTimer) {
         currentSpeed = GetConVarFloat(ww_speed);
         ResetScores();
         SetStateAll(false);
-        ResetConVar(FindConVar("mp_friendlyfire"));
         ResetWinners();
         g_minigamestotal = 0;
         
@@ -1092,6 +1281,8 @@ public Action:Restartall_timer(Handle:hTimer) {
         }
         else {
             status = 0;
+            SetGameMode();
+            ResetScores();
             StartMinigame();
         }
         
@@ -1213,7 +1404,11 @@ RespawnClient(any:i, bool:force = false, bool:savepos = true) {
     decl Float:ang[3];
     new alive = false;
     if (IsValidClient(i) && (g_Spawned[i] == true)) {
-        if ((!(IsPlayerAlive(i))) || force) {
+        new bool:force2 = false;
+        if (!IsPlayerAlive(i)) force2 = true;
+        if (force && IsClientParticipating(i)) force2 = true;
+        if (g_Gamemode == GAMEMODE_WIPEOUT && g_Points[i] <= 0) force2 = false;
+        if (force2) {
             alive = false;
             if (savepos) {
                 GetClientAbsOrigin(i, pos);
@@ -1260,12 +1455,19 @@ RespawnClient(any:i, bool:force = false, bool:savepos = true) {
  */
 
 SetStateClient(client, bool:value, bool:complete=false) {
-    if (IsValidClient(client)) {
+    if (IsValidClient(client) && IsClientParticipating(client)) {
         if (complete && g_Complete[client] != value) {
             if (value) {
                 EmitSoundToClient(client, SOUND_COMPLETE);
                 for(new i = 1; i <= MaxClients; i++) {
-                    if (IsValidClient(i) && !IsFakeClient(i)) EmitSoundToClient(i, SOUND_COMPLETE_YOU, client);
+                    if (IsValidClient(i) && !IsFakeClient(i)) {
+                        EmitSoundToClient(i, SOUND_COMPLETE_YOU, client);
+                        if (IsClientParticipating(i) && IsPlayerAlive(i) && g_Gamemode == GAMEMODE_WIPEOUT && i != client) {
+                            SetStateClient(i, false, true);
+                            ForcePlayerSuicide(i);
+                            CPrintToChatEx(i, client, "{green}You were beaten by {teamcolor}%N{green}!", client);
+                        }
+                    }
                 }
                 new String:effect[128] = PARTICLE_WIN_BLUE;
                 if (GetClientTeam(client) == 2) effect = PARTICLE_WIN_RED;
@@ -1381,15 +1583,27 @@ UpdateHud(Float:time) {
     decl String:output[512];
     decl String:add[5];
     decl String:scorename[26];
+    new colorR = 255;
+    new colorG = 255;
+    new colorB = 0;
+    Format(scorename, sizeof(scorename), "Points:");
+    if (g_Gamemode == GAMEMODE_WIPEOUT && SpecialRound != 7) {
+        Format(scorename, sizeof(scorename), "Lives:");
+    }
     if (SpecialRound == 7) Format(scorename, sizeof(scorename), "Pizza:");
-    else Format(scorename, sizeof(scorename), "Points:");
     for(new i = 1; i <= MaxClients; i++) {
         if (IsValidClient(i)) {
             Format(add, sizeof(add), "");
-            if (g_Complete[i] && bossBattle == 1 && SpecialRound != 7) Format(add, sizeof(add), "+5");
-            if (g_Complete[i] && bossBattle != 1 && SpecialRound != 7) Format(add, sizeof(add), "+1");
+            if (g_Gamemode == GAMEMODE_WIPEOUT) {
+                if (!g_Complete[i] && IsClientParticipating(i) && bossBattle != 1 && SpecialRound != 7) Format(add, sizeof(add), "-1");
+                if (!g_Complete[i] && IsClientParticipating(i) && bossBattle == 1 && SpecialRound != 7) Format(add, sizeof(add), "-5");
+            }
+            else {
+                if (g_Complete[i] && IsClientParticipating(i) && bossBattle != 1 && SpecialRound != 7) Format(add, sizeof(add), "+1");
+                if (g_Complete[i] && IsClientParticipating(i) && bossBattle == 1 && SpecialRound != 7) Format(add, sizeof(add), "+5");
+            }
             Format(output, sizeof(output), "%s %i %s", scorename, g_Points[i], add);
-            SetHudTextParams(0.3, 0.70, time, 255, 255, 0, 0);
+            SetHudTextParams(0.3, 0.70, time, colorR, colorG, colorB, 0);
             ShowSyncHudText(i, hudScore, output);
         }
     }
@@ -1408,7 +1622,8 @@ public SortPlayerTimes(elem1[],elem2[],const array[][],Handle:hndl) {
 
 ResetScores() {
     for(new i = 1; i <= MaxClients; i++) {
-        g_Points[i] = 0;
+        if (g_Gamemode == GAMEMODE_WIPEOUT) g_Points[i] = 3;
+        else g_Points[i] = 0;
     }
 }
 
@@ -1446,6 +1661,23 @@ GetAverageScore() {
     if ((total > 0) && (out > 0)) out = out / total;
     
     return out;
+}
+
+stock Float:GetAverageScoreFloat() {
+    new out = 0;
+    new Float:out2 = 0.0;
+    new total = 0;
+    
+    for (new i = 1; i <= MaxClients; i++) {
+        if (IsValidClient(i) && GetClientTeam(i) >= 2 && (g_Points[i] > 0)) {
+            out += g_Points[i];
+            total += 1;
+        }
+    }
+    
+    if ((total > 0) && (out > 0)) out2 = float(out) / float(total);
+    
+    return out2;
 }
 
 ResetWinners() {
@@ -1489,9 +1721,11 @@ InitMinigame(id) {
     Call_Finish();
     
     for (new i = 1; i <= MaxClients; i++) {
-        Call_StartForward(g_justEntered);
-        Call_PushCell(i);
-        Call_Finish();
+        if (IsValidClient(i) && IsClientParticipating(i)) {
+            Call_StartForward(g_justEntered);
+            Call_PushCell(i);
+            Call_Finish();
+        }
     }
 }
 
@@ -1502,23 +1736,17 @@ public Player_Death(Handle:event, const String:name[], bool:dontBroadcast) {
     
     if (GetConVarBool(ww_enable) && (status == 2)) {
     
-        if (g_PlayerDeath != INVALID_HANDLE && IsValidClient(client)) {
+        if (g_PlayerDeath != INVALID_HANDLE && IsValidClient(client) && IsClientParticipating(client)) {
             Call_StartForward(g_PlayerDeath);
             Call_PushCell(client);
             Call_Finish();
         }
     }
     
-    if (SpecialRound == 7) DropPizza(client);
+    if (SpecialRound == 7 && IsClientParticipating(client)) DropPizza(client);
     
     RemoveFakeWeapon(client);
 }
-
-/* public ScoreGreaterThan(left, right, playerids[], Handle:data) {
-    if (g_Points[left] < g_Points[right]) return -1;
-    if (g_Points[left] == g_Points[right]) return 0;
-    return 1;
-} */
 
 // Some convenience functions for parsing the configuration file more simply.
 GotoGameConf(String:game[]) {
@@ -1547,4 +1775,76 @@ GetMinigameConfNum(String:game[], String:key[], def=0) {
     new value = KvGetNum(MinigameConf, key, def);
     KvGoBack(MinigameConf);
     return value;
+}
+
+GetRandomWipeoutPlayer() {
+    new Handle:roll = CreateArray();
+    new out = -1;
+    for (new i = 1; i <= MaxClients; i++) {
+        if (IsValidClient(i) && GetClientTeam(i) >= 2 && IsClientParticipating(i) == false && g_Points[i] > 0) {
+            PushArrayCell(roll, i);
+        }
+    }
+        
+    if (GetArraySize(roll) > 0) out = GetArrayCell(roll, GetRandomInt(0, GetArraySize(roll)-1));
+    CloseHandle(roll);
+    
+    return out;
+}
+
+stock bool:IsClientParticipating(iClient) {
+    if (g_Participating[iClient] == false) return false;
+    return true;
+}
+
+SetGameMode() {
+    new iOld = g_Gamemode;
+    new iGamemode = GetConVarInt(ww_gamemode);
+    if (iGamemode >= 0) g_Gamemode = iGamemode;
+    else {
+        g_Gamemode = GAMEMODE_NORMAL;
+        new iRoll = GetRandomInt(0, 100);
+        if (iRoll <= 10) g_Gamemode = GAMEMODE_WIPEOUT;
+    }
+    
+    if (iOld == GAMEMODE_WIPEOUT && g_Gamemode != iOld) {
+        for (new i = 1; i <= MaxClients; i++) {
+            if (IsValidClient(i) && IsPlayerAlive(i)) SetWipeoutPosition(i, false);
+        }
+    }
+    if (g_Gamemode == GAMEMODE_WIPEOUT && g_Gamemode != iOld) {
+        for (new i = 1; i <= MaxClients; i++) {
+            if (IsValidClient(i) && IsPlayerAlive(i)) SetWipeoutPosition(i, true);
+        }
+    }
+}
+
+RemoveAllParticipants() {
+    for (new i = 1; i <= MaxClients; i++) {
+        g_Participating[i] = false;
+    }
+}
+
+GetLeftWipeoutPlayers() {
+    new out = 0;
+    for (new i = 1; i <= MaxClients; i++) {
+        if (IsValidClient(i) && GetClientTeam(i) >= 2 && g_Points[i] > 0) out ++;
+    }
+    return out;
+}
+
+SetWipeoutPosition(iClient, bool:bState = false) {
+    new Float:fPos[3];
+    GetClientAbsOrigin(iClient, fPos);
+    if (bState) fPos[2] = GAMEMODE_WIPEOUT_HEIGHT;
+    else fPos[2] = -70.0;
+    TeleportEntity(iClient, fPos, NULL_VECTOR, NULL_VECTOR);
+}
+
+HandleWipeoutLives(iClient) {
+    if (g_Gamemode == GAMEMODE_WIPEOUT && IsValidClient(iClient) && IsPlayerAlive(iClient) && g_Points[iClient] <= 0) {
+        if (g_Points[iClient] == 0) CPrintToChatAllEx(iClient, "{teamcolor}%N{olive} has been {green}wiped out!", iClient);
+        if (g_Points[iClient] < 0) CPrintToChat(iClient, "{default}Please wait, the current {olive}Wipeout round{default} needs to finish before you can join.");
+        ForcePlayerSuicide(iClient);
+    }
 }

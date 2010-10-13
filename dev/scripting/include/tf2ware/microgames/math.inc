@@ -53,6 +53,7 @@ public Action:Math_Player_Say(iClient, iArgs) {
     // Check to make sure this is happening during the math minigame
     if (!StrEqual(minigame, "Math")) return Plugin_Continue;
     if (!(IsValidClient(iClient))) return Plugin_Continue;
+    if (!(IsClientParticipating(iClient))) return Plugin_Continue;
     if (iArgs < 1) return Plugin_Continue;
     
     if ((IsPlayerAlive(iClient)) && (status == 2) && (g_Complete[iClient] == false)) {
@@ -71,8 +72,7 @@ public Action:Math_Player_Say(iClient, iArgs) {
             if (!(g_first)) {
                 for (new i = 1; i <= MaxClients; i++) {
                     if (IsValidClient(i)) {
-                        if (g_Country[i] == 1) CPrintToChatEx(i, iClient, "{teamcolor}%N{green} ha indovinato la risposta per primo!", iClient);
-                        else CPrintToChatEx(i, iClient, "{teamcolor}%N{green} guessed the answer first!", iClient);
+                        CPrintToChatEx(i, iClient, "{teamcolor}%N{green} guessed the answer first!", iClient);
                     }
                 }
                 g_first = true;

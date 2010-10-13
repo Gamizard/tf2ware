@@ -24,7 +24,6 @@ public SniperTarget_OnMinigame() {
     AddToForward(g_OnGameFrame_Minigames, INVALID_HANDLE, SniperTarget_OnGameFrame);
 
     g_attack = true;
-    RemoveAllWeapons();
     
     g_Target_Random = GetRandomInt(0,4);
     g_Target_Pos = 0;
@@ -123,6 +122,7 @@ public Action:SniperTarget_Hurt2(victim, &attacker, &inflictor, &Float:damage, &
 
 public SniperTarget_justEntered(client) {
     if (IsValidClient(client)) {
+        RemoveClientWeapons(client);
         SetClientClass(client, "sniper");
         GiveClientWeapon(client, "tf_weapon_sniperrifle", 0, true);
         SetClientClass(client, "sniper");

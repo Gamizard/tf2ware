@@ -8,7 +8,7 @@ public SawRun_OnMinigame() {
 
 public SawRun_OnGameFrame() {
     for (new i = 1; i <= MaxClients; i++) {
-        if (IsValidClient(i) && IsPlayerAlive(i)) {
+        if (IsValidClient(i) && IsPlayerAlive(i) && IsClientParticipating(i)) {
             decl Float:pos[3];
             GetClientAbsOrigin(i, pos);
             if (pos[1] > 1000.0) SetStateClient(i, true, true);

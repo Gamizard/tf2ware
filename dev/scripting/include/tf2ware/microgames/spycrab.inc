@@ -37,8 +37,6 @@ public Spycrab_OnMinigame() {
     } else {
         Spycrab_sprite_sky = -1;
     }*/
-    
-    RemoveAllWeapons();
 }
 
 public Spycrab_TimerMinigame(timer) {
@@ -49,7 +47,7 @@ public Spycrab_TimerMinigame(timer) {
         
         for (new i = 1; i <= MaxClients; i++) {
             min = -35.0;
-            if (IsValidClient(i) && IsPlayerAlive(i)) {
+            if (IsValidClient(i) && IsPlayerAlive(i) && IsClientParticipating(i)) {
                 if (GetEntProp(i, Prop_Send, "m_nPlayerCond") & 16) SetEntProp(i, Prop_Send, "m_nPlayerCond", 0);
                 SetEntPropFloat(i, Prop_Send, "m_flCloakMeter", 0.0);
                 TF2_RemovePlayerDisguise(i);
@@ -80,6 +78,7 @@ public Spycrab_TimerMinigame(timer) {
 
 public Spycrab_justEntered(client) {
     if (IsValidClient(client)) {
+        RemoveClientWeapons(client);
         SetClientClass(client, "spy");
         GiveClientWeapon(client, "tf_weapon_pda_spy", 3, true);
     }

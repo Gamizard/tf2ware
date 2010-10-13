@@ -21,8 +21,8 @@ public Action:Hopscotch_Weapon(Handle:hTimer) {
     if (status == 2 && g_Hopscotch_arena == 1) {
         g_Hopscotch_weapon = true;
         for (new i = 1; i <= MaxClients; i++) {
-            if (IsValidClient(i)) {
-                DisableClientWeapons(i);
+            if (IsValidClient(i) && IsClientParticipating(i)) {
+                RemoveClientWeapons(i);
                 GiveClientWeapon(i, "tf_weapon_rocketlauncher", 0, true);
             }
         }
@@ -36,7 +36,10 @@ public Hopscotch_justEntered(client) {
         if (g_Hopscotch_arena == 1) SetClientClass(client, "soldier");
         else SetClientClass(client, "heavy");
         DisableClientWeapons(client);
-        if (g_Hopscotch_weapon && g_Hopscotch_arena == 1) GiveClientWeapon(client, "tf_weapon_rocketlauncher", 0, true);
+        if (g_Hopscotch_weapon && g_Hopscotch_arena == 1) {
+            RemoveClientWeapons(client);
+            GiveClientWeapon(client, "tf_weapon_rocketlauncher", 0, true);
+        }
         
         decl Float:vel[3];
         vel[0] = 0.0;
@@ -74,7 +77,7 @@ public Hopscotch_justEntered(client) {
 
 public Hopscotch_OnGameFrame() {
     for (new i = 1; i <= MaxClients; i++) {
-        if (IsValidClient(i) && IsPlayerAlive(i)) {
+        if (IsValidClient(i) && IsPlayerAlive(i) && IsClientParticipating(i)) {
             decl Float:pos[3];
             GetClientAbsOrigin(i, pos);
             if (g_Hopscotch_arena == 0 && pos[1] > 2235.0  && g_Complete[i] == false ) SetStateClient(i, true, true);

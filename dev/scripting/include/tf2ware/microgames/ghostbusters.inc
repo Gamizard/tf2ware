@@ -50,7 +50,7 @@ public Ghostbusters_OnMinigame() {
     for (new i = 1; i <= medics; i++) {
         attempts = 0;
         target = GetRandomInt(1, AllPlayers);
-        while (((!IsValidClient(target)) || GetClientTeam(target) < 2 || g_Spawned[target] == false || IsFakeClient(target) || g_Mission[target] != GHOSTBUSTERS_SPY) && attempts <= 50) {
+        while (((!IsValidClient(target)) || IsClientParticipating(target) == false || IsFakeClient(target) || g_Mission[target] != GHOSTBUSTERS_SPY) && attempts <= 50) {
             target = GetRandomInt(1, AllPlayers);
             attempts += 1;
         }
@@ -63,7 +63,7 @@ public Ghostbusters_OnMinigame() {
     for (new i = 1; i <= heavies; i++) {
         attempts = 0;
         target = GetRandomInt(1, AllPlayers);
-        while (((!IsValidClient(target)) || GetClientTeam(target) < 2 || g_Spawned[target] == false || g_Mission[target] != GHOSTBUSTERS_SPY) && attempts <= 50) {
+        while (((!IsValidClient(target)) || IsClientParticipating(target) == false || g_Mission[target] != GHOSTBUSTERS_SPY) && attempts <= 50) {
             target = GetRandomInt(1, AllPlayers);
             attempts += 1;
         }
@@ -73,7 +73,7 @@ public Ghostbusters_OnMinigame() {
     }
     
     for (new i = 1; i <= MaxClients; i++) {
-        if (IsValidClient(i)) {
+        if (IsValidClient(i) && IsClientParticipating(i)) {
             if (g_Mission[i] == GHOSTBUSTERS_SPY) {
                 SetStateClient(i, true);
                 spyclients[i-1] = i;
@@ -103,7 +103,7 @@ public Ghostbusters_End() {
     
     for (new i = 1; i <= MaxClients; i++) {
         SDKUnhook(i, SDKHook_OnTakeDamage, Ghostbusters_Damage);
-        if (IsValidClient(i)) {
+        if (IsValidClient(i) && IsClientParticipating(i)) {
             StopSound(i, SND_CHANNEL_SPECIFIC, MUSIC_GHOSTB);
             if (IsPlayerAlive(i)) {
                 Ghostbusters_FixSlap(i);
@@ -210,15 +210,17 @@ public Ghostbusters_justEntered(client) {
 Ghostbusters_GetGroupId(client, id) {
     new out = 0;
     for (new i = 1; i <= MaxClients; i++) {
-        if (g_Mission[i] == id) out += 1;
-        if (i == client) return out;
+        if (IsValidClient(i) && IsClientParticipating(i)) {
+            if (g_Mission[i] == id) out += 1;
+            if (i == client) return out;
+        }
     }
     return 1;
 }
 
 public Ghostbusters_OnGameFrame() {
     for (new i = 1; i <= MaxClients; i++) {
-        if (IsValidClient(i) && IsPlayerAlive(i)) {
+        if (IsValidClient(i) && IsPlayerAlive(i) && IsClientParticipating(i)) {
             if (GetClientTeam(i) == 2 && g_Mission[i] != GHOSTBUSTERS_HEAVY) ChangeClientTeamAlive(i, 3);
             if (GetClientTeam(i) == 3 && g_Mission[i] == GHOSTBUSTERS_HEAVY) ChangeClientTeamAlive(i, 2);
         
@@ -234,7 +236,7 @@ public Ghostbusters_OnGameFrame() {
                         //Ghostbusters_Slap(target);
                         new default_fov = GetEntProp(target, Prop_Send, "m_iDefaultFOV"); 
                         new health = GetClientHealth(target);
-                        new new_fov = default_fov + (125 - health);
+                        new new_fov = default_fov + RoundFloat(float(125 - health)*0.75);
                         SetEntProp(target, Prop_Send, "m_iFOV", new_fov);
                     
                         new target_health = GetClientHealth(target);
@@ -279,8 +281,8 @@ public Action:Ghostbusters_Check(Handle:timer) {
     new bool:complete_spy = true;
     new winner = 0;
     for (new i = 1; i <= MaxClients; i++) {
-        if (IsValidClient(i) && (g_Mission[i] == GHOSTBUSTERS_SPY) && g_Spawned[i] && IsPlayerAlive(i)) complete_medic = false;
-        if (IsValidClient(i) && (g_Mission[i] == GHOSTBUSTERS_MEDIC) && g_Spawned[i] && IsPlayerAlive(i)) complete_spy = false;
+        if (IsValidClient(i) && IsClientParticipating(i) && (g_Mission[i] == GHOSTBUSTERS_SPY) && IsPlayerAlive(i)) complete_medic = false;
+        if (IsValidClient(i) && IsClientParticipating(i) && (g_Mission[i] == GHOSTBUSTERS_MEDIC) && IsPlayerAlive(i)) complete_spy = false;
     }
     
     if (complete_spy) winner = 2;
@@ -291,15 +293,15 @@ public Action:Ghostbusters_Check(Handle:timer) {
         if (winner == 2) CPrintToChatAll("{lightgreen}All medics are dead... {green}surviving undeads win!");
         for (new i = 1; i <= MaxClients; i++) {
             if (winner == 1) {
-                if (IsValidClient(i) && (g_Mission[i] == GHOSTBUSTERS_MEDIC) && IsPlayerAlive(i)) SetStateClient(i, true, true);
-                if (IsValidClient(i) && (g_Mission[i] != GHOSTBUSTERS_MEDIC)) {
+                if (IsValidClient(i) && IsClientParticipating(i) && (g_Mission[i] == GHOSTBUSTERS_MEDIC) && IsPlayerAlive(i)) SetStateClient(i, true, true);
+                if (IsValidClient(i) && IsClientParticipating(i) && (g_Mission[i] != GHOSTBUSTERS_MEDIC)) {
                     SetStateClient(i, false, true);
                     if (IsPlayerAlive(i)) ForcePlayerSuicide(i);
                 }
             }
             if (winner == 2) {
-                if (IsValidClient(i) && (g_Mission[i] != GHOSTBUSTERS_MEDIC) && IsPlayerAlive(i)) SetStateClient(i, true, true);
-                if (IsValidClient(i) && (g_Mission[i] == GHOSTBUSTERS_MEDIC)) {
+                if (IsValidClient(i) && IsClientParticipating(i) && (g_Mission[i] != GHOSTBUSTERS_MEDIC) && IsPlayerAlive(i)) SetStateClient(i, true, true);
+                if (IsValidClient(i) && IsClientParticipating(i) && (g_Mission[i] == GHOSTBUSTERS_MEDIC)) {
                     SetStateClient(i, false, true);
                     if (IsPlayerAlive(i)) ForcePlayerSuicide(i);
                 }

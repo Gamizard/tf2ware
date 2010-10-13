@@ -10,8 +10,6 @@ public RedFloor_OnMinigame() {
     
     CreateTimer(5.0, Minigame16_Timer);
     SetConVarInt(FindConVar("mp_friendlyfire"), 1);
-    
-    RemoveAllWeapons();
 }
 
 public Action:RedFloor_OnTakeDamageClient(victim, &attacker, &inflictor, &Float:damage, &damagetype) {
@@ -33,6 +31,7 @@ public RedFloor_justEntered(client) {
     if (IsValidClient(client)) {
         SDKHook(client, SDKHook_OnTakeDamage, RedFloor_OnTakeDamageClient);
         
+        RemoveClientWeapons(client);
         SetClientClass(client, "spy");
         GiveClientWeapon(client, "tf_weapon_knife", 2, true);
         

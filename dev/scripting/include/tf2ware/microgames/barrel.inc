@@ -5,7 +5,6 @@ new g_Barrels[MAXPLAYERS+1] = -1;
 public Barrel_OnMinigame() {
     AddToForward(g_justEntered, INVALID_HANDLE, Barrel_justEntered);
     AddToForward(g_OnEndMinigame, INVALID_HANDLE, Barrel_End);
-    AddToForward(g_OnGameFrame_Minigames, INVALID_HANDLE, Barrel_OnGameFrame);
     
     g_attack = true;
     
@@ -15,7 +14,7 @@ public Barrel_OnMinigame() {
     DestroyAllBarrels();
     
     for (new i = 1; i <= MaxClients; i++) {
-        if (IsValidClient(i)) {
+        if (IsValidClient(i) && IsClientParticipating(i)) {
             GetClientAbsOrigin(i, pos);
             g_Barrels[i] = CreateEntityByName("prop_physics");
             
@@ -31,22 +30,11 @@ public Barrel_OnMinigame() {
             }    
         }
     }
-    
-    RemoveAllWeapons();
-}
-
-public Barrel_OnGameFrame() {
-    for (new i = 1; i <= MaxClients; i++) {
-        if (IsValidClient(i) && IsPlayerAlive(i)) {
-            decl Float:pos[3];
-            GetClientAbsOrigin(i, pos);
-            if (pos[1] > 1000.0) SetStateClient(i, true, true);
-        }
-    }
 }
 
 public Barrel_justEntered(client) {
     if (IsValidClient(client)) {
+        RemoveClientWeapons(client);
         SetClientClass(client, "scout");
         GiveClientWeapon(client, "tf_weapon_bat", 2, true);
     }

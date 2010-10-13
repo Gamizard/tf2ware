@@ -8,13 +8,13 @@ public Airblast_OnMinigame() {
     
     SetStateAll(true);
     g_attack = true;
-    RemoveAllWeapons();
 }
 
 public Airblast_justEntered(client) {
     if (IsValidClient(client)) {
         SDKHook(client, SDKHook_PreThink, Airblast_RemoveLeftClick);
     
+        RemoveClientWeapons(client);
         SetClientClass(client, "pyro");
         GiveClientWeapon(client, "tf_weapon_flamethrower", 0, true);
         SetClientClass(client, "pyro");
@@ -52,7 +52,7 @@ public Airblast_RemoveLeftClick(client) {
 
 public Airblast_CheckDeadPlayers() {
     for (new i = 1; i <= MaxClients; i++) {
-        if (IsValidClient(i) && (!(IsPlayerAlive(i)))) SetStateClient(i, false, true);
+        if (IsValidClient(i) && (!(IsPlayerAlive(i))) && IsClientParticipating(i)) SetStateClient(i, false, true);
     }
 }
 

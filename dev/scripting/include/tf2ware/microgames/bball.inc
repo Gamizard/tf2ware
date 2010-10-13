@@ -11,8 +11,6 @@ public BBall_OnMinigame() {
     AddToForward(g_OnEndMinigame, INVALID_HANDLE, BBall_End);
 
     g_attack = true;
-    RemoveAllWeapons();
-
 }
 
 public Action:BBall_OnTakeDamageClient(victim, &attacker, &inflictor, &Float:damage, &damagetype) {
@@ -54,6 +52,7 @@ public Action:Hook_StartTouch_Pipe(entity, other) {
 
 public BBall_justEntered(client) {
     if (IsValidClient(client)) {
+        RemoveClientWeapons(client);
         SetClientClass(client, "demoman");
         GiveClientWeapon(client, "tf_weapon_grenadelauncher", 0, true);
         

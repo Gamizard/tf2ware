@@ -58,7 +58,7 @@ public Pinata_justEntered(client) {
 /*
 public Pinata_OnGameFrame() {
     for (new i = 1; i <= MaxClients; i++) {
-        if (IsValidClient(i) && IsPlayerAlive(i)) {
+        if (IsValidClient(i) && IsPlayerAlive(i) && IsClientParticipating(i)) {
         }
     }
 }

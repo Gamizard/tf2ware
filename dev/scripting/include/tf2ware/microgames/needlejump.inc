@@ -12,13 +12,11 @@ public Needlejump_OnMinigame() {
     
     SetStateAll(true);
     g_attack = true;
-    
-    RemoveAllWeapons();
 }
 
 public Needlejump_OnGameFrame() {
     for (new i = 1; i <= MaxClients; i++) {
-        if((IsValidClient(i) && IsPlayerAlive(i))) {
+        if(IsValidClient(i) && IsPlayerAlive(i) && IsClientParticipating(i)) {
             if (g_Mission[i] == 0) PerformNeedleJump(i);
         }
     }
@@ -39,9 +37,9 @@ public Action:Needlejump_OnTakeDamageClient(victim, &attacker, &inflictor, &Floa
 }
 
 public Needlejump_TimerMinigame(timer) {
-    if (timer == 3) {
+    if ((g_Needle_Type != 1 && timer == 3) || (g_Needle_Type == 1 && timer == 5)) {
         for (new i = 1; i <= MaxClients; i++) {
-            if (IsValidClient(i) && IsPlayerAlive(i)) {
+            if (IsValidClient(i) && IsPlayerAlive(i) && IsClientParticipating(i)) {
                 decl Float:pos[3];
                 GetClientAbsOrigin(i, pos);
                 decl Float:forigin[3];
@@ -64,6 +62,7 @@ public Needlejump_justEntered(client) {
     if (IsValidClient(client)) {
         SDKHook(client, SDKHook_OnTakeDamage, Needlejump_OnTakeDamageClient);
     
+        RemoveClientWeapons(client);
         g_Mission[client] = g_Needle_Type;
         if (g_Mission[client] == 0) {
             SetClientClass(client, "medic");
