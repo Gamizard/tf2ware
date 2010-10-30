@@ -233,7 +233,7 @@ public OnMapStart() {
         AddServerTag("TF2Ware");
         
         // Load game config
-        GameConf = LoadGameConfigFile("tf2ware.games");
+        GameConf = LoadGameConfigFile("mechatheslag_global");
         
         // Load minigames
         decl String:imFile[PLATFORM_MAX_PATH];
@@ -757,6 +757,7 @@ StartMinigame() {
     if (GetConVarBool(ww_enable) && g_enabled && (status == 0) && g_waiting == false) {
         if (GetConVarBool(ww_log)) LogMessage("Starting microgame %s! Status = 0", minigame);
         SetConVarInt(FindConVar("mp_respawnwavetime"), 9999);
+        SetConVarInt(FindConVar("mp_friendlyfire"), 1);
         
         new Float:MUSIC_INFO_LEN = MUSIC_START_LEN;
         decl String:MUSIC_INFO[PLATFORM_MAX_PATH];
@@ -952,14 +953,14 @@ public Action:EndGame(Handle:hTimer) {
         }
         
         if (GetMinigameConfNum(minigame, "endrespawn", 0) > 0) RespawnAll(true, false);
-        else if (g_Gamemode == GAMEMODE_WIPEOUT) {
+        else RespawnAll();
+        if (g_Gamemode == GAMEMODE_WIPEOUT) {
             for (new i2 = 1; i2 <= MaxClients; i2++) {
                 if (IsValidClient(i2) && IsClientParticipating(i2)) {
                     SetWipeoutPosition(i2, true);
                 }
             }
         }
-        else RespawnAll();
         
         if (SpecialRound == 6) g_attack = true;
         else g_attack = false;
