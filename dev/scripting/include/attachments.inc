@@ -65,7 +65,13 @@ stock CDetach(ent) {
     new link = CGetLink(ent);
     if (link != -1) {
         AcceptEntityInput(ent, "SetParent", -1, -1, 0);
-        if (IsValidEntity(link)) AcceptEntityInput(link, "kill");
+        if (IsValidEntity(link) && link > 0) {
+            decl String:strClassname[32];
+            GetEdictClassname(link, strClassname, sizeof(strClassname));
+            if (StrEqual(strClassname, "env_sprite") {
+                AcceptEntityInput(link, "kill");
+            }
+        }
         for (new i = 0; i < GetArraySize(attachments_array); i++) {
             new ent2 = GetArrayCell(attachments_array, i);
             if (ent == ent2) RemoveFromArray(attachments_array, i);

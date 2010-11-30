@@ -20,11 +20,9 @@
 
 #define PLUGIN_VERSION "0.9.6-20"
 
+// Comment out to have no restriction
 // Japan Server's IP
 //#define FIXED_IP -1062731517
-
-// No Restriction
-#define FIXED_IP 0
 
 
 #define MUSIC2_START "imgay/tf2ware/tf2ware_intro.mp3"
@@ -151,6 +149,10 @@ new Handle:g_OnGameFrame_Minigames;
 new Handle:g_PlayerDeath;
 /////////////////////////////////////////
 
+#define GAMEMODE_NORMAL         0
+#define GAMEMODE_WIPEOUT        1
+#define GAMEMODE_WIPEOUT_HEIGHT 1190.0
+
 #include tf2ware\microgames\hitenemy.inc
 #include tf2ware\microgames\spycrab.inc
 #include tf2ware\microgames\kamikaze.inc
@@ -179,10 +181,6 @@ new Handle:g_PlayerDeath;
 #include tf2ware\vocalize.inc
 #include tf2ware\camera.inc
 
-#define GAMEMODE_NORMAL         0
-#define GAMEMODE_WIPEOUT        1
-#define GAMEMODE_WIPEOUT_HEIGHT 1190.0
-
 public Plugin:myinfo = {
     name = "TF2 Ware",
     author = "Mecha the Slag",
@@ -197,7 +195,10 @@ public OnPluginStart() {
     GetGameFolderName(game, sizeof(game));
     new iIp = GetConVarInt(FindConVar("hostip"));
     if (!(StrEqual(game, "tf"))) SetFailState("This plugin is only for Team Fortress 2, not %s", game);
-    if (FIXED_IP != 0 && FIXED_IP != iIp) SetFailState("This server does not have credidentals to run this plugin. Please contact the TF2Ware staff.");
+    
+    #if defined FIXED_IP
+    if (FIXED_IP != iIp) SetFailState("This server does not have credidentals to run this plugin. Please contact the TF2Ware staff.");
+    #endif
     
     // Check for SDKHooks
     if(GetExtensionFileStatus("sdkhooks.ext") < 1)
@@ -594,15 +595,15 @@ public EventInventoryApplication(Handle:event, const String:name[], bool:dontBro
     if (GetConVarBool(ww_enable) && g_enabled) {
         if ((status != 2) && (g_Winner[client] == 0)) {
             DisableClientWeapons(client);
-            if (status != 5) CreateSprite(client);
+            //if (status != 5) CreateSprite(client);
         }
         if (status == 2 && IsClientParticipating(client)) {
             Call_StartForward(g_justEntered);
             Call_PushCell(client);
             Call_Finish();
-            CreateSprite(client);
+            //CreateSprite(client);
         }
-        if (status == 5 && g_Winner[client] > 0) CreateSprite(client);
+        if (status == 5 && g_Winner[client] > 0) //CreateSprite(client);
         if ((status == 2 && g_attack) || (g_Winner[client] > 0) || (SpecialRound == 6)) SetWeaponState(client, true);
         else SetWeaponState(client, false);
         
@@ -825,7 +826,7 @@ StartMinigame() {
         CreateTimer(GetSpeedMultiplier(MUSIC_INFO_LEN), Game_Start);
         if (SpecialRound == 6) g_attack = true;
         else g_attack = false;
-        CreateAllSprites();
+        //CreateAllSprites();
     }
 }
 
@@ -1114,6 +1115,7 @@ public Action:Speedup_timer(Handle:hTimer) {
     if (status == 3) {
         RemoveAllParticipants();
         if (bossBattle == 1) {
+            if (GetConVarBool(ww_log)) LogMessage("GETTING READY TO START SOME BOSS");
             new Float:MUSIC_INFO_LEN = MUSIC_BOSS_LEN;
             decl String:MUSIC_INFO[PLATFORM_MAX_PATH];
             Format(MUSIC_INFO, sizeof(MUSIC_INFO), MUSIC_BOSS);
@@ -1121,14 +1123,24 @@ public Action:Speedup_timer(Handle:hTimer) {
                 MUSIC_INFO_LEN = MUSIC2_BOSS_LEN;
                 Format(MUSIC_INFO, sizeof(MUSIC_INFO), MUSIC2_BOSS);
             }
+            
+            if (GetConVarBool(ww_log)) LogMessage("Boss part 2");
         
             // Set the Speed. If special round, we want it to be a tad faster ;)
             if (SpecialRound == 1) SetConVarFloat(ww_speed, 3.0);
             else SetConVarFloat(ww_speed, 1.0);
+            
+            if (GetConVarBool(ww_log)) LogMessage("Boss part 3");
+            
             currentSpeed = GetConVarFloat(ww_speed);
             ServerCommand("host_timescale %f", GetHostMultiplier(1.0));
             ServerCommand("phys_timescale %f", GetHostMultiplier(1.0));
+            
+            if (GetConVarBool(ww_log)) LogMessage("Boss part 4");
+            
             CreateTimer(GetSpeedMultiplier(MUSIC_INFO_LEN), StartMinigame_timer2);
+            
+            if (GetConVarBool(ww_log)) LogMessage("Boss part 5");
             
             if (GetConVarBool(ww_music)) EmitSoundToClient(1, MUSIC_INFO, SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, SNDVOL_NORMAL,GetSoundMultiplier());
             else EmitSoundToAll(MUSIC_INFO, SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, SNDVOL_NORMAL,GetSoundMultiplier());
@@ -1136,9 +1148,14 @@ public Action:Speedup_timer(Handle:hTimer) {
                 if (IsValidClient(i) && (!(IsFakeClient(i)))) {
                     SetOverlay(i,"tf2ware_minigame_boss");
                 }
-            }            
+            }     
+
+            if (GetConVarBool(ww_log)) LogMessage("Boss part 6");
+            
             UpdateHud(GetSpeedMultiplier(MUSIC_INFO_LEN));
         }
+        
+        if (GetConVarBool(ww_log)) LogMessage("Boss part 7");
     
         if (bossBattle != 1) {
             new Float:MUSIC_INFO_LEN = MUSIC_SPEEDUP_LEN;
@@ -1160,10 +1177,14 @@ public Action:Speedup_timer(Handle:hTimer) {
             SetConVarFloat(ww_speed, GetConVarFloat(ww_speed) + 1.0);
             CreateTimer(GetSpeedMultiplier(MUSIC_INFO_LEN), StartMinigame_timer2);
         }
-        CreateAllSprites();
+        
+        if (GetConVarBool(ww_log)) LogMessage("Boss part 8");
+        
+        //CreateAllSprites();
         status = 10;
+        
+        if (GetConVarBool(ww_log)) LogMessage("Post boss");
     }
-    return Plugin_Stop;
 }
 
 public Action:Victory_timer(Handle:hTimer) {
@@ -1214,7 +1235,7 @@ public Action:Victory_timer(Handle:hTimer) {
                 }
                 if (bAccepted) {
                     g_Winner[i] = 1;
-                    CreateSprite(i);
+                    //CreateSprite(i);
                     RespawnClient(i, true, true);
                     SetWeaponState(i, true);
                     winnernumber += 1;

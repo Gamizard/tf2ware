@@ -185,10 +185,14 @@ stock DestroyAllSprites() {
 stock DestroySprite(client) {
     if (IsValidClient(client)) {
         new ent = g_Sprites[client];
-        if ((g_Sprites[client] > 0) && IsValidEntity(ent)) {
-            CDetach(ent);
-            AcceptEntityInput(ent, "kill");
-            g_Sprites[client] = 0;
+        if (ent > 0 && IsValidEntity(ent)) {
+            new String:classname[64];
+            GetEdictClassname(ent, classname, 64);
+            if(!StrEqual(classname, "env_sprite")) {
+                CDetach(ent);
+                AcceptEntityInput(ent, "kill");
+                g_Sprites[client] = 0;
+            }
         }
     }
 }

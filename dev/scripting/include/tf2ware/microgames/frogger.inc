@@ -221,10 +221,15 @@ public Frogger_OnGameFrame() {
                 SetStateClient(i, true, true);
                 if (g_Frogger_Goal == false) {
                     g_Frogger_Goal = true;
-                    CreateTimer(0.0, Frogger_Timer);
+                    
                     CPrintToChatAllEx(i, "{teamcolor}%N{default} made it to the goal first!", i);
-                    CPrintToChatAll("The boss will end in {red}10 seconds{default}!");
                     g_Frogger_Pos[i] = 99;
+                    if (g_Gamemode == GAMEMODE_WIPEOUT) {
+                        TriggerTimer(microgametimer);
+                    } else {
+                        CreateTimer(0.0, Frogger_Timer);
+                        CPrintToChatAll("The boss will end in {red}10 seconds{default}!");
+                    }
                 }
             }
         }
