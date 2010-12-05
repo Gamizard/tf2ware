@@ -1826,7 +1826,7 @@ SetGameMode() {
     else {
         g_Gamemode = GAMEMODE_NORMAL;
         new iRoll = GetRandomInt(0, 100);
-        if (iRoll <= 10) g_Gamemode = GAMEMODE_WIPEOUT;
+        if (iRoll <= 5) g_Gamemode = GAMEMODE_WIPEOUT;
     }
     
     if (iOld == GAMEMODE_WIPEOUT && g_Gamemode != iOld) {

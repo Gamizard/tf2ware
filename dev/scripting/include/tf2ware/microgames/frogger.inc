@@ -50,7 +50,7 @@ public Action:Frogger_Timer(Handle:hTimer) {
             if (g_Frogger_Timer < 5) CPrintToChatAll("{red}%d{default}!", g_Frogger_Timer);
         }
         else {
-            TriggerTimer(microgametimer);
+            if (microgametimer != INVALID_HANDLE) TriggerTimer(microgametimer);
         }
     }
 }
@@ -201,6 +201,7 @@ public Action:Frogger_Respawn(Handle:hTimer, any:client) {
 }
 
 public Frogger_OnGameFrame() {
+    if (status != 2) return;
     for (new i = 1; i <= MaxClients; i++) {
         if (IsValidClient(i) && IsPlayerAlive(i)) {
             decl Float:pos[3];
@@ -218,14 +219,14 @@ public Frogger_OnGameFrame() {
             
             // goal
             if (pos[1] > 3751.0 && g_Complete[i] == false ) {
-                SetStateClient(i, true, true);
                 if (g_Frogger_Goal == false) {
+                    SetStateClient(i, true, true);
                     g_Frogger_Goal = true;
                     
                     CPrintToChatAllEx(i, "{teamcolor}%N{default} made it to the goal first!", i);
                     g_Frogger_Pos[i] = 99;
                     if (g_Gamemode == GAMEMODE_WIPEOUT) {
-                        TriggerTimer(microgametimer);
+                        if (microgametimer != INVALID_HANDLE) TriggerTimer(microgametimer);
                     } else {
                         CreateTimer(0.0, Frogger_Timer);
                         CPrintToChatAll("The boss will end in {red}10 seconds{default}!");
