@@ -9,7 +9,6 @@
 #include <tf2_stocks>
 #include <sdkhooks>
 #include <geoip>
-#include <attachments>
 #include <attachables>
 
 #undef REQUIRE_PLUGIN
@@ -18,7 +17,7 @@
 
 #define MAX_MINIGAMES 40
 
-#define PLUGIN_VERSION "0.9.6-20"
+#define PLUGIN_VERSION "1.0.0 - 20"
 
 // Comment out to have no restriction
 // Japan Server's IP
@@ -193,10 +192,10 @@ public OnPluginStart() {
     // G A M E  C H E C K //
     decl String:game[32];
     GetGameFolderName(game, sizeof(game));
-    new iIp = GetConVarInt(FindConVar("hostip"));
     if (!(StrEqual(game, "tf"))) SetFailState("This plugin is only for Team Fortress 2, not %s", game);
     
     #if defined FIXED_IP
+    new iIp = GetConVarInt(FindConVar("hostip"));
     if (FIXED_IP != iIp) SetFailState("This server does not have credidentals to run this plugin. Please contact the TF2Ware staff.");
     #endif
     
@@ -595,15 +594,15 @@ public EventInventoryApplication(Handle:event, const String:name[], bool:dontBro
     if (GetConVarBool(ww_enable) && g_enabled) {
         if ((status != 2) && (g_Winner[client] == 0)) {
             DisableClientWeapons(client);
-            //if (status != 5) CreateSprite(client);
+            if (status != 5) CreateSprite(client);
         }
         if (status == 2 && IsClientParticipating(client)) {
             Call_StartForward(g_justEntered);
             Call_PushCell(client);
             Call_Finish();
-            //CreateSprite(client);
+            CreateSprite(client);
         }
-        if (status == 5 && g_Winner[client] > 0) //CreateSprite(client);
+        if (status == 5 && g_Winner[client] > 0) CreateSprite(client);
         if ((status == 2 && g_attack) || (g_Winner[client] > 0) || (SpecialRound == 6)) SetWeaponState(client, true);
         else SetWeaponState(client, false);
         
@@ -620,8 +619,8 @@ public EventInventoryApplication(Handle:event, const String:name[], bool:dontBro
             }
             else {
                 SetWipeoutPosition(client, true);
-                HandleWipeoutLives(client);
             }
+            HandleWipeoutLives(client);
         }
     }
 }
@@ -826,7 +825,7 @@ StartMinigame() {
         CreateTimer(GetSpeedMultiplier(MUSIC_INFO_LEN), Game_Start);
         if (SpecialRound == 6) g_attack = true;
         else g_attack = false;
-        //CreateAllSprites();
+        CreateAllSprites();
     }
 }
 
@@ -1020,6 +1019,7 @@ public Action:EndGame(Handle:hTimer) {
                 Format(oldsound, sizeof(oldsound), "imgay/tf2ware/minigame_%d.mp3", iMinigame);
                 if (GetMinigameConfNum(minigame, "dynamic", 0)) StopSound(i, SND_CHANNEL_SPECIFIC, oldsound);
                 EmitSoundToClient(i, sound, SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, SNDVOL_NORMAL,GetSoundMultiplier());
+                HandleWipeoutLives(i);
             }
         }
         
@@ -1180,7 +1180,7 @@ public Action:Speedup_timer(Handle:hTimer) {
         
         if (GetConVarBool(ww_log)) LogMessage("Boss part 8");
         
-        //CreateAllSprites();
+        CreateAllSprites();
         status = 10;
         
         if (GetConVarBool(ww_log)) LogMessage("Post boss");
@@ -1235,7 +1235,7 @@ public Action:Victory_timer(Handle:hTimer) {
                 }
                 if (bAccepted) {
                     g_Winner[i] = 1;
-                    //CreateSprite(i);
+                    CreateSprite(i);
                     RespawnClient(i, true, true);
                     SetWeaponState(i, true);
                     winnernumber += 1;
@@ -1863,10 +1863,15 @@ SetWipeoutPosition(iClient, bool:bState = false) {
     TeleportEntity(iClient, fPos, NULL_VECTOR, NULL_VECTOR);
 }
 
+public Action:Timer_HandleWOLives(Handle:hTimer, any:iClient) {
+    HandleWipeoutLives(iClient);
+}
+
 HandleWipeoutLives(iClient) {
     if (g_Gamemode == GAMEMODE_WIPEOUT && IsValidClient(iClient) && IsPlayerAlive(iClient) && g_Points[iClient] <= 0) {
         if (g_Points[iClient] == 0) CPrintToChatAllEx(iClient, "{teamcolor}%N{olive} has been {green}wiped out!", iClient);
         if (g_Points[iClient] < 0) CPrintToChat(iClient, "{default}Please wait, the current {olive}Wipeout round{default} needs to finish before you can join.");
         ForcePlayerSuicide(iClient);
+        CreateTimer(0.2, Timer_HandleWOLives, iClient);
     }
 }

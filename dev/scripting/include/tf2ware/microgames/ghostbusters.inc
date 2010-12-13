@@ -356,5 +356,9 @@ public Action:Ghostbusters_Damage(victim, &attacker, &inflictor, &Float:damage, 
         damage = 0.0;
         return Plugin_Changed;
     }
+    if (IsValidClient(victim) && IsValidClient(attacker) && g_Mission[victim] == GHOSTBUSTERS_HEAVY) {
+        damage = 0.0;
+        return Plugin_Changed;
+    }
     return Plugin_Continue;
 }

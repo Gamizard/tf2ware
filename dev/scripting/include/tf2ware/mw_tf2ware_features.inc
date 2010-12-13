@@ -52,8 +52,7 @@ PyroExplode(Float:vec1[3]) {
     TE_SendToAll();
 }
 
-ExplosionDamage(Float:origin[3])
-{
+ExplosionDamage(Float:origin[3]) {
     new maxplayers = GetMaxClients();
     
     decl Float:PlayerVec[3];
@@ -116,6 +115,7 @@ stock CreateAllSprites() {
 }
 
 stock CreateSprite(client) {
+    return;
     if (IsValidClient(client) && (SpecialRound != 4)) {
         DestroySprite(client);
         if (IsPlayerAlive(client) && ((g_Points[client] > 0) || g_AlwaysShowPoints)) {
@@ -150,7 +150,11 @@ stock CreateSprite(client) {
             vOrigin[2] += 100;
             
             new ent = CreateEntityByName("env_sprite");
-            if (IsValidEntity(ent)) {            
+            if (IsValidEntity(ent)) {
+                decl String:strName[32];
+                Format(strName, sizeof(strName), "target%i", client);
+                DispatchKeyValue(client, "targetname", strName);
+            
                 DispatchKeyValue(ent, "classname", "env_sprite");
                 DispatchKeyValue(ent, "spawnflags", "1");
                 DispatchKeyValue(ent, "scale", scale);
@@ -159,7 +163,12 @@ stock CreateSprite(client) {
                 DispatchKeyValue(ent, "model", sprite);
                 DispatchSpawn(ent);
                 TeleportEntity(ent, vOrigin, NULL_VECTOR, NULL_VECTOR);
-                CAttach(ent, client, "");
+                
+                DispatchKeyValue(ent, "parentname", strName);
+                SetVariantString("!activator");
+                AcceptEntityInput(ent, "SetParent", client, ent, 0);
+                SetVariantString("head");
+                AcceptEntityInput(ent, "SetParentAttachment", client, ent, 0);
                 
                 g_Sprites[client] = ent;
             }
@@ -167,14 +176,8 @@ stock CreateSprite(client) {
     }
 }
 
-stock SetSpriteParent(ent, String:szTargetName[]) {
-    SetVariantString(szTargetName);
-    AcceptEntityInput(ent, "SetParent", ent, ent, 0);
-    SetVariantString("flag");
-    //AcceptEntityInput(ent, "SetParentAttachmentMaintainOffset", ent, ent, 0);
-}
-
 stock DestroyAllSprites() {
+    return;
     for (new client = 1; client <= MaxClients; client++) {
         if (IsValidClient(client)) {
             DestroySprite(client);
@@ -185,16 +188,15 @@ stock DestroyAllSprites() {
 stock DestroySprite(client) {
     if (IsValidClient(client)) {
         new ent = g_Sprites[client];
-        if (ent > 0 && IsValidEntity(ent)) {
+        if (ent > 0 && IsValidEdict(ent)) {
             new String:classname[64];
-            GetEdictClassname(ent, classname, 64);
-            if(!StrEqual(classname, "env_sprite")) {
-                CDetach(ent);
+            GetEdictClassname(ent, classname, sizeof(classname));
+            if(StrEqual(classname, "env_sprite", false)) {
                 AcceptEntityInput(ent, "kill");
-                g_Sprites[client] = 0;
             }
         }
     }
+    g_Sprites[client] = 0;
 }
 
 stock ClientParticle(client, String:effect[128], Float:time) {

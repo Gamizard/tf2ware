@@ -44,7 +44,6 @@ public Action:Hook_StartTouch_Pipe(entity, other) {
             EmitSoundToClient(owner, SOUND_MINISCORE, SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, SNDVOL_NORMAL,GetSoundMultiplier());
             g_Minipoints[owner] += 1;
             if (g_Minipoints[owner] >= 7) SetStateClient(owner, true, true);
-            CDetach(entity);
             AcceptEntityInput(entity, "Kill" );
         }
     }

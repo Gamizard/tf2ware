@@ -40,7 +40,6 @@ public Kamikaze_OnMinigame() {
 
 public Kamikaze_End() {
     if ((g_bomb > 0) && IsValidEntity(g_bomb)) {
-        CDetach(g_bomb);
         AcceptEntityInput(g_bomb, "Kill" );
         g_bomb = 0;
     }
@@ -73,7 +72,6 @@ public Kamikaze_TimerMinigame(timer) {
                 PyroExplode(pos);
                 ExplosionDamage(pos);
                 if ((g_bomb > 0) && IsValidEntity(g_bomb)) {
-                    CDetach(g_bomb);
                     AcceptEntityInput(g_bomb, "Kill" );
                     g_bomb = 0;
                 }
@@ -99,12 +97,19 @@ public Kamikaze_justEntered(client) {
             
             g_bomb = CreateEntityByName("prop_dynamic");
             
-            if (IsValidEdict(g_bomb)) {                        
+            if (IsValidEdict(g_bomb)) { 
+                decl String:strName[32];
+                Format(strName, sizeof(strName), "target%i", client);
+                DispatchKeyValue(client, "targetname", strName);
+            
                 DispatchKeyValue(g_bomb, "model", WW_BOMB_MODEL);
                 DispatchSpawn(g_bomb);
+                
+                DispatchKeyValue(g_bomb, "parentname", strName);
                 SetVariantString("!activator");
-                CAttach(g_bomb, client, "flag");
-                ActivateEntity(g_bomb);
+                AcceptEntityInput(g_bomb, "SetParent", client, g_bomb, 0);
+                SetVariantString("flag");
+                AcceptEntityInput(g_bomb, "SetParentAttachment", client, g_bomb, 0);
             }    
         }
     }

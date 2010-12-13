@@ -68,7 +68,11 @@ public Action:Barrel_OnTakeDamage(victim, &attacker, &inflictor, &Float:damage, 
 }
 
 DestroyBarrel(ent) {
-    SDKUnhook(ent, SDKHook_OnTakeDamage, Barrel_OnTakeDamage);
-    CDetach(ent);
-    AcceptEntityInput(ent, "Kill" );
+    if (ent > 0 && IsValidEdict(ent)) {
+        decl String:strClassname[64];
+        GetEdictClassname(ent, strClassname, sizeof(strClassname));
+        if (StrEqual(strClassname, "prop_physics", false)) {
+            AcceptEntityInput(ent, "Kill" );
+        }
+    }
 }
