@@ -89,6 +89,10 @@ public Ghostbusters_OnMinigame() {
         }
     }
     
+    for (new i = 1; i <= MaxClients; i++) {
+        SetEntProp(i, Prop_Send, "m_bGlowEnabled", 1);
+    }
+    
     AddRandVocalization("ghostslaugh", spyclients, 2.0, 4.0, SNDLEVEL_AIRCRAFT);
     
     g_attack = true;

@@ -622,6 +622,8 @@ public EventInventoryApplication(Handle:event, const String:name[], bool:dontBro
             }
             HandleWipeoutLives(client);
         }
+        
+        SetEntProp(client, Prop_Send, "m_bGlowEnabled", 0);
     }
 }
 
@@ -745,7 +747,7 @@ HandOutPoints() {
                 if (g_Gamemode == GAMEMODE_WIPEOUT && g_Points[i] > 0) {
                     g_Points[i] -= points;
                     if (g_Points[i] < 0) g_Points[i] = 0;
-                    HandleWipeoutLives(i);
+                    HandleWipeoutLives(i, true);
                 }
             }
         }
@@ -952,32 +954,15 @@ public Action:EndGame(Handle:hTimer) {
             Format(MUSIC_INFO_FAIL, sizeof(MUSIC_INFO_FAIL), MUSIC2_FAIL);
         }
         
-        if (GetMinigameConfNum(minigame, "endrespawn", 0) > 0) RespawnAll(true, false);
-        else RespawnAll();
-        if (g_Gamemode == GAMEMODE_WIPEOUT) {
-            for (new i2 = 1; i2 <= MaxClients; i2++) {
-                if (IsValidClient(i2) && IsClientParticipating(i2)) {
-                    SetWipeoutPosition(i2, true);
-                }
-            }
-        }
         
         if (SpecialRound == 6) g_attack = true;
         else g_attack = false;
-        
-        if (SpecialRound == 4) NoCollision(true);
-        else NoCollision(false);
         
         Call_StartForward(g_OnEndMinigame);
         Call_Finish();
         
         CleanupAllVocalizations();
         
-        if (SpecialRound == 8) {
-            for (new i = 1; i <= MaxClients; i++) {
-                if (IsValidClient(i) && !IsFakeClient(i)) ClientCommand(i, "wait; thirdperson");
-            }
-        }
         
         currentSpeed = GetConVarFloat(ww_speed);
         ServerCommand("host_timescale %f", GetHostMultiplier(1.0));
@@ -1019,7 +1004,6 @@ public Action:EndGame(Handle:hTimer) {
                 Format(oldsound, sizeof(oldsound), "imgay/tf2ware/minigame_%d.mp3", iMinigame);
                 if (GetMinigameConfNum(minigame, "dynamic", 0)) StopSound(i, SND_CHANNEL_SPECIFIC, oldsound);
                 EmitSoundToClient(i, sound, SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, SNDVOL_NORMAL,GetSoundMultiplier());
-                HandleWipeoutLives(i);
             }
         }
         
@@ -1057,6 +1041,30 @@ public Action:EndGame(Handle:hTimer) {
             }
         }
         if (bHandlePoints) HandOutPoints();
+        
+        
+        // RESPAWN START
+        if (GetMinigameConfNum(minigame, "endrespawn", 0) > 0) RespawnAll(true, false);
+        else RespawnAll();
+        if (g_Gamemode == GAMEMODE_WIPEOUT) {
+            for (new i2 = 1; i2 <= MaxClients; i2++) {
+                if (IsValidClient(i2) && IsClientParticipating(i2)) {
+                    SetWipeoutPosition(i2, true);
+                }
+            }
+        }
+        
+        if (SpecialRound == 4) NoCollision(true);
+        else NoCollision(false);
+        
+        if (SpecialRound == 8) {
+            for (new i = 1; i <= MaxClients; i++) {
+                if (IsValidClient(i) && !IsFakeClient(i)) ClientCommand(i, "wait; thirdperson");
+            }
+        }
+        
+        // RESPAWN END
+        
 
         new bool:speedup = false;
         g_minigamestotal += 1;
@@ -1867,10 +1875,12 @@ public Action:Timer_HandleWOLives(Handle:hTimer, any:iClient) {
     HandleWipeoutLives(iClient);
 }
 
-HandleWipeoutLives(iClient) {
+HandleWipeoutLives(iClient, bMessage = false) {
     if (g_Gamemode == GAMEMODE_WIPEOUT && IsValidClient(iClient) && IsPlayerAlive(iClient) && g_Points[iClient] <= 0) {
-        if (g_Points[iClient] == 0) CPrintToChatAllEx(iClient, "{teamcolor}%N{olive} has been {green}wiped out!", iClient);
-        if (g_Points[iClient] < 0) CPrintToChat(iClient, "{default}Please wait, the current {olive}Wipeout round{default} needs to finish before you can join.");
+        if (bMessage) {
+            if (g_Points[iClient] == 0) CPrintToChatAllEx(iClient, "{teamcolor}%N{olive} has been {green}wiped out!", iClient);
+            if (g_Points[iClient] < 0) CPrintToChat(iClient, "{default}Please wait, the current {olive}Wipeout round{default} needs to finish before you can join.");
+        }
         ForcePlayerSuicide(iClient);
         CreateTimer(0.2, Timer_HandleWOLives, iClient);
     }
