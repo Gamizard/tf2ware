@@ -347,6 +347,7 @@ public Action:GiveClientWeapon(client, String:weapon[128], slot, bool:input) {
         if (StrEqual(weapon, "tf_weapon_sniperrifle")) Format(strModel, sizeof(strModel), "models/weapons/w_models/w_sniperrifle.mdl");
         if (StrEqual(weapon, "tf_weapon_rocketlauncher")) Format(strModel, sizeof(strModel), "models/weapons/w_models/w_rocketlauncher.mdl");
         if (StrEqual(weapon, "tf_weapon_pipebomblauncher")) Format(strModel, sizeof(strModel), "models/weapons/w_models/w_stickybomb_launcher.mdl");
+        if (StrEqual(weapon, "tf_weapon_medigun")) Format(strModel, sizeof(strModel), "models/weapons/w_models/w_medigun.mdl");
         
         if (!StrEqual(strModel, "")) {
             new iEntity = Attachable_CreateAttachable(client);

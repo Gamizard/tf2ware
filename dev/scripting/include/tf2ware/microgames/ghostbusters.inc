@@ -77,7 +77,7 @@ public Ghostbusters_OnMinigame() {
             if (g_Mission[i] == GHOSTBUSTERS_SPY) {
                 SetStateClient(i, true);
                 spyclients[i-1] = i;
-            }
+            }           
             if (g_Mission[i] == GHOSTBUSTERS_MEDIC) {
                 SetStateClient(i, false);
                 medicclients[i-1] = i;
@@ -90,7 +90,7 @@ public Ghostbusters_OnMinigame() {
     }
     
     for (new i = 1; i <= MaxClients; i++) {
-        SetEntProp(i, Prop_Send, "m_bGlowEnabled", 1);
+        if (IsValidClient(i) && IsPlayerAlive(i)) SetEntProp(i, Prop_Send, "m_bGlowEnabled", 1);
     }
     
     AddRandVocalization("ghostslaugh", spyclients, 2.0, 4.0, SNDLEVEL_AIRCRAFT);
