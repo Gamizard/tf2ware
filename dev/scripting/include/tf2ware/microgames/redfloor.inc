@@ -71,7 +71,7 @@ public Action:Minigame16_Timer(Handle:hTimer) {
     if (status == 2) {
         new activeplayers = 0;
         for (new i = 1; i <= MaxClients; i++) {
-            if (IsValidClient(i) && g_Complete[i] && IsPlayerAlive(i) && g_Spawned[i] && GetClientTeam(i) >= 2) {
+            if (IsValidClient(i) && g_Complete[i] && IsClientParticipating(i)) {
                 activeplayers += 1;
             }
         }

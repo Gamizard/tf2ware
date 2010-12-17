@@ -416,56 +416,56 @@ DisableClientWeapons(client) {
 
 // This function is meant to handle player wearables.
 // Ideally it would call some kind of way to re-add a player's wearables, but until we find a way to do that, removing them will do.
-public Action:HandlePlayerItems(client)
-{
-    new entity;
-    new prev = 0;
-    if(IsValidClient(client)) {
-        while((entity = FindEntityByClassname(entity, "tf_wearable_item")) != -1 && IsValidEntity(entity)) {
-            if (IsValidEntity(entity) && GetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity") == client) {
-                SetEntityRenderMode(entity, RENDER_TRANSCOLOR);
-                SetEntityRenderColor(entity, 255, 255, 255, 0);
-                if (prev && IsValidEdict(prev)) 
-                    RemoveEdict(prev);
-                prev = entity;
-            }
-            else
-            if(IsValidEdict(entity) && GetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity") == client)
-            {
-                SetEntityRenderMode(entity, RENDER_NORMAL);
-                SetEntityRenderColor(entity, 255, 255, 255, 255);
-                SetVariantString("");
-                AcceptEntityInput(client, "EnableShadow");
-            }
+
+public Action:HandlePlayerItems(iClient) {
+    RemoveHeadgear(iClient);
+    RemoveDemoShield(iClient);
+    SetEntProp(iClient, Prop_Send, "m_nBody", 0);
+}
+
+RemoveHeadgear(iClient) {
+    if (!IsValidClient(iClient)) return;
+    if (!IsPlayerAlive(iClient)) return;
+
+    new iEntity = -1;
+    while ((iEntity = FindEntityByClassname2(iEntity, "tf_wearable_item")) != -1) {
+        if (IsItemEntity(iEntity)) {
+            RemoveItemEntity(iClient, iEntity);
         }
-        if (prev && IsValidEdict(prev)) 
-            RemoveEdict(prev);
-            
-        RemoveEquipMisc(client);
     }
 }
 
-RemoveEquipMisc(client) {
-    new edict;
-    
-    if (IsValidClient(client) && IsPlayerAlive(client)) {
-        for (new x=0; x<11; x++) {
-            if((edict = GetPlayerWeaponSlot(client, x)) != -1) {
-                new defIdx = GetEntProp(edict, Prop_Send, "m_iItemDefinitionIndex");
-                if (defIdx == 131 || defIdx == 57) {
-                        RemovePlayerItem(client, edict);
-                        RemoveEdict(edict);
-                }
-            }
+RemoveDemoShield(iClient) {
+    if (!IsValidClient(iClient)) return;
+    if (!IsPlayerAlive(iClient)) return;
+
+    new iEntity = -1;
+    while ((iEntity = FindEntityByClassname2(iEntity, "tf_wearable_item_demoshield")) != -1) {
+        if (IsItemEntity(iEntity)) {
+            RemoveItemEntity(iClient, iEntity);
         }
     }
-    
-    edict = MaxClients+1;
-    
-    while((edict = FindEntityByClassname(edict, "tf_wearable_item")) != -1) {
-        new owner = GetEntPropEnt(edict, Prop_Send, "m_hOwnerEntity");
-        if (owner == client) RemoveEdict(edict);
+}
+
+stock RemoveItemEntity(iClient, iEntity) {
+    if (IsValidClient(iClient) && IsItemEntity(iEntity)) {
+        if (GetEntPropEnt(iEntity, Prop_Send, "m_hOwnerEntity") == iClient) {
+            SDKCall(g_hSdkRemoveWearable, iClient, iEntity);
+        }
+        RemoveEdict(iEntity);
     }
+}
+
+stock bool:IsItemEntity(iEntity) {
+    if (iEntity > 0) {
+        if (IsValidEdict(iEntity)) {
+            decl String:strClassname[32];
+            GetEdictClassname(iEntity, strClassname, sizeof(strClassname));
+            if (StrEqual(strClassname, "tf_wearable_item", false)) return true;
+            if (StrEqual(strClassname, "tf_wearable_item_demoshield", false)) return true;
+        }
+    }
+    return false;
 }
 
 new Handle:GameTextHandle = INVALID_HANDLE;
@@ -515,4 +515,44 @@ public GetHealtarget(client) {
         return 0;
     
     return GetEntDataEnt2(weapon, FindSendPropInfo("CWeaponMedigun", "m_hHealingTarget"));
+}
+
+SuperPrecacheModel(String:strModel[]) {
+    if (!StrEqual(strModel, "")) {
+        decl String:strBase[PLATFORM_MAX_PATH];
+        decl String:strPath[PLATFORM_MAX_PATH];
+        
+        PrecacheModel(strModel, true);
+        AddFileToDownloadsTable(strModel);
+        
+        SplitString(strModel, ".mdl", strBase, sizeof(strBase));     
+        
+        Format(strPath, sizeof(strPath), "%s.phy", strBase);
+        if (FileExists(strPath)) {
+            PrecacheModel(strPath, true);
+            AddFileToDownloadsTable(strPath);
+        }
+        
+        Format(strPath, sizeof(strPath), "%s.vvd", strBase);
+        AddFileToDownloadsTable(strPath);
+        
+        Format(strPath, sizeof(strPath), "%s.sw.vtx", strBase);
+        AddFileToDownloadsTable(strPath);
+        
+        Format(strPath, sizeof(strPath), "%s.dx80.vtx", strBase);
+        AddFileToDownloadsTable(strPath);      
+
+        Format(strPath, sizeof(strPath), "%s.dx90.vtx", strBase);
+        AddFileToDownloadsTable(strPath);   
+    }
+}
+
+GetClientMaxHealth(iClient) {
+    return TF2_GetPlayerResourceData(iClient, TFResource_MaxHealth);
+}
+
+stock FindEntityByClassname2(startEnt, const String:classname[]) {
+    /* If startEnt isn't valid shifting it back to the nearest valid one */
+    while (startEnt > -1 && !IsValidEntity(startEnt)) startEnt--;
+    return FindEntityByClassname(startEnt, classname);
 }

@@ -14,8 +14,13 @@ public BBall_OnMinigame() {
 }
 
 public Action:BBall_OnTakeDamageClient(victim, &attacker, &inflictor, &Float:damage, &damagetype) {
-    if (status == 2) {
-        if (damage > 0) damage = 1.0;
+    if (status == 2 && IsValidClient(victim)) {
+        new iMaxHealth = GetClientMaxHealth(victim);
+        SetEntityHealth(victim, iMaxHealth);
+        
+        if (damage >= float(iMaxHealth-5)) damage = float(iMaxHealth-10);
+        if (damage > 150.0) damage = 150.0;
+        CreateTimer(0.0, BBall_GiveHealth, victim);
         return Plugin_Changed;
     }
     return Plugin_Continue;
@@ -24,6 +29,13 @@ public Action:BBall_OnTakeDamageClient(victim, &attacker, &inflictor, &Float:dam
 public BBall_End() {
     for (new i = 1; i <= MaxClients; i++) {
         SDKUnhook(i, SDKHook_OnTakeDamage, BBall_OnTakeDamageClient);
+    }
+}
+
+public Action:BBall_GiveHealth(Handle:hTimer, any:iClient) {
+    if (IsValidClient(iClient) && IsPlayerAlive(iClient)) {
+        new iMaxHealth = GetClientMaxHealth(iClient);
+        SetEntityHealth(iClient, iMaxHealth);  
     }
 }
 

@@ -219,8 +219,12 @@ public Frogger_OnGameFrame() {
             
             // goal
             if (pos[1] > 3751.0 && g_Complete[i] == false ) {
+                new bool:bWin = true;
+                if (g_Gamemode == GAMEMODE_WIPEOUT && g_Frogger_Goal) bWin = false;
+                
+                if (bWin) SetStateClient(i, true, true);
+                
                 if (g_Frogger_Goal == false) {
-                    SetStateClient(i, true, true);
                     g_Frogger_Goal = true;
                     
                     CPrintToChatAllEx(i, "{teamcolor}%N{default} made it to the goal first!", i);

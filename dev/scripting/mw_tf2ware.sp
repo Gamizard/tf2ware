@@ -86,6 +86,7 @@ new Handle:hudScore;
 new Handle:GameConf = INVALID_HANDLE;
 new Handle:hGiveNamedItem = INVALID_HANDLE;
 new Handle:hWeaponEquip = INVALID_HANDLE;
+new Handle:g_hSdkRemoveWearable = INVALID_HANDLE;
 new Handle:microgametimer = INVALID_HANDLE;
 
 // Keyvalues configuration handle
@@ -269,6 +270,11 @@ public OnMapStart() {
         PrepSDKCall_AddParameter(SDKType_CBaseEntity, SDKPass_Pointer);
         hWeaponEquip = EndPrepSDKCall();
         
+        StartPrepSDKCall(SDKCall_Player);
+        PrepSDKCall_SetFromConf(GameConf, SDKConf_Virtual, "RemoveWearable");
+        PrepSDKCall_AddParameter(SDKType_CBaseEntity, SDKPass_Pointer);
+        g_hSdkRemoveWearable = EndPrepSDKCall();
+        
         // Add logging
         if (GetConVarBool(ww_log)) {
         LogMessage("//////////////////////////////////////////////////////");
@@ -414,6 +420,7 @@ public OnMapStart() {
         PrecacheModel( "models/weapons/w_models/w_sniperrifle.mdl", true);
         PrecacheModel( "models/weapons/w_models/w_rocketlauncher.mdl", true);
         PrecacheModel( "models/weapons/w_models/w_stickybomb_launcher.mdl", true);
+        PrecacheModel( "models/weapons/w_models/w_medigun.mdl", true);
         
         decl String:input[512];
         
@@ -592,6 +599,10 @@ public EventInventoryApplication(Handle:event, const String:name[], bool:dontBro
 
     g_Spawned[client] = true;
     if (GetConVarBool(ww_enable) && g_enabled) {
+        SetEntityRenderMode(client, RENDER_NORMAL);
+        SetEntityRenderColor(client, 255, 255, 255, 255);
+        SetEntProp(client, Prop_Send, "m_bGlowEnabled", 0);
+    
         if ((status != 2) && (g_Winner[client] == 0)) {
             DisableClientWeapons(client);
             if (status != 5) CreateSprite(client);
@@ -623,7 +634,6 @@ public EventInventoryApplication(Handle:event, const String:name[], bool:dontBro
             HandleWipeoutLives(client);
         }
         
-        SetEntProp(client, Prop_Send, "m_bGlowEnabled", 0);
     }
 }
 
@@ -815,7 +825,6 @@ StartMinigame() {
             if (IsValidClient(i) && (!(IsFakeClient(i)))) {
                 SetOverlay(i,"");
                 g_Minipoints[i] = 0;
-                g_Special_Pizza_d[i] = false;
             }
         }
         
@@ -838,7 +847,7 @@ public Action:Game_Start(Handle:hTimer) {
         // Spawn everyone so they can participate
         RespawnAll();
         if (SpecialRound == 4) NoCollision(true);
-        if (SpecialRound == 8) {
+        if (SpecialRound == 7) {
             for (new i = 1; i <= MaxClients; i++) {
                 if (IsValidClient(i) && !IsFakeClient(i)) ClientCommand(i, "wait; thirdperson");
             }
@@ -993,7 +1002,6 @@ public Action:EndGame(Handle:hTimer) {
                     if (g_Complete[i] == false) {
                         Format(sound, sizeof(sound), MUSIC_INFO_FAIL);
                         Format(event, sizeof(event), "tf2ware_fail_%d", iMinigame);
-                        if (SpecialRound == 7) DropPizza(i);
                         if (g_Achievements) mw_AchievementEvent(event, i, 0, 0, 1);
                     }
                 }
@@ -1057,7 +1065,7 @@ public Action:EndGame(Handle:hTimer) {
         if (SpecialRound == 4) NoCollision(true);
         else NoCollision(false);
         
-        if (SpecialRound == 8) {
+        if (SpecialRound == 7) {
             for (new i = 1; i <= MaxClients; i++) {
                 if (IsValidClient(i) && !IsFakeClient(i)) ClientCommand(i, "wait; thirdperson");
             }
@@ -1227,7 +1235,6 @@ public Action:Victory_timer(Handle:hTimer) {
         decl String:pointsname[512];
         Format(pointsname, sizeof(pointsname), "points");
         if (g_Gamemode == GAMEMODE_WIPEOUT) Format(pointsname, sizeof(pointsname), "lives");
-        if (SpecialRound == 7) Format(pointsname, sizeof(pointsname), "pizzas");
         
         new bool:bAccepted = false;
         for (new i = 1; i <= MaxClients; i++) {
@@ -1503,9 +1510,6 @@ SetStateClient(client, bool:value, bool:complete=false) {
                 if (GetClientTeam(client) == 2) effect = PARTICLE_WIN_RED;
                 ClientParticle(client, effect, 8.0);
             }
-            else {
-                if (SpecialRound == 7) DropPizza(client);
-            }
         }
         g_Complete[client] = value;
     }
@@ -1620,7 +1624,6 @@ UpdateHud(Float:time) {
     if (g_Gamemode == GAMEMODE_WIPEOUT && SpecialRound != 7) {
         Format(scorename, sizeof(scorename), "Lives:");
     }
-    if (SpecialRound == 7) Format(scorename, sizeof(scorename), "Pizza:");
     for(new i = 1; i <= MaxClients; i++) {
         if (IsValidClient(i)) {
             Format(add, sizeof(add), "");
@@ -1773,8 +1776,6 @@ public Player_Death(Handle:event, const String:name[], bool:dontBroadcast) {
         }
     }
     
-    if (SpecialRound == 7 && IsClientParticipating(client)) DropPizza(client);
-    
     RemoveFakeWeapon(client);
 }
 
@@ -1884,4 +1885,13 @@ HandleWipeoutLives(iClient, bMessage = false) {
         ForcePlayerSuicide(iClient);
         CreateTimer(0.2, Timer_HandleWOLives, iClient);
     }
+}
+
+public Action:TF2_CalcIsAttackCritical(iClient, iWeapon, String:StrWeapon[], &bool:bCrit) {
+    if (g_enabled && GetConVarBool(ww_enable)) {
+        bCrit = false;
+        return Plugin_Changed;
+    }
+    
+    return Plugin_Continue;
 }
