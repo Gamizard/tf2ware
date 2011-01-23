@@ -39,7 +39,6 @@ public Frogger_OnMapStart() {
 
 public Action:Frogger_Timer(Handle:hTimer) {
     if (status == 2) {
-        CreateTimer(1.0, Frogger_Timer);
         g_Frogger_Timer -= 1;
         
         if (g_Frogger_Timer > 0) {
@@ -48,6 +47,7 @@ public Action:Frogger_Timer(Handle:hTimer) {
             if (GetConVarBool(ww_music) == true) EmitSoundToClient(1, sound);
             else EmitSoundToAll(sound);
             if (g_Frogger_Timer < 5) CPrintToChatAll("{red}%d{default}!", g_Frogger_Timer);
+            CreateTimer(1.0, Frogger_Timer);
         }
         else {
             if (microgametimer != INVALID_HANDLE) EndGame(microgametimer);
@@ -229,7 +229,8 @@ public Frogger_OnGameFrame() {
                     g_Frogger_Pos[i] = 99;
                     if (!g_Frogger_Goal) {
                         if (g_Gamemode == GAMEMODE_WIPEOUT) {
-                            if (microgametimer != INVALID_HANDLE) EndGame(microgametimer);
+                            CreateTimer(0.1, Frogger_Timer);
+                            g_Frogger_Timer = 0;
                         } else {
                             CreateTimer(0.0, Frogger_Timer);
                             CPrintToChatAll("The boss will end in {red}10 seconds{default}!");

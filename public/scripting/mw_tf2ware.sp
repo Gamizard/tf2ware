@@ -282,7 +282,6 @@ public OnMapStart() {
         RegAdminCmd("ww_list", Command_list, ADMFLAG_GENERIC, "Lists all the registered, enabled plugins and their ids");
         RegAdminCmd("ww_give", Command_points, ADMFLAG_GENERIC, "Gives you 20 points - You're a winner! (testing feature)");
         RegAdminCmd("ww_event", Command_event, ADMFLAG_GENERIC, "Starts a debugging event");
-        RegConsoleCmd("sm_supersecretemergencylockdown", Command_lock, "Lockdown"); 
         
         // Vars
         currentSpeed = GetConVarFloat(ww_speed);
@@ -1359,15 +1358,6 @@ public Action:Command_event(client, args) {
     status = 6;
     StartSpecialRound();
     SetConVarBool(ww_enable, true);
-    
-    return Plugin_Handled;
-}
-
-public Action:Command_lock(client, args) {
-    status = -999;
-    SetConVarBool(ww_enable, false);
-    g_enabled = false;
-    ServerCommand("killserver");
     
     return Plugin_Handled;
 }
