@@ -23,7 +23,7 @@ public Movement_OnGameFrame() {
             if (IsValidClient(i) && IsPlayerAlive(i) && IsClientParticipating(i)) {
                 limit = GetEntPropFloat(i, Prop_Send, "m_flMaxspeed") - 100.0;
                 GetEntPropVector(i, Prop_Data, "m_vecVelocity", fVelocity);
-                speed = (FloatAbs(fVelocity[0]) + FloatAbs(fVelocity[1]) + FloatAbs(fVelocity[2]));
+                speed = GetVectorLength(fVelocity);
                 if ((g_Mission[i] == 0) && (speed < limit) && (g_Complete[i]) && (IsPlayerAlive(i))) {
                     SetStateClient(i, false, true);
                     ForcePlayerSuicide(i);

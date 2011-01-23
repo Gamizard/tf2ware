@@ -106,99 +106,6 @@ HealClient(i) {
     SetEntityHealth(i, health);
 }
 
-stock CreateAllSprites() {
-    for (new client = 1; client <= MaxClients; client++) {
-        if (IsValidClient(client)) {
-            CreateSprite(client);
-        }
-    }
-}
-
-stock CreateSprite(client) {
-    return;
-    if (IsValidClient(client) && (SpecialRound != 4)) {
-        DestroySprite(client);
-        if (IsPlayerAlive(client) && ((g_Points[client] > 0) || g_AlwaysShowPoints)) {
-            
-            // Sprite name
-            decl String:sprite[256];
-            decl String:scale[12];   
-            Format(scale, sizeof(scale), "0.2");
-
-            
-            if (status == 2 && StrEqual(minigame, "Ghostbusters")) {
-                if (g_Mission[client] == 0) Format(sprite, sizeof(sprite), "materials/tf2ware/medicsign2.vmt");
-                if (g_Mission[client] == 1) {
-                    Format(sprite, sizeof(sprite), "materials/tf2ware/ghost2.vmt");
-                    Format(scale, sizeof(scale), "0.5");
-                }
-                if (g_Mission[client] == 2) {
-                    Format(sprite, sizeof(sprite), "materials/tf2ware/frankenstein.vmt");
-                    Format(scale, sizeof(scale), "0.3");
-                }
-            }
-            else {
-                new points = g_Points[client];
-                if (points > 20) points = 20;
-                if (g_Winner[client] > 0) points = 99;
-                Format(sprite, sizeof(sprite), "materials/tf2ware/tf2ware_points%d.vmt", points);
-            }
-
-            new Float:vOrigin[3];
-            GetClientAbsOrigin(client, vOrigin);
-            
-            vOrigin[2] += 100;
-            
-            new ent = CreateEntityByName("env_sprite");
-            if (IsValidEntity(ent)) {
-                decl String:strName[32];
-                Format(strName, sizeof(strName), "target%i", client);
-                DispatchKeyValue(client, "targetname", strName);
-            
-                DispatchKeyValue(ent, "classname", "env_sprite");
-                DispatchKeyValue(ent, "spawnflags", "1");
-                DispatchKeyValue(ent, "scale", scale);
-                DispatchKeyValue(ent, "rendermode", "1");
-                DispatchKeyValue(ent, "rendercolor", "255 255 255");
-                DispatchKeyValue(ent, "model", sprite);
-                DispatchSpawn(ent);
-                TeleportEntity(ent, vOrigin, NULL_VECTOR, NULL_VECTOR);
-                
-                DispatchKeyValue(ent, "parentname", strName);
-                SetVariantString("!activator");
-                AcceptEntityInput(ent, "SetParent", client, ent, 0);
-                SetVariantString("head");
-                AcceptEntityInput(ent, "SetParentAttachment", client, ent, 0);
-                
-                g_Sprites[client] = ent;
-            }
-        }
-    }
-}
-
-stock DestroyAllSprites() {
-    return;
-    for (new client = 1; client <= MaxClients; client++) {
-        if (IsValidClient(client)) {
-            DestroySprite(client);
-        }
-    }
-}
-
-stock DestroySprite(client) {
-    if (IsValidClient(client)) {
-        new ent = g_Sprites[client];
-        if (ent > 0 && IsValidEdict(ent)) {
-            new String:classname[64];
-            GetEdictClassname(ent, classname, sizeof(classname));
-            if(StrEqual(classname, "env_sprite", false)) {
-                AcceptEntityInput(ent, "kill");
-            }
-        }
-    }
-    g_Sprites[client] = 0;
-}
-
 stock ClientParticle(client, String:effect[128], Float:time) {
     new Float:strflVec[3];
     GetClientEyePosition(client, strflVec);
@@ -515,36 +422,6 @@ public GetHealtarget(client) {
         return 0;
     
     return GetEntDataEnt2(weapon, FindSendPropInfo("CWeaponMedigun", "m_hHealingTarget"));
-}
-
-SuperPrecacheModel(String:strModel[]) {
-    if (!StrEqual(strModel, "")) {
-        decl String:strBase[PLATFORM_MAX_PATH];
-        decl String:strPath[PLATFORM_MAX_PATH];
-        
-        PrecacheModel(strModel, true);
-        AddFileToDownloadsTable(strModel);
-        
-        SplitString(strModel, ".mdl", strBase, sizeof(strBase));     
-        
-        Format(strPath, sizeof(strPath), "%s.phy", strBase);
-        if (FileExists(strPath)) {
-            PrecacheModel(strPath, true);
-            AddFileToDownloadsTable(strPath);
-        }
-        
-        Format(strPath, sizeof(strPath), "%s.vvd", strBase);
-        AddFileToDownloadsTable(strPath);
-        
-        Format(strPath, sizeof(strPath), "%s.sw.vtx", strBase);
-        AddFileToDownloadsTable(strPath);
-        
-        Format(strPath, sizeof(strPath), "%s.dx80.vtx", strBase);
-        AddFileToDownloadsTable(strPath);      
-
-        Format(strPath, sizeof(strPath), "%s.dx90.vtx", strBase);
-        AddFileToDownloadsTable(strPath);   
-    }
 }
 
 GetClientMaxHealth(iClient) {

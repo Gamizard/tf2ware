@@ -1,0 +1,31 @@
+"Games"
+{
+	/* Team Fortress 2 */
+	"tf"
+	{
+		"Offsets"
+		{
+			"EquipWearable"
+			{
+				"windows"	"413"
+				"linux"		"414"
+			}
+			"RemoveWearable"
+			{
+				"windows"	"414"
+				"linux"		"415"
+			}
+			"GiveNamedItem"
+			{
+				"windows"	"387"
+				"linux"		"388"
+			}
+			
+			"WeaponEquip"
+			{
+				"windows"	"251"
+				"linux"		"252" 
+			}
+		}
+	}
+}

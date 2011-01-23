@@ -50,7 +50,7 @@ public Action:Frogger_Timer(Handle:hTimer) {
             if (g_Frogger_Timer < 5) CPrintToChatAll("{red}%d{default}!", g_Frogger_Timer);
         }
         else {
-            if (microgametimer != INVALID_HANDLE) TriggerTimer(microgametimer);
+            if (microgametimer != INVALID_HANDLE) EndGame(microgametimer);
         }
     }
 }
@@ -222,19 +222,20 @@ public Frogger_OnGameFrame() {
                 new bool:bWin = true;
                 if (g_Gamemode == GAMEMODE_WIPEOUT && g_Frogger_Goal) bWin = false;
                 
-                if (bWin) SetStateClient(i, true, true);
-                
-                if (g_Frogger_Goal == false) {
-                    g_Frogger_Goal = true;
+                if (bWin) {
+                    SetStateClient(i, true, true);
                     
                     CPrintToChatAllEx(i, "{teamcolor}%N{default} made it to the goal first!", i);
                     g_Frogger_Pos[i] = 99;
-                    if (g_Gamemode == GAMEMODE_WIPEOUT) {
-                        if (microgametimer != INVALID_HANDLE) TriggerTimer(microgametimer);
-                    } else {
-                        CreateTimer(0.0, Frogger_Timer);
-                        CPrintToChatAll("The boss will end in {red}10 seconds{default}!");
+                    if (!g_Frogger_Goal) {
+                        if (g_Gamemode == GAMEMODE_WIPEOUT) {
+                            if (microgametimer != INVALID_HANDLE) EndGame(microgametimer);
+                        } else {
+                            CreateTimer(0.0, Frogger_Timer);
+                            CPrintToChatAll("The boss will end in {red}10 seconds{default}!");
+                        }
                     }
+                    g_Frogger_Goal = true;
                 }
             }
         }

@@ -96,9 +96,7 @@ public Ghostbusters_OnMinigame() {
     AddRandVocalization("ghostslaugh", spyclients, 2.0, 4.0, SNDLEVEL_AIRCRAFT);
     
     g_attack = true;
-    g_AlwaysShowPoints = true;
     Ghostbusters_ended = false;
-    CreateAllSprites();
 }
 
 public Ghostbusters_End() {

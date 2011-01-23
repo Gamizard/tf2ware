@@ -10,19 +10,11 @@
 #include <sdkhooks>
 #include <geoip>
 #include <attachables>
-
-#undef REQUIRE_PLUGIN
-#include <mw_achievements_natives>
-#define REQUIRE_PLUGIN
+//#include <slagshillings>
 
 #define MAX_MINIGAMES 40
 
 #define PLUGIN_VERSION "1.0.0 - 20"
-
-// Comment out to have no restriction
-// Japan Server's IP
-//#define FIXED_IP -1062731517
-
 
 #define MUSIC2_START "imgay/tf2ware/tf2ware_intro.mp3"
 #define MUSIC2_START_LEN 2.18
@@ -100,8 +92,6 @@ new bool:g_attack = false;
 new bool:g_enabled = false;
 new bool:g_first = false;
 new bool:g_waiting = true;
-new bool:g_Achievements = false;
-new bool:g_AlwaysShowPoints = false;
 
 // Ints
 new g_Mission[MAXPLAYERS+1];
@@ -111,7 +101,6 @@ new g_Id[MAXPLAYERS+1];
 new g_Winner[MAXPLAYERS+1];
 new g_Minipoints[MAXPLAYERS+1];
 new g_Country[MAXPLAYERS+1];
-new g_Sprites[MAXPLAYERS+1];
 new Float:currentSpeed;
 new iMinigame;
 new status;
@@ -179,7 +168,6 @@ new Handle:g_PlayerDeath;
 #include tf2ware\mw_tf2ware_features.inc
 #include tf2ware\special.inc
 #include tf2ware\vocalize.inc
-#include tf2ware\camera.inc
 
 public Plugin:myinfo = {
     name = "TF2 Ware",
@@ -294,10 +282,7 @@ public OnMapStart() {
         RegAdminCmd("ww_list", Command_list, ADMFLAG_GENERIC, "Lists all the registered, enabled plugins and their ids");
         RegAdminCmd("ww_give", Command_points, ADMFLAG_GENERIC, "Gives you 20 points - You're a winner! (testing feature)");
         RegAdminCmd("ww_event", Command_event, ADMFLAG_GENERIC, "Starts a debugging event");
-        RegConsoleCmd("sm_supersecretemergencylockdown", Command_lock, "Lockdown");
-        
-        HookEvent("player_spawn", Camera_PlayerSpawn); 
-        HookEvent("player_death", Camera_PlayerDeath);    
+        RegConsoleCmd("sm_supersecretemergencylockdown", Command_lock, "Lockdown"); 
         
         // Vars
         currentSpeed = GetConVarFloat(ww_speed);
@@ -367,9 +352,6 @@ public OnMapStart() {
         RemoveNotifyFlag("tf_tournament_hide_domination_icons");
         SetConVarInt(FindConVar("tf_tournament_hide_domination_icons"), 0, true);
         SetConVarInt(FindConVar("mp_friendlyfire"), 1);
-        
-        // Include optional achievements
-        if (LibraryExists("mw_ach")) g_Achievements = true;
         
         if (GetConVarBool(ww_log)) LogMessage("Calling OnMapStart Forward");
             
@@ -548,8 +530,6 @@ public OnClientPutInServer(client) {
 
 public OnClientDisconnect(client) {
     if (GetConVarBool(ww_log)) LogMessage("Client disconnected");
-    
-    if(ClientCamera[client] != 0) DestroyCamera(client);
 
     g_Spawned[client] = false;
 }
@@ -605,15 +585,12 @@ public EventInventoryApplication(Handle:event, const String:name[], bool:dontBro
     
         if ((status != 2) && (g_Winner[client] == 0)) {
             DisableClientWeapons(client);
-            if (status != 5) CreateSprite(client);
         }
         if (status == 2 && IsClientParticipating(client)) {
             Call_StartForward(g_justEntered);
             Call_PushCell(client);
             Call_Finish();
-            CreateSprite(client);
         }
-        if (status == 5 && g_Winner[client] > 0) CreateSprite(client);
         if ((status == 2 && g_attack) || (g_Winner[client] > 0) || (SpecialRound == 6)) SetWeaponState(client, true);
         else SetWeaponState(client, false);
         
@@ -836,7 +813,6 @@ StartMinigame() {
         CreateTimer(GetSpeedMultiplier(MUSIC_INFO_LEN), Game_Start);
         if (SpecialRound == 6) g_attack = true;
         else g_attack = false;
-        CreateAllSprites();
     }
 }
 
@@ -873,9 +849,6 @@ public Action:Game_Start(Handle:hTimer) {
         
         // Set everyone's state to fail
         SetStateAll(false);
-        
-        // Don't allow no points by default
-        g_AlwaysShowPoints = false;
         
         // The 'x did y first' is untriggered
         g_first = false;
@@ -948,8 +921,6 @@ public Action:EndGame(Handle:hTimer) {
         Call_StartForward(g_OnAlmostEnd);
         Call_Finish();
         
-        g_AlwaysShowPoints = false;
-        SetCameraState(false);
         status = 0;
         
         new Float:MUSIC_INFO_LEN = MUSIC_END_LEN;
@@ -987,22 +958,15 @@ public Action:EndGame(Handle:hTimer) {
                     // Kill their weapons
                     DisableClientWeapons(i);
                     HealClient(i);
-                
-                    // achievement event
-                    decl String:event[128];
                     
                     // if client won
                     if (g_Complete[i]) {
                         Format(sound, sizeof(sound), MUSIC_INFO_WIN);
-                        Format(event, sizeof(event), "tf2ware_complete_%d", iMinigame);
-                        if (g_Achievements) mw_AchievementEvent(event, i, 0, 0, 1);
                     }
                     
                     // if client lost
                     if (g_Complete[i] == false) {
                         Format(sound, sizeof(sound), MUSIC_INFO_FAIL);
-                        Format(event, sizeof(event), "tf2ware_fail_%d", iMinigame);
-                        if (g_Achievements) mw_AchievementEvent(event, i, 0, 0, 1);
                     }
                 }
                 else {
@@ -1196,7 +1160,6 @@ public Action:Speedup_timer(Handle:hTimer) {
         
         if (GetConVarBool(ww_log)) LogMessage("Boss part 8");
         
-        CreateAllSprites();
         status = 10;
         
         if (GetConVarBool(ww_log)) LogMessage("Post boss");
@@ -1223,7 +1186,6 @@ public Action:Victory_timer(Handle:hTimer) {
         if (GetConVarBool(ww_music)) EmitSoundToClient(1, MUSIC_INFO, SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, SNDVOL_NORMAL,GetSoundMultiplier());
         else EmitSoundToAll(MUSIC_INFO, SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, SNDVOL_NORMAL,GetSoundMultiplier());
         
-        DestroyAllSprites();
         ResetWinners();
         
         new targetscore = GetHighestScore();
@@ -1250,14 +1212,16 @@ public Action:Victory_timer(Handle:hTimer) {
                 }
                 if (bAccepted) {
                     g_Winner[i] = 1;
-                    CreateSprite(i);
                     RespawnClient(i, true, true);
                     SetWeaponState(i, true);
                     winnernumber += 1;
                     PushArrayCell(ArrayWinners, i);
-                    if (g_Achievements) mw_AchievementEvent("tf2ware_win", i, 0, 0, 1);
+                    /*
+                    if (SlagShillingsGive(i, 3)) {
+                        CPrintToChat(i, "You were rewarded {green}3 Slag Shillings{default}!");
+                    }
+                    */
                 }
-                if (g_Achievements) mw_AchievementEvent("tf2ware_playround", i, 0, 0, 1);
             }
         }
         for (new i = 0; i < GetArraySize(ArrayWinners); i++) {
@@ -1292,8 +1256,6 @@ public Action:Victory_timer(Handle:hTimer) {
 public Action:Restartall_timer(Handle:hTimer) {
     if (status == 5) {
         bossBattle = 0;
-        
-        DestroyAllSprites();
         
         // Set the game speed
         if (SpecialRound == 1) SetConVarFloat(ww_speed, 3.0);
@@ -1764,8 +1726,6 @@ InitMinigame(id) {
 
 public Player_Death(Handle:event, const String:name[], bool:dontBroadcast) {
     new client = GetClientOfUserId(GetEventInt(event, "userid"));
-    
-    DestroySprite(client);
     
     if (GetConVarBool(ww_enable) && (status == 2)) {
     
