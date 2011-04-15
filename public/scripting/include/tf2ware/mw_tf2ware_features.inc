@@ -257,12 +257,14 @@ public Action:GiveClientWeapon(client, String:weapon[128], slot, bool:input) {
         if (StrEqual(weapon, "tf_weapon_medigun")) Format(strModel, sizeof(strModel), "models/weapons/w_models/w_medigun.mdl");
         
         if (!StrEqual(strModel, "")) {
+            #if defined ENABLE_ATTACHMENTS
             new iEntity = Attachable_CreateAttachable(client);
             if (iEntity > 0 && IsValidEdict(iEntity)) {
                 
                 SetEntityModel(iEntity, strModel);
                 g_PlayerVisibleWeapon[client] = iEntity;
             }
+            #endif
         }
         
         
@@ -270,7 +272,8 @@ public Action:GiveClientWeapon(client, String:weapon[128], slot, bool:input) {
     }
 }
 
-RemoveFakeWeapon(iClient) {
+RemoveFakeWeapon(&iClient) {
+    #if defined ENABLE_ATTACHMENTS
     new iEntity = g_PlayerVisibleWeapon[iClient];
     g_PlayerVisibleWeapon[iClient] = -1;
     
@@ -278,6 +281,7 @@ RemoveFakeWeapon(iClient) {
         if (Attachable_IsHooked(iEntity)) Attachable_UnhookEntity(iEntity);
         RemoveEdict(iEntity);
     }
+    #endif
 }
 
 public Action:RemoveClientSlot(i, slot) {

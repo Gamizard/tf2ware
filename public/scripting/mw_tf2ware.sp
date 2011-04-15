@@ -1,5 +1,8 @@
 #pragma semicolon 1
 
+//#define ENABLE_ATTACHMENTS  1
+//#define ENABLE_SHILLINGS  1
+
 //Includes:
 #include <sourcemod>
 #include <sdktools>
@@ -9,8 +12,14 @@
 #include <tf2_stocks>
 #include <sdkhooks>
 #include <geoip>
+
+#if defined ENABLE_ATTACHMENTS
 #include <attachables>
-//#include <slagshillings>
+#endif
+
+#if defined ENABLE_SHILLINGS
+#include <slagshillings>
+#endif
 
 #define MAX_MINIGAMES 40
 
@@ -1215,11 +1224,11 @@ public Action:Victory_timer(Handle:hTimer) {
                     SetWeaponState(i, true);
                     winnernumber += 1;
                     PushArrayCell(ArrayWinners, i);
-                    /*
+                    #if defined ENABLE_SHILLINGS
                     if (SlagShillingsGive(i, 3)) {
                         CPrintToChat(i, "You were rewarded {green}3 Slag Shillings{default}!");
                     }
-                    */
+                    #endif
                 }
             }
         }
