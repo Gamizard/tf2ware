@@ -339,7 +339,7 @@ RemoveHeadgear(iClient) {
     if (!IsPlayerAlive(iClient)) return;
 
     new iEntity = -1;
-    while ((iEntity = FindEntityByClassname2(iEntity, "tf_wearable_item")) != -1) {
+    while ((iEntity = FindEntityByClassname2(iEntity, "tf_wearable")) != -1) {
         if (IsItemEntity(iEntity)) {
             RemoveItemEntity(iClient, iEntity);
         }
@@ -351,7 +351,7 @@ RemoveDemoShield(iClient) {
     if (!IsPlayerAlive(iClient)) return;
 
     new iEntity = -1;
-    while ((iEntity = FindEntityByClassname2(iEntity, "tf_wearable_item_demoshield")) != -1) {
+    while ((iEntity = FindEntityByClassname2(iEntity, "tf_wearable_demoshield")) != -1) {
         if (IsItemEntity(iEntity)) {
             RemoveItemEntity(iClient, iEntity);
         }
@@ -372,8 +372,8 @@ stock bool:IsItemEntity(iEntity) {
         if (IsValidEdict(iEntity)) {
             decl String:strClassname[32];
             GetEdictClassname(iEntity, strClassname, sizeof(strClassname));
-            if (StrEqual(strClassname, "tf_wearable_item", false)) return true;
-            if (StrEqual(strClassname, "tf_wearable_item_demoshield", false)) return true;
+            if (StrEqual(strClassname, "tf_wearable", false)) return true;
+            if (StrEqual(strClassname, "tf_wearable_demoshield", false)) return true;
         }
     }
     return false;
