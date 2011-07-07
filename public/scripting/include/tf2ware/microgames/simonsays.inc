@@ -60,7 +60,7 @@ public SimonSays_OnGameFrame() {
 IsPlayerDoing(client) {
     switch (simon_action) {
         case A_TAUNT: {
-            if (TF2_GetPlayerConditionFlags(client) & TF_CONDFLAG_TAUNTING) {
+            if (TF2_IsPlayerInCondition(client, TFCond_Taunting)) {
                 return true;
             }
         }

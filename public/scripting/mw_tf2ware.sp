@@ -86,7 +86,6 @@ new Handle:hudScore;
 // REPLACE WEAPON
 new Handle:GameConf = INVALID_HANDLE;
 new Handle:hGiveNamedItem = INVALID_HANDLE;
-new Handle:hWeaponEquip = INVALID_HANDLE;
 new Handle:g_hSdkRemoveWearable = INVALID_HANDLE;
 new Handle:microgametimer = INVALID_HANDLE;
 
@@ -261,11 +260,6 @@ public OnMapStart() {
         PrepSDKCall_AddParameter(SDKType_PlainOldData, SDKPass_Plain);
         PrepSDKCall_SetReturnInfo(SDKType_CBaseEntity, SDKPass_Plain);
         hGiveNamedItem = EndPrepSDKCall();
-
-        StartPrepSDKCall(SDKCall_Player);
-        PrepSDKCall_SetFromConf(GameConf, SDKConf_Virtual, "WeaponEquip");
-        PrepSDKCall_AddParameter(SDKType_CBaseEntity, SDKPass_Pointer);
-        hWeaponEquip = EndPrepSDKCall();
         
         StartPrepSDKCall(SDKCall_Player);
         PrepSDKCall_SetFromConf(GameConf, SDKConf_Virtual, "RemoveWearable");
@@ -734,7 +728,7 @@ HandOutPoints() {
     for (new i = 1; i <= MaxClients; i++) {
         new points = 1;
         if (bossBattle == 1) points = 5;
-        if ((IsValidClient(i)) && IsClientParticipating(i) && SpecialRound != 7) {
+        if ((IsValidClient(i)) && IsClientParticipating(i)) {
             if (g_Complete[i]) {
                 if (g_Gamemode == GAMEMODE_NORMAL) g_Points[i] += points;
             }
@@ -1209,7 +1203,7 @@ public Action:Victory_timer(Handle:hTimer) {
         new bool:bAccepted = false;
         for (new i = 1; i <= MaxClients; i++) {
             SetOverlay(i, "");
-            if (IsValidClient(i)) {
+            if (IsValidClient(i) && (GetClientTeam(i) == 2 || GetClientTeam(i) == 3)) {
                 bAccepted = false;
                 if (g_Gamemode == GAMEMODE_WIPEOUT) {
                     if (g_Points[i] > 0) bAccepted = true;
@@ -1401,7 +1395,7 @@ RespawnClient(any:i, bool:force = false, bool:savepos = true) {
     decl Float:vel[3];
     decl Float:ang[3];
     new alive = false;
-    if (IsValidClient(i) && (g_Spawned[i] == true)) {
+    if (IsValidClient(i) && IsValidTeam(i) && (g_Spawned[i] == true)) {
         new bool:force2 = false;
         if (!IsPlayerAlive(i)) force2 = true;
         if (force && IsClientParticipating(i)) force2 = true;
@@ -1853,4 +1847,11 @@ public Action:TF2_CalcIsAttackCritical(iClient, iWeapon, String:StrWeapon[], &bo
     }
     
     return Plugin_Continue;
+}
+
+bool:IsValidTeam(iClient)
+{
+    new iTeam = GetClientTeam(iClient);
+    if (iTeam == 2 || iTeam == 3) return true;
+    return false;
 }

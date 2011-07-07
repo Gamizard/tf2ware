@@ -9,6 +9,7 @@
 new bool:Ghostbusters_pp[MAXPLAYERS+1] = false;
 new Ghostbusters_target[MAXPLAYERS+1] = 0;
 new Ghostbusters_hurt[MAXPLAYERS+1] = 0;
+new Ghostbusters_hp[MAXPLAYERS+1] = 0;
 new bool:Ghostbusters_ended = false;
 
 public Ghostbusters_Init() {
@@ -152,6 +153,8 @@ public Ghostbusters_justEntered(client) {
         vel[0] = 0.0;
         vel[1] = 0.0;
         vel[2] = 0.0;
+        
+        Ghostbusters_hp[client] = GetClientHealth(client);
 
         if (g_Mission[client] == GHOSTBUSTERS_SPY) {
             if (GetClientTeam(client) == 2) ChangeClientTeamAlive(client, 3);
@@ -237,14 +240,17 @@ public Ghostbusters_OnGameFrame() {
                         Ghostbusters_Slap(i);
                         //Ghostbusters_Slap(target);
                         new default_fov = GetEntProp(target, Prop_Send, "m_iDefaultFOV"); 
-                        new health = GetClientHealth(target);
+                        new health = Ghostbusters_hp[target];
                         new new_fov = default_fov + RoundFloat(float(125 - health)*0.75);
                         SetEntProp(target, Prop_Send, "m_iFOV", new_fov);
                     
-                        new target_health = GetClientHealth(target);
-                        new target_newhealth = target_health - 10;
+                        new newhealth = health - 3;
                         
-                        if (target_newhealth > 0) SetEntityHealth(target, target_newhealth);
+                        if (newhealth > 0)
+                        {
+                            SetEntityHealth(target, newhealth);
+                            Ghostbusters_hp[target] = newhealth;
+                        }
                         else {
                             Ghostbusters_SetPP(target, false);
                             ForcePlayerSuicide(target);

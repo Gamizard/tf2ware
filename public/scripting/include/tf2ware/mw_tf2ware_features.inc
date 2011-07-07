@@ -89,7 +89,12 @@ SetClientClass(i, String:tfclass[128]) {
     if (StrEqual(tfclass,"pyro")) input = TFClass_Pyro;
 
     if (IsValidClient(i)) {
-        TF2_SetPlayerClass(i, input);
+        if (TF2_GetPlayerClass(i) != input)
+        {
+            TF2_SetPlayerClass(i, input);
+            SetVariantString("");
+            AcceptEntityInput(i, "SetCustomModel");
+        }
         HealClient(i);
     }
 }
@@ -217,7 +222,7 @@ public Action:GiveClientWeapon(client, String:weapon[128], slot, bool:input) {
         TF2_RemoveWeaponSlot(client, slot);
         
         new wpn = SDKCall(hGiveNamedItem, client, weapon, 0, 0);
-        SDKCall(hWeaponEquip, client, wpn);
+        EquipPlayerWeapon(client, wpn);
         
         SetClientSlot(client, slot);
 

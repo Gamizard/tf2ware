@@ -50,9 +50,10 @@ public Action:Frogger_Timer(Handle:hTimer) {
             CreateTimer(1.0, Frogger_Timer);
         }
         else {
-            if (microgametimer != INVALID_HANDLE) EndGame(microgametimer);
+            if (microgametimer != INVALID_HANDLE) TriggerTimer(microgametimer);
         }
     }
+    return Plugin_Handled;
 }
 
 
